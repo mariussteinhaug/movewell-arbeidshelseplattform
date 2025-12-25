@@ -17,8 +17,12 @@ import { cn } from "@/lib/utils";
 export default function Layout({ children, currentPageName }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Don't show layout on Landing page
+  if (currentPageName === 'Landing') {
+    return <>{children}</>;
+  }
+
   const navigation = [
-    { name: 'Landingsside', page: 'Landing', icon: Heart },
     { name: 'Dashboard', page: 'Dashboard', icon: LayoutDashboard },
     { name: 'Kartlegging', page: 'Assessment', icon: ClipboardCheck },
     { name: 'Avdelinger', page: 'Departments', icon: Building2 },
