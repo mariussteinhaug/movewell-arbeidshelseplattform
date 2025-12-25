@@ -18,6 +18,7 @@ export default function Layout({ children, currentPageName }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navigation = [
+    { name: 'Landingsside', page: 'Landing', icon: Heart },
     { name: 'Dashboard', page: 'Dashboard', icon: LayoutDashboard },
     { name: 'Kartlegging', page: 'Assessment', icon: ClipboardCheck },
     { name: 'Avdelinger', page: 'Departments', icon: Building2 },
