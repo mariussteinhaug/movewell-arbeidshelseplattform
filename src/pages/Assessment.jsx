@@ -166,6 +166,107 @@ Returner JSON med:
       completed: true,
       session_week: week
     });
+
+    // Send e-post til leder og HR med AI-forslag
+    await sendManagerNotification(assessment, answeredQuestions);
+  };
+
+  const sendManagerNotification = async (assessment, answeredQuestions) => {
+    try {
+      // Hent nåværende bruker
+      const currentUser = await base44.auth.me();
+      
+      // Hent avdelingsinformasjon
+      const deptList = await base44.entities.Department.list();
+      const dept = deptList.find(d => d.name === selectedDepartment);
+
+      // Generer AI-forslag for tiltak
+      const answeredData = answeredQuestions.map(aq => {
+        const q = allQuestions.find(question => question.question_id === aq.question_id);
+        return `Spørsmål: ${q?.text}\nSvar: ${aq.answer}`;
+      }).join('\n\n');
+
+      const aiPrompt = `Du er en ekspert på arbeidshelse og tilrettelegging. 
+
+En ansatt har fullført en helsekartlegging med følgende informasjon:
+
+Ansatt: ${currentUser.full_name} (${currentUser.email})
+Avdeling: ${selectedDepartment}
+Risikonivå: ${assessment.risk_level}
+Risikosignaler: ${assessment.risk_signals?.join(', ')}
+
+Svar fra kartlegging:
+${answeredData}
+
+Basert på denne informasjonen, gi konkrete anbefalinger til leder og HR om:
+1. Umiddelbare tiltak som bør gjøres (0-2 uker)
+2. Hvilke tilpasninger eller tilrettelegginger som kan være aktuelle
+3. Oppfølgingsplan for den ansatte
+4. Eventuelle eksterne ressurser som kan være relevante (fysioterapeut, bedriftshelsetjeneste, etc.)
+
+Vær konkret, konstruktiv og empatisk i anbefalingene.`;
+
+      const aiRecommendations = await base44.integrations.Core.InvokeLLM({
+        prompt: aiPrompt
+      });
+
+      // Hent admin-brukere (HR/Ledere)
+      const users = await base44.entities.User.list();
+      const adminUsers = users.filter(u => u.role === 'admin');
+
+      // Send e-post til hver admin
+      for (const admin of adminUsers) {
+        await base44.integrations.Core.SendEmail({
+          to: admin.email,
+          subject: `Ny helsekartlegging fra ${currentUser.full_name} - ${selectedDepartment}`,
+          body: `
+Hei,
+
+En ansatt har fullført en helsekartlegging som krever oppfølging:
+
+ANSATT INFORMASJON:
+- Navn: ${currentUser.full_name}
+- E-post: ${currentUser.email}
+- Avdeling: ${selectedDepartment}
+
+RESULTAT:
+- Risikonivå: ${assessment.risk_level === 'low' ? 'Lav' : assessment.risk_level === 'moderate' ? 'Moderat' : 'Høy'}
+- Identifiserte risikosignaler: ${assessment.risk_signals?.join(', ') || 'Ingen spesifikke'}
+- Begrunnelse: ${assessment.reason}
+
+AI-ANBEFALINGER:
+${aiRecommendations}
+
+---
+Denne e-posten er generert automatisk fra MoveWell helsekartlegging.
+Vennligst følg opp med den ansatte innen 2 virkedager.
+          `
+        });
+      }
+
+      // Send også til avdelingsleder hvis oppgitt
+      if (dept?.manager_name && dept?.manager_email) {
+        await base44.integrations.Core.SendEmail({
+          to: dept.manager_email,
+          subject: `Ny helsekartlegging i din avdeling - ${selectedDepartment}`,
+          body: `
+Hei ${dept.manager_name},
+
+En ansatt i din avdeling har fullført en helsekartlegging:
+
+ANSATT: ${currentUser.full_name}
+RISIKONIVÅ: ${assessment.risk_level === 'low' ? 'Lav' : assessment.risk_level === 'moderate' ? 'Moderat' : 'Høy'}
+
+AI-ANBEFALINGER:
+${aiRecommendations}
+
+Ta kontakt med den ansatte for oppfølging.
+          `
+        });
+      }
+    } catch (error) {
+      console.error('Feil ved sending av varsel:', error);
+    }
   };
 
   const handleNext = async () => {
