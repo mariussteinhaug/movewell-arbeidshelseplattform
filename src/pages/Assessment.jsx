@@ -57,13 +57,19 @@ export default function Assessment() {
   const queryClient = useQueryClient();
   const [submitted, setSubmitted] = useState(false);
   const [formData, setFormData] = useState({
-    department: '',
-    physical_load: null,
-    mental_wellbeing: null,
-    work_environment: null,
-    recovery: null,
-    stress_level: null,
-    comments: ''
+      department: '',
+      physical_load: null,
+      mental_wellbeing: null,
+      work_environment: null,
+      recovery: null,
+      stress_level: null,
+      comments: ''
+  });
+
+  const [showAdaptiveQuestions, setShowAdaptiveQuestions] = useState({
+      physical: false,
+      mental: false,
+      work: false
   });
 
   const { data: departments = [] } = useQuery({

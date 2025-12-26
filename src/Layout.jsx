@@ -10,7 +10,8 @@ import {
   Menu,
   X,
   Shield,
-  Heart
+  Heart,
+  FileText
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
@@ -25,6 +26,7 @@ export default function Layout({ children, currentPageName }) {
   const navigation = [
     { name: 'Dashboard', page: 'Dashboard', icon: LayoutDashboard },
     { name: 'Kartlegging', page: 'Assessment', icon: ClipboardCheck },
+    { name: 'AI-Rapporter', page: 'Reports', icon: FileText },
     { name: 'Avdelinger', page: 'Departments', icon: Building2 },
     { name: 'Anbefalinger', page: 'Recommendations', icon: Lightbulb },
     { name: 'Innstillinger', page: 'Settings', icon: Settings },
