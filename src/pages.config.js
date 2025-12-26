@@ -1,11 +1,25 @@
-import AdaptiveAssessment from './pages/AdaptiveAssessment';
+import Assessment from './pages/Assessment';
+import Dashboard from './pages/Dashboard';
+import Departments from './pages/Departments';
+import Landing from './pages/Landing';
+import Recommendations from './pages/Recommendations';
+import Reports from './pages/Reports';
+import Settings from './pages/Settings';
+import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "AdaptiveAssessment": AdaptiveAssessment,
+    "Assessment": Assessment,
+    "Dashboard": Dashboard,
+    "Departments": Departments,
+    "Landing": Landing,
+    "Recommendations": Recommendations,
+    "Reports": Reports,
+    "Settings": Settings,
 }
 
 export const pagesConfig = {
-    mainPage: "AdaptiveAssessment",
+    mainPage: "Assessment",
     Pages: PAGES,
+    Layout: __Layout,
 };
