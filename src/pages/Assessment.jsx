@@ -156,12 +156,19 @@ Returner JSON med:
         setRiskAssessment(result);
         await saveSession(result);
         setCompleted(true);
+        queryClient.invalidateQueries({ queryKey: ['assessment-sessions'] });
       } else {
         const nextIndex = relevantQuestions.findIndex(
           q => q.question_id === result.next_question_id
         );
         if (nextIndex !== -1) {
           setCurrentQuestionIndex(nextIndex);
+        } else {
+          // Hvis AI ikke finner neste spørsmål, avslutt
+          setRiskAssessment(result);
+          await saveSession(result);
+          setCompleted(true);
+          queryClient.invalidateQueries({ queryKey: ['assessment-sessions'] });
         }
       }
     } catch (error) {
@@ -344,10 +351,14 @@ Ta kontakt med den ansatte for oppfølging.
     const answeredCount = Object.keys(answers).length;
     const isLastQuestion = currentQuestionIndex === relevantQuestions.length - 1;
 
-    // Hvis siste spørsmål eller nok svar, kjør AI-analyse
-    if (isLastQuestion || (answeredCount >= 6 && sessionPath !== 'not_set')) {
+    // Hvis siste spørsmål, ALLTID kjør AI-analyse
+    if (isLastQuestion) {
+      await getNextQuestion();
+    } else if (answeredCount >= 6 && sessionPath !== 'not_set') {
+      // Eller hvis nok svar, kjør AI-analyse
       await getNextQuestion();
     } else {
+      // Gå til neste spørsmål
       if (currentQuestionIndex < relevantQuestions.length - 1) {
         setCurrentQuestionIndex(currentQuestionIndex + 1);
       }
