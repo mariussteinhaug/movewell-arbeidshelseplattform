@@ -7,6 +7,8 @@ import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, Shield, Loader2, ArrowLeft, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import QuestionRenderer from '../components/assessment/QuestionRenderer';
+import QuestionFeedback from '../components/assessment/QuestionFeedback';
+import DocumentUpload from '../components/assessment/DocumentUpload';
 
 export default function Assessment() {
   const queryClient = useQueryClient();
@@ -17,6 +19,8 @@ export default function Assessment() {
   const [completed, setCompleted] = useState(false);
   const [riskAssessment, setRiskAssessment] = useState(null);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState([]);
 
   const { data: allQuestions = [] } = useQuery({
     queryKey: ['questions'],
@@ -52,6 +56,9 @@ export default function Assessment() {
   const handleAnswer = (answer) => {
     const newAnswers = { ...answers, [currentQuestion.question_id]: answer };
     setAnswers(newAnswers);
+
+    // Vis feedback når brukeren svarer
+    setShowFeedback(true);
 
     if (currentQuestion.question_id === 'Q4') {
       setSelectedDepartment(answer);
@@ -93,10 +100,15 @@ ${relevantQuestions
   .map(q => `${q.question_id}: ${q.text} (kategori: ${q.category}, vekt: ${q.severity_weight})`)
   .join('\n')}
 
+DYNAMISK SPØRSMÅLSFLYT:
+- Hvis brukeren har rapportert smerter eller høy belastning, prioriter oppfølgingsspørsmål om lokalisering, intensitet og varighet.
+- Hvis brukeren har svart "Ja" på støtte (Q10), still oppfølgingsspørsmål om type støtte.
+- Tilpass spørsmål basert på alvorlighetsgrad i tidligere svar.
+
 Basert på svarene hittil:
 1. Er det nok informasjon til å gjøre en risikovurdering? 
 2. Hvis ja, gi risikonivå (low/moderate/high) og begrunnelse
-3. Hvis nei, hvilket spørsmål bør stilles neste? Velg question_id.
+3. Hvis nei, hvilket spørsmål bør stilles neste? Velg question_id som er mest relevant basert på tidligere svar.
 
 Returner JSON med:
 {
@@ -164,7 +176,8 @@ Returner JSON med:
       risk_level: assessment.risk_level || 'unknown',
       confidence: assessment.confidence || 0,
       completed: true,
-      session_week: week
+      session_week: week,
+      uploaded_documents: uploadedFiles.map(f => f.url)
     });
 
     // Send e-post til leder og HR med AI-forslag
@@ -275,6 +288,8 @@ Ta kontakt med den ansatte for oppfølging.
       return;
     }
 
+    setShowFeedback(false);
+
     const answeredCount = Object.keys(answers).length;
     const isLastQuestion = currentQuestionIndex === relevantQuestions.length - 1;
 
@@ -344,6 +359,8 @@ Ta kontakt med den ansatte for oppfølging.
               setSessionPath('not_set');
               setRiskAssessment(null);
               setSelectedDepartment(null);
+              setUploadedFiles([]);
+              setShowFeedback(false);
             }}
             variant="outline"
           >
@@ -392,12 +409,20 @@ Ta kontakt med den ansatte for oppfølging.
         >
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">
-                {currentQuestion?.text}
-              </CardTitle>
-              <CardDescription>
-                {currentQuestion?.category && `Kategori: ${currentQuestion.category}`}
-              </CardDescription>
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <CardTitle className="text-lg">
+                    {currentQuestion?.text}
+                  </CardTitle>
+                  <CardDescription>
+                    {currentQuestion?.category && `Kategori: ${currentQuestion.category}`}
+                  </CardDescription>
+                </div>
+                <QuestionFeedback 
+                  show={showFeedback} 
+                  onComplete={() => setShowFeedback(false)} 
+                />
+              </div>
             </CardHeader>
             <CardContent className="space-y-6">
               {currentQuestion && currentQuestion.question_id === 'Q4' ? (
@@ -426,6 +451,14 @@ Ta kontakt med den ansatte for oppfølging.
                   question={currentQuestion}
                   answer={answers[currentQuestion.question_id]}
                   onAnswer={handleAnswer}
+                />
+              )}
+
+              {/* Document upload - vis på siste spørsmål */}
+              {currentQuestionIndex === relevantQuestions.length - 1 && (
+                <DocumentUpload
+                  uploadedFiles={uploadedFiles}
+                  onFilesChange={setUploadedFiles}
                 />
               )}
 
