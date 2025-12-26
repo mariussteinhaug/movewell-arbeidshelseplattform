@@ -87,11 +87,13 @@ export default function Settings() {
     varm_prosess: 'Varm prosess',
     kald_prosess: 'Kald prosess',
     pakkeri: 'Pakkeri',
-    lager_logistikk: 'Lager/Logistikk',
-    laboratorium: 'Laboratorium',
-    mekanisk_vedlikehold: 'Mekanisk/Vedlikehold',
-    tilkalling_fleksibel: 'Tilkalling/Fleksibel',
+    lager_logistikk: 'Lager og logistikk',
+    kai_lasting: 'Kai/Lasting og lossing',
+    mekanisk_vedlikehold: 'Mekanisk vedlikehold',
+    laboratorium: 'Laboratorium/Kvalitet',
+    miljo_hms: 'Miljø og HMS',
     administrasjon: 'Administrasjon',
+    tilkalling: 'Tilkallingsavdeling',
     annet: 'Annet'
   };
 
@@ -100,20 +102,21 @@ export default function Settings() {
     kald_prosess: 'bg-blue-100 text-blue-700',
     pakkeri: 'bg-purple-100 text-purple-700',
     lager_logistikk: 'bg-slate-100 text-slate-700',
-    laboratorium: 'bg-emerald-100 text-emerald-700',
+    kai_lasting: 'bg-indigo-100 text-indigo-700',
     mekanisk_vedlikehold: 'bg-amber-100 text-amber-700',
-    tilkalling_fleksibel: 'bg-cyan-100 text-cyan-700',
+    laboratorium: 'bg-emerald-100 text-emerald-700',
+    miljo_hms: 'bg-green-100 text-green-700',
     administrasjon: 'bg-rose-100 text-rose-700',
+    tilkalling: 'bg-cyan-100 text-cyan-700',
     annet: 'bg-gray-100 text-gray-700'
   };
 
   const shiftLabels = {
     dagtid: 'Dagtid',
-    '2-skift': '2-skift',
-    '3-skift': '3-skift',
     '5-skift': '5-skift',
-    nattskift: 'Natt',
-    turnus: 'Turnus'
+    nattskift: 'Nattskift',
+    kveldsskift: 'Kveldsskift',
+    tilkalling_ekstrahjelp: 'Tilkalling/Ekstrahjelp'
   };
 
   return (
@@ -183,14 +186,16 @@ export default function Settings() {
                       <SelectValue placeholder="Velg type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="varm_prosess">Varm prosess (produksjon)</SelectItem>
-                      <SelectItem value="kald_prosess">Kald prosess (kai, pakkeri)</SelectItem>
+                      <SelectItem value="varm_prosess">Varm prosess (produksjon/ovn)</SelectItem>
+                      <SelectItem value="kald_prosess">Kald prosess</SelectItem>
                       <SelectItem value="pakkeri">Pakkeri</SelectItem>
-                      <SelectItem value="lager_logistikk">Lager/Logistikk</SelectItem>
-                      <SelectItem value="laboratorium">Laboratorium/Miljø</SelectItem>
-                      <SelectItem value="mekanisk_vedlikehold">Mekanisk/Vedlikehold</SelectItem>
-                      <SelectItem value="tilkalling_fleksibel">Tilkalling/Fleksibel ressurs</SelectItem>
-                      <SelectItem value="administrasjon">Administrasjon</SelectItem>
+                      <SelectItem value="lager_logistikk">Lager og logistikk</SelectItem>
+                      <SelectItem value="kai_lasting">Kai/Lasting og lossing</SelectItem>
+                      <SelectItem value="mekanisk_vedlikehold">Mekanisk vedlikehold</SelectItem>
+                      <SelectItem value="laboratorium">Laboratorium/Kvalitet</SelectItem>
+                      <SelectItem value="miljo_hms">Miljø og HMS</SelectItem>
+                      <SelectItem value="administrasjon">Administrasjon/Dagtid</SelectItem>
+                      <SelectItem value="tilkalling">Tilkallingsavdeling</SelectItem>
                       <SelectItem value="annet">Annet</SelectItem>
                     </SelectContent>
                   </Select>
@@ -207,11 +212,10 @@ export default function Settings() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="dagtid">Dagtid</SelectItem>
-                      <SelectItem value="2-skift">2-skift</SelectItem>
-                      <SelectItem value="3-skift">3-skift</SelectItem>
-                      <SelectItem value="5-skift">5-skift</SelectItem>
+                      <SelectItem value="5-skift">Skiftarbeid (5-skift)</SelectItem>
                       <SelectItem value="nattskift">Nattskift</SelectItem>
-                      <SelectItem value="turnus">Turnus</SelectItem>
+                      <SelectItem value="kveldsskift">Kveldsskift</SelectItem>
+                      <SelectItem value="tilkalling_ekstrahjelp">Tilkalling/Ekstrahjelp</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
