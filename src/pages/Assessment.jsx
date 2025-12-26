@@ -213,7 +213,7 @@ Returner JSON med:
             <CheckCircle2 className="h-10 w-10 text-emerald-600" />
           </div>
           <h2 className="text-2xl font-bold text-slate-900 mb-2">Kartlegging fullført</h2>
-          <p className="text-slate-500 mb-4">Takk for din anonyme deltakelse. Dine svar er lagret uten noen kobling til din identitet.</p>
+          <p className="text-slate-500 mb-4">Takk for din deltakelse. Dine svar vil bidra til å forbedre arbeidsmiljøet og tilrettelegge bedre for din helse.</p>
           
           {riskAssessment && (
             <div className="bg-slate-50 rounded-xl p-6 mb-6 text-left">
@@ -256,7 +256,7 @@ Returner JSON med:
       <div className="mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Adaptiv helsekartlegging</h1>
         <p className="text-slate-500 mt-2">
-          AI-styrt kartlegging som tilpasses dine svar - fullstendig anonym
+          AI-styrt kartlegging som tilpasses dine svar - hjelper både deg og bedriften
         </p>
       </div>
 
@@ -264,10 +264,10 @@ Returner JSON med:
         <Shield className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
         <div>
           <p className="text-sm font-medium text-emerald-800">
-            {selectedDepartment ? `Anonym kartlegging for ${selectedDepartment}` : '100% Anonym kartlegging'}
+            {selectedDepartment ? `Kartlegging for ${selectedDepartment}` : 'Helsekartlegging'}
           </p>
           <p className="text-sm text-emerald-700 mt-0.5">
-            Dine svar lagres uten navn eller e-post. De aggregeres sammen med kollegaer i din avdeling. Ingen kan identifisere hvem som har svart hva.
+            Dine ærlige svar hjelper bedriften med å identifisere forbedringsområder og tilrettelegge bedre for ditt arbeidsmiljø og helse.
           </p>
         </div>
       </div>
@@ -289,14 +289,6 @@ Returner JSON med:
         >
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2 text-sm">
-                  <Shield className="h-4 w-4 text-emerald-600" />
-                  <span className="text-emerald-700 font-medium">Anonym besvarelse</span>
-                  <span className="text-slate-400">•</span>
-                  <span className="text-slate-600">{selectedDepartment}</span>
-                </div>
-              </div>
               <CardTitle className="text-lg">
                 {currentQuestion?.text}
               </CardTitle>
