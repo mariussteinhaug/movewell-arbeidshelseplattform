@@ -13,21 +13,22 @@ export default function QuestionRenderer({ question, answer, onAnswer }) {
   );
 
   React.useEffect(() => {
-    if (answer !== undefined && answer !== localAnswer && question.answer_type !== 'multichoice') {
-      setLocalAnswer(answer || '');
-    }
-    if (answer !== undefined && question.answer_type === 'multichoice') {
-      setMultiAnswers(Array.isArray(answer) ? answer : (answer ? [answer] : []));
-    }
-  }, [answer, question]);
+    setLocalAnswer(answer || '');
+    setMultiAnswers(answer ? (Array.isArray(answer) ? answer : [answer]) : []);
+  }, [question.question_id]);
 
-  React.useEffect(() => {
-    if (question.answer_type === 'multichoice') {
-      onAnswer(multiAnswers.length > 0 ? multiAnswers : null);
-    } else {
-      onAnswer(localAnswer || null);
-    }
-  }, [localAnswer, multiAnswers]);
+  const handleSingleChange = (value) => {
+    setLocalAnswer(value);
+    onAnswer(value || null);
+  };
+
+  const handleMultiChange = (option, checked) => {
+    const newAnswers = checked
+      ? [...multiAnswers, option]
+      : multiAnswers.filter(a => a !== option);
+    setMultiAnswers(newAnswers);
+    onAnswer(newAnswers.length > 0 ? newAnswers : null);
+  };
 
   if (question.answer_type === 'scale') {
     const scale = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -38,7 +39,7 @@ export default function QuestionRenderer({ question, answer, onAnswer }) {
             <button
               key={val}
               type="button"
-              onClick={() => setLocalAnswer(val.toString())}
+              onClick={() => handleSingleChange(val.toString())}
               className={cn(
                 "flex-1 min-w-[40px] py-3 rounded-xl text-sm font-medium transition-all",
                 localAnswer === val.toString()
@@ -61,7 +62,7 @@ export default function QuestionRenderer({ question, answer, onAnswer }) {
   if (question.answer_type === 'choice') {
     return (
       <div className="space-y-2">
-        <RadioGroup value={localAnswer} onValueChange={setLocalAnswer}>
+        <RadioGroup value={localAnswer} onValueChange={handleSingleChange}>
           {question.answer_options?.map((option) => (
             <div key={option} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-slate-50 border border-slate-200">
               <RadioGroupItem value={option} id={option} />
@@ -83,13 +84,7 @@ export default function QuestionRenderer({ question, answer, onAnswer }) {
             <Checkbox
               id={option}
               checked={multiAnswers.includes(option)}
-              onCheckedChange={(checked) => {
-                if (checked) {
-                  setMultiAnswers([...multiAnswers, option]);
-                } else {
-                  setMultiAnswers(multiAnswers.filter(a => a !== option));
-                }
-              }}
+              onCheckedChange={(checked) => handleMultiChange(option, checked)}
             />
             <Label htmlFor={option} className="flex-1 cursor-pointer text-slate-700">
               {option}
@@ -105,7 +100,7 @@ export default function QuestionRenderer({ question, answer, onAnswer }) {
       <Input
         type="number"
         value={localAnswer}
-        onChange={(e) => setLocalAnswer(e.target.value)}
+        onChange={(e) => handleSingleChange(e.target.value)}
         placeholder="Skriv tall..."
         className="text-base"
       />
@@ -116,7 +111,7 @@ export default function QuestionRenderer({ question, answer, onAnswer }) {
   return (
     <Textarea
       value={localAnswer}
-      onChange={(e) => setLocalAnswer(e.target.value)}
+      onChange={(e) => handleSingleChange(e.target.value)}
       placeholder="Skriv ditt svar her..."
       rows={4}
       className="text-base"
