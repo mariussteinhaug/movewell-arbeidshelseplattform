@@ -17,7 +17,6 @@ export default function Assessment() {
   const [completed, setCompleted] = useState(false);
   const [riskAssessment, setRiskAssessment] = useState(null);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
-  const [showDepartmentSelect, setShowDepartmentSelect] = useState(true);
 
   const { data: allQuestions = [] } = useQuery({
     queryKey: ['questions'],
@@ -53,6 +52,10 @@ export default function Assessment() {
   const handleAnswer = (answer) => {
     const newAnswers = { ...answers, [currentQuestion.question_id]: answer };
     setAnswers(newAnswers);
+
+    if (currentQuestion.question_id === 'Q4') {
+      setSelectedDepartment(answer);
+    }
 
     if (currentQuestion.question_id === 'Q6') {
       const pathMap = {
@@ -198,59 +201,6 @@ Returner JSON med:
     );
   }
 
-  if (showDepartmentSelect) {
-    return (
-      <div className="max-w-2xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Anonym helsekartlegging</h1>
-          <p className="text-slate-500 mt-2">
-            Før vi starter trenger vi å vite hvilken avdeling du jobber i
-          </p>
-        </div>
-
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Velg din avdeling</CardTitle>
-            <CardDescription>
-              Dette er kun for å kunne aggregere data på avdelingsnivå. Dine individuelle svar kan ikke spores tilbake til deg.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {departments.map((dept) => (
-                <button
-                  key={dept.id}
-                  onClick={() => {
-                    setSelectedDepartment(dept.name);
-                    setShowDepartmentSelect(false);
-                  }}
-                  className="w-full text-left p-4 rounded-lg border border-slate-200 hover:bg-slate-50 hover:border-emerald-300 transition-all"
-                >
-                  <p className="font-medium text-slate-900">{dept.name}</p>
-                  {dept.sector && (
-                    <p className="text-sm text-slate-500 mt-1">
-                      {dept.sector.replace(/_/g, ' ')}
-                    </p>
-                  )}
-                </button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="flex items-start gap-3 p-4 rounded-xl bg-emerald-50 border border-emerald-100">
-          <Shield className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-medium text-emerald-800">100% Anonym</p>
-            <p className="text-sm text-emerald-700 mt-0.5">
-              Vi lagrer ingen personidentifiserbare opplysninger. Dine svar aggregeres kun på avdelingsnivå sammen med andre ansattes svar. Ingen kan se hvem som har svart hva.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   if (completed) {
     return (
       <div className="max-w-2xl mx-auto">
@@ -291,7 +241,6 @@ Returner JSON med:
               setSessionPath('not_set');
               setRiskAssessment(null);
               setSelectedDepartment(null);
-              setShowDepartmentSelect(true);
             }}
             variant="outline"
           >
@@ -314,7 +263,9 @@ Returner JSON med:
       <div className="flex items-start gap-3 p-4 rounded-xl bg-emerald-50 border border-emerald-100 mb-8">
         <Shield className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
         <div>
-          <p className="text-sm font-medium text-emerald-800">Anonym kartlegging for {selectedDepartment}</p>
+          <p className="text-sm font-medium text-emerald-800">
+            {selectedDepartment ? `Anonym kartlegging for ${selectedDepartment}` : '100% Anonym kartlegging'}
+          </p>
           <p className="text-sm text-emerald-700 mt-0.5">
             Dine svar lagres uten navn eller e-post. De aggregeres sammen med kollegaer i din avdeling. Ingen kan identifisere hvem som har svart hva.
           </p>
@@ -354,7 +305,28 @@ Returner JSON med:
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {currentQuestion && (
+              {currentQuestion && currentQuestion.question_id === 'Q4' ? (
+                <div className="space-y-2">
+                  {departments.map((dept) => (
+                    <button
+                      key={dept.id}
+                      onClick={() => handleAnswer(dept.name)}
+                      className={`w-full text-left p-4 rounded-lg border transition-all ${
+                        answers['Q4'] === dept.name
+                          ? 'border-emerald-500 bg-emerald-50'
+                          : 'border-slate-200 hover:bg-slate-50 hover:border-emerald-300'
+                      }`}
+                    >
+                      <p className="font-medium text-slate-900">{dept.name}</p>
+                      {dept.sector && (
+                        <p className="text-sm text-slate-500 mt-1">
+                          {dept.sector.replace(/_/g, ' ')}
+                        </p>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              ) : currentQuestion && (
                 <QuestionRenderer
                   question={currentQuestion}
                   answer={answers[currentQuestion.question_id]}
