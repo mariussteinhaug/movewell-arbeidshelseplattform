@@ -100,6 +100,22 @@ ${relevantQuestions
   .map(q => `${q.question_id}: ${q.text} (kategori: ${q.category}, vekt: ${q.severity_weight})`)
   .join('\n')}
 
+KRITISKE RISIKOFAKTORER - VURDER SPESIFIKT:
+1. SMERTELOKALISERING (Q13): 
+   - Nakke/skuldre = høy risiko for langvarig plager, krever ergonomi-vurdering
+   - Nedre rygg = høy risiko, vanlig ved manuelt arbeid og stillesittende arbeid
+   - Multiple områder = betydelig høyere risiko, krever omfattende tiltak
+   
+2. SMERTEINTENSITET (Q14):
+   - 7-10 = høy risiko, krever umiddelbar oppfølging og mulig sykmelding
+   - 4-6 = moderat risiko, krever tilrettelegging og oppfølging
+   - 0-3 = lav risiko, forebyggende tiltak
+
+3. KOMBINERTE FAKTORER:
+   - Høy smerte (7+) + multiple lokalisasjoner = kritisk risiko
+   - Langvarig varighet (>3 mnd) + høy intensitet = kronisk tilstand, kompleks håndtering
+   - Manglende støtte + moderate/høye smerter = økt risiko for langtidssykmelding
+
 DYNAMISK SPØRSMÅLSFLYT:
 - Hvis brukeren har rapportert smerter eller høy belastning, prioriter oppfølgingsspørsmål om lokalisering, intensitet og varighet.
 - Hvis brukeren har svart "Ja" på støtte (Q10), still oppfølgingsspørsmål om type støtte.
@@ -107,14 +123,14 @@ DYNAMISK SPØRSMÅLSFLYT:
 
 Basert på svarene hittil:
 1. Er det nok informasjon til å gjøre en risikovurdering? 
-2. Hvis ja, gi risikonivå (low/moderate/high) og begrunnelse
+2. Hvis ja, gi risikonivå (low/moderate/high) og begrunnelse som EKSPLISITT refererer til smertelokalisering og intensitet hvis relevant
 3. Hvis nei, hvilket spørsmål bør stilles neste? Velg question_id som er mest relevant basert på tidligere svar.
 
 Returner JSON med:
 {
   "stop_assessment": true/false,
   "risk_level": "low/moderate/high" (kun hvis stop),
-  "risk_signals": ["signal1", "signal2"] (kun hvis stop),
+  "risk_signals": ["signal1", "signal2"] (kun hvis stop - vær SPESIFIKK om smertelokalisering og intensitet),
   "confidence": 0.0-1.0 (kun hvis stop),
   "next_question_id": "QXX" (kun hvis fortsett),
   "reason": "begrunnelse"
@@ -199,25 +215,60 @@ Returner JSON med:
         return `Spørsmål: ${q?.text}\nSvar: ${aq.answer}`;
       }).join('\n\n');
 
-      const aiPrompt = `Du er en ekspert på arbeidshelse og tilrettelegging. 
+      // Ekstraher smertedata for mer spesifikke anbefalinger
+      const painLocation = answeredQuestions.find(q => q.question_id === 'Q13')?.answer;
+      const painIntensity = answeredQuestions.find(q => q.question_id === 'Q14')?.answer;
+      const painFrequency = answeredQuestions.find(q => q.question_id === 'Q15')?.answer;
+
+      const aiPrompt = `Du er en ekspert på arbeidshelse, ergonomi og tilrettelegging. 
 
 En ansatt har fullført en helsekartlegging med følgende informasjon:
 
-Ansatt: ${currentUser.full_name} (${currentUser.email})
-Avdeling: ${selectedDepartment}
-Risikonivå: ${assessment.risk_level}
-Risikosignaler: ${assessment.risk_signals?.join(', ')}
+ANSATT INFORMASJON:
+- Navn: ${currentUser.full_name} (${currentUser.email})
+- Avdeling: ${selectedDepartment}
+- Risikonivå: ${assessment.risk_level}
+- Risikosignaler: ${assessment.risk_signals?.join(', ')}
 
-Svar fra kartlegging:
+DETALJERT SMERTEANALYSE:
+${painLocation ? `- Smertelokalisering: ${Array.isArray(painLocation) ? painLocation.join(', ') : painLocation}` : ''}
+${painIntensity ? `- Smerteintensitet: ${painIntensity}/10` : ''}
+${painFrequency ? `- Frekvens: ${painFrequency}` : ''}
+
+Svar fra fullstendig kartlegging:
 ${answeredData}
 
-Basert på denne informasjonen, gi konkrete anbefalinger til leder og HR om:
-1. Umiddelbare tiltak som bør gjøres (0-2 uker)
-2. Hvilke tilpasninger eller tilrettelegginger som kan være aktuelle
-3. Oppfølgingsplan for den ansatte
-4. Eventuelle eksterne ressurser som kan være relevante (fysioterapeut, bedriftshelsetjeneste, etc.)
+Basert på denne informasjonen, gi KONKRETE og MÅLRETTEDE anbefalinger til leder og HR:
 
-Vær konkret, konstruktiv og empatisk i anbefalingene.`;
+1. UMIDDELBARE TILTAK (0-2 uker):
+   ${painLocation ? `- Spesifikke tiltak for ${Array.isArray(painLocation) ? painLocation.join(' og ') : painLocation}-plager` : '- Generelle førstetiltak'}
+   ${painIntensity && parseInt(painIntensity) >= 7 ? '- KRITISK: Høy smerte krever rask handling' : ''}
+   - Konkrete arbeidsplassendringer
+   - Nødvendige verktøy/hjelpemidler
+
+2. TILPASNINGER OG TILRETTELEGGING:
+   ${painLocation ? `- Ergonomiske tilpasninger spesifikt for ${Array.isArray(painLocation) ? painLocation.join('/') : painLocation}` : '- Generelle ergonomiske tilpasninger'}
+   - Arbeidstidsordninger
+   - Arbeidsoppgaver som bør justeres/unngås
+   - Fysiske tilpasninger på arbeidsplassen
+
+3. OPPFØLGINGSPLAN:
+   - Konkret tidsplan for oppfølgingsmøter
+   - Målbare milepæler
+   - Ansvarsfordeling (leder, HR, tillitsvalgt, verneombud)
+
+4. EKSTERNE RESSURSER:
+   ${painLocation && painIntensity ? '- SPESIFIKKE fagpersoner basert på smertelokalisering og intensitet:' : '- Relevante fagpersoner:'}
+   - Fysioterapeut/manuellterapeut (når og hvorfor)
+   - Ergoterapeut/ergonomirådgiver (spesifikke områder)
+   - Bedriftshelsetjeneste (hvilke tjenester)
+   - Eventuelt psykolog/coach hvis relevant
+   
+5. FOREBYGGENDE TILTAK FOR AVDELINGEN:
+   - Læringspunkter fra denne saken
+   - Tiltak for å unngå lignende situasjoner
+
+Vær KONKRET, KONSTRUKTIV og EMPATISK. Unngå generelle råd - gi spesifikke handlingspunkter basert på smertelokalisering og intensitet.`;
 
       const aiRecommendations = await base44.integrations.Core.InvokeLLM({
         prompt: aiPrompt
