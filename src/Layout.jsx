@@ -47,6 +47,7 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Kartleggingsdata', page: 'AssessmentResults', icon: FileText, adminOnly: true },
     { name: 'AI-Rapporter', page: 'Reports', icon: FileText, adminOnly: true },
     { name: 'Trendanalyse', page: 'TrendAnalysis', icon: LayoutDashboard, adminOnly: true },
+    { name: 'Tilrettelegging', page: 'Accommodation', icon: ClipboardCheck, adminOnly: true },
     { name: 'Avdelinger', page: 'Departments', icon: Building2, adminOnly: true },
     { name: 'Anbefalinger', page: 'Recommendations', icon: Lightbulb, adminOnly: true },
     { name: 'Meldingssenter', page: 'MessageCenter', icon: Heart, adminOnly: true },

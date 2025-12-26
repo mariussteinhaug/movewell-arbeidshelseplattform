@@ -9,6 +9,7 @@ import TrendAnalysis from './pages/TrendAnalysis';
 import MessageCenter from './pages/MessageCenter';
 import MyMessages from './pages/MyMessages';
 import AssessmentResults from './pages/AssessmentResults';
+import Accommodation from './pages/Accommodation';
 import __Layout from './Layout.jsx';
 
 
@@ -24,6 +25,7 @@ export const PAGES = {
     "MessageCenter": MessageCenter,
     "MyMessages": MyMessages,
     "AssessmentResults": AssessmentResults,
+    "Accommodation": Accommodation,
 }
 
 export const pagesConfig = {
