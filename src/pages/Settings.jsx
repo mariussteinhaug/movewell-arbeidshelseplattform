@@ -20,6 +20,7 @@ export default function Settings() {
     name: '',
     employee_count: '',
     sector: '',
+    shift_type: '',
     manager_name: ''
   });
 
@@ -58,7 +59,7 @@ export default function Settings() {
   const resetForm = () => {
     setIsDialogOpen(false);
     setEditingDept(null);
-    setFormData({ name: '', employee_count: '', sector: '', manager_name: '' });
+    setFormData({ name: '', employee_count: '', sector: '', shift_type: '', manager_name: '' });
   };
 
   const handleEdit = (dept) => {
@@ -67,6 +68,7 @@ export default function Settings() {
       name: dept.name,
       employee_count: dept.employee_count?.toString() || '',
       sector: dept.sector || '',
+      shift_type: dept.shift_type || '',
       manager_name: dept.manager_name || ''
     });
     setIsDialogOpen(true);
@@ -82,21 +84,36 @@ export default function Settings() {
   };
 
   const sectorLabels = {
-    industri: 'Industri',
-    bygg: 'Bygg',
-    helse: 'Helse',
-    kontor: 'Kontor',
-    lager: 'Lager',
+    varm_prosess: 'Varm prosess',
+    kald_prosess: 'Kald prosess',
+    pakkeri: 'Pakkeri',
+    lager_logistikk: 'Lager/Logistikk',
+    laboratorium: 'Laboratorium',
+    mekanisk_vedlikehold: 'Mekanisk/Vedlikehold',
+    tilkalling_fleksibel: 'Tilkalling/Fleksibel',
+    administrasjon: 'Administrasjon',
     annet: 'Annet'
   };
 
   const sectorColors = {
-    industri: 'bg-orange-100 text-orange-700',
-    bygg: 'bg-amber-100 text-amber-700',
-    helse: 'bg-rose-100 text-rose-700',
-    kontor: 'bg-blue-100 text-blue-700',
-    lager: 'bg-slate-100 text-slate-700',
+    varm_prosess: 'bg-orange-100 text-orange-700',
+    kald_prosess: 'bg-blue-100 text-blue-700',
+    pakkeri: 'bg-purple-100 text-purple-700',
+    lager_logistikk: 'bg-slate-100 text-slate-700',
+    laboratorium: 'bg-emerald-100 text-emerald-700',
+    mekanisk_vedlikehold: 'bg-amber-100 text-amber-700',
+    tilkalling_fleksibel: 'bg-cyan-100 text-cyan-700',
+    administrasjon: 'bg-rose-100 text-rose-700',
     annet: 'bg-gray-100 text-gray-700'
+  };
+
+  const shiftLabels = {
+    dagtid: 'Dagtid',
+    '2-skift': '2-skift',
+    '3-skift': '3-skift',
+    '5-skift': '5-skift',
+    nattskift: 'Natt',
+    turnus: 'Turnus'
   };
 
   return (
@@ -157,21 +174,44 @@ export default function Settings() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Sektor</Label>
+                  <Label>Avdelingstype</Label>
                   <Select 
                     value={formData.sector} 
                     onValueChange={(v) => setFormData({...formData, sector: v})}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Velg sektor" />
+                      <SelectValue placeholder="Velg type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="industri">Industri</SelectItem>
-                      <SelectItem value="bygg">Bygg</SelectItem>
-                      <SelectItem value="helse">Helse</SelectItem>
-                      <SelectItem value="kontor">Kontor</SelectItem>
-                      <SelectItem value="lager">Lager</SelectItem>
+                      <SelectItem value="varm_prosess">Varm prosess (produksjon)</SelectItem>
+                      <SelectItem value="kald_prosess">Kald prosess (kai, pakkeri)</SelectItem>
+                      <SelectItem value="pakkeri">Pakkeri</SelectItem>
+                      <SelectItem value="lager_logistikk">Lager/Logistikk</SelectItem>
+                      <SelectItem value="laboratorium">Laboratorium/Miljø</SelectItem>
+                      <SelectItem value="mekanisk_vedlikehold">Mekanisk/Vedlikehold</SelectItem>
+                      <SelectItem value="tilkalling_fleksibel">Tilkalling/Fleksibel ressurs</SelectItem>
+                      <SelectItem value="administrasjon">Administrasjon</SelectItem>
                       <SelectItem value="annet">Annet</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Skiftordning (valgfritt)</Label>
+                  <Select 
+                    value={formData.shift_type} 
+                    onValueChange={(v) => setFormData({...formData, shift_type: v})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Velg skiftordning" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="dagtid">Dagtid</SelectItem>
+                      <SelectItem value="2-skift">2-skift</SelectItem>
+                      <SelectItem value="3-skift">3-skift</SelectItem>
+                      <SelectItem value="5-skift">5-skift</SelectItem>
+                      <SelectItem value="nattskift">Nattskift</SelectItem>
+                      <SelectItem value="turnus">Turnus</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -221,7 +261,8 @@ export default function Settings() {
                   <TableRow>
                     <TableHead>Avdeling</TableHead>
                     <TableHead>Ansatte</TableHead>
-                    <TableHead>Sektor</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Skift</TableHead>
                     <TableHead>Leder</TableHead>
                     <TableHead className="text-right">Handlinger</TableHead>
                   </TableRow>
@@ -242,6 +283,9 @@ export default function Settings() {
                             {sectorLabels[dept.sector]}
                           </Badge>
                         )}
+                      </TableCell>
+                      <TableCell className="text-sm text-slate-600">
+                        {dept.shift_type ? shiftLabels[dept.shift_type] : '-'}
                       </TableCell>
                       <TableCell className="text-slate-600">{dept.manager_name || '-'}</TableCell>
                       <TableCell className="text-right">
