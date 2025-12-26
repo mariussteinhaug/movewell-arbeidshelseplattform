@@ -341,6 +341,23 @@ Ta kontakt med den ansatte for oppfølging.
           `
         });
       }
+
+      // Opprett automatisk tilretteleggingstiltak
+      if (assessment.risk_level === 'high' || assessment.risk_level === 'moderate') {
+        await base44.entities.Accommodation.create({
+          employee_email: currentUser.email,
+          employee_name: currentUser.full_name,
+          department: selectedDepartment,
+          accommodation_type: assessment.risk_level === 'high' ? 'Høy prioritet - krever tilrettelegging' : 'Moderat prioritet - oppfølging anbefalt',
+          description: `Basert på helsekartlegging:\n\nRISIKOSIGNALER:\n${assessment.risk_signals?.join('\n') || 'Ingen spesifikke'}\n\nBEGRUNNELSE:\n${assessment.reason}\n\nAI-ANBEFALINGER:\n${aiRecommendations}`,
+          status: 'planlagt',
+          responsible_person: dept?.manager_name || 'Ikke tildelt',
+          responsible_email: dept?.manager_email || '',
+          risk_level: assessment.risk_level,
+          last_updated: new Date().toISOString(),
+          notes: `Automatisk opprettet fra kartlegging ${new Date().toLocaleDateString('nb-NO')}`
+        });
+      }
     } catch (error) {
       console.error('Feil ved sending av varsel:', error);
     }
