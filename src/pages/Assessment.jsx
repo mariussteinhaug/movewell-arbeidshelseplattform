@@ -270,13 +270,13 @@ Ta kontakt med den ansatte for oppfølging.
   };
 
   const handleNext = async () => {
-    // Sjekk om spørsmålet er påkrevd
-    if (currentQuestion.required_for_minimum && !answers[currentQuestion.question_id]) {
+    // Alle spørsmål er nå påkrevd
+    if (!answers[currentQuestion.question_id]) {
       return;
     }
 
     const answeredCount = Object.keys(answers).length;
-    
+
     if (answeredCount >= 6 && sessionPath !== 'not_set') {
       await getNextQuestion();
     } else {
@@ -439,7 +439,7 @@ Ta kontakt med den ansatte for oppfølging.
                 </Button>
                 <Button
                   onClick={handleNext}
-                  disabled={(currentQuestion?.required_for_minimum && !answers[currentQuestion?.question_id]) || isAnalyzing}
+                  disabled={!answers[currentQuestion?.question_id] || isAnalyzing}
                   className="flex-1 bg-emerald-600 hover:bg-emerald-700"
                 >
                   {isAnalyzing ? (
@@ -449,7 +449,7 @@ Ta kontakt med den ansatte for oppfølging.
                     </>
                   ) : (
                     <>
-                      {currentQuestion?.required_for_minimum ? 'Neste' : 'Hopp over'}
+                      Neste
                       <ArrowRight className="h-4 w-4 ml-2" />
                     </>
                   )}

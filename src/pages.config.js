@@ -5,6 +5,7 @@ import Landing from './pages/Landing';
 import Recommendations from './pages/Recommendations';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
+import TrendAnalysis from './pages/TrendAnalysis';
 import __Layout from './Layout.jsx';
 
 
@@ -16,6 +17,7 @@ export const PAGES = {
     "Recommendations": Recommendations,
     "Reports": Reports,
     "Settings": Settings,
+    "TrendAnalysis": TrendAnalysis,
 }
 
 export const pagesConfig = {

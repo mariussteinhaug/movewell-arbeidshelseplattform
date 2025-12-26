@@ -27,6 +27,7 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Dashboard', page: 'Dashboard', icon: LayoutDashboard },
     { name: 'Kartlegging', page: 'Assessment', icon: ClipboardCheck },
     { name: 'AI-Rapporter', page: 'Reports', icon: FileText },
+    { name: 'Trendanalyse', page: 'TrendAnalysis', icon: LayoutDashboard },
     { name: 'Avdelinger', page: 'Departments', icon: Building2 },
     { name: 'Anbefalinger', page: 'Recommendations', icon: Lightbulb },
     { name: 'Innstillinger', page: 'Settings', icon: Settings },
