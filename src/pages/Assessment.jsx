@@ -375,7 +375,7 @@ Ta kontakt med den ansatte for oppfølging.
 
       <div className="mb-8">
         <div className="flex justify-between text-sm text-slate-600 mb-2">
-          <span>Spørsmål {Object.keys(answers).length} av ~{relevantQuestions.length}</span>
+          <span>Spørsmål {currentQuestionIndex + 1} av ~{relevantQuestions.length}</span>
           <span>{Math.round(progress)}%</span>
         </div>
         <Progress value={progress} className="h-2" />

@@ -13,12 +13,21 @@ export default function QuestionRenderer({ question, answer, onAnswer }) {
   );
 
   React.useEffect(() => {
+    if (answer !== undefined && answer !== localAnswer && question.answer_type !== 'multichoice') {
+      setLocalAnswer(answer || '');
+    }
+    if (answer !== undefined && question.answer_type === 'multichoice') {
+      setMultiAnswers(Array.isArray(answer) ? answer : (answer ? [answer] : []));
+    }
+  }, [answer, question]);
+
+  React.useEffect(() => {
     if (question.answer_type === 'multichoice') {
       onAnswer(multiAnswers.length > 0 ? multiAnswers : null);
     } else {
       onAnswer(localAnswer || null);
     }
-  }, [localAnswer, multiAnswers, question.answer_type]);
+  }, [localAnswer, multiAnswers]);
 
   if (question.answer_type === 'scale') {
     const scale = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
