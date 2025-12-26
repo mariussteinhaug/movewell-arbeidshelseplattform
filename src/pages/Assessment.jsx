@@ -36,12 +36,10 @@ export default function Assessment() {
   const relevantQuestions = React.useMemo(() => {
     if (!allQuestions.length) return [];
     
-    // Always include general questions
     const generalQuestions = allQuestions.filter(q => 
       q.path === 'generell' && q.order <= 12
     );
     
-    // Add path-specific questions after Q6 is answered
     if (sessionPath && sessionPath !== 'not_set') {
       const pathQuestions = allQuestions.filter(q => q.path === sessionPath);
       return [...generalQuestions, ...pathQuestions].sort((a, b) => a.order - b.order);
@@ -49,6 +47,21 @@ export default function Assessment() {
     
     return generalQuestions;
   }, [allQuestions, sessionPath]);
+
+  const handleAnswer = (answer) => {
+    const newAnswers = { ...answers, [currentQuestion.question_id]: answer };
+    setAnswers(newAnswers);
+
+    if (currentQuestion.question_id === 'Q6') {
+      const pathMap = {
+        'Muskel- og skjelettplager': 'muskel',
+        'Fysisk sykdom': 'fysisk',
+        'Psykisk helse': 'psykisk',
+        'Andre årsaker': 'annet'
+      };
+      setSessionPath(pathMap[answer] || 'generell');
+    }
+  };
 
   // AI: Decide next question
   const getNextQuestion = async () => {
@@ -111,7 +124,6 @@ Returner JSON med:
         await saveSession(result);
         setCompleted(true);
       } else {
-        // Find next question by ID
         const nextIndex = relevantQuestions.findIndex(
           q => q.question_id === result.next_question_id
         );
@@ -130,7 +142,7 @@ Returner JSON med:
     const now = new Date();
     const week = `${now.getFullYear()}-${String(Math.ceil((now - new Date(now.getFullYear(), 0, 1)) / (7 * 24 * 60 * 60 * 1000))).padStart(2, '0')}`;
     
-    const user = await base44.auth.me();
+    const anonymousId = `anon_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     const answeredQuestions = Object.keys(answers).map(qid => ({
       question_id: qid,
@@ -139,7 +151,7 @@ Returner JSON med:
     }));
 
     await base44.entities.AssessmentSession.create({
-      user_email: user.email,
+      anonymous_id: anonymousId,
       department: answers['Q4'] || 'Ikke oppgitt',
       path: sessionPath,
       answered_questions: answeredQuestions,
@@ -151,30 +163,17 @@ Returner JSON med:
     });
   };
 
-  const handleAnswer = (answer) => {
-    const newAnswers = { ...answers, [currentQuestion.question_id]: answer };
-    setAnswers(newAnswers);
-
-    // Update path if Q6 answered
-    if (currentQuestion.question_id === 'Q6') {
-      const pathMap = {
-        'Muskel- og skjelettplager': 'muskel',
-        'Fysisk sykdom': 'fysisk',
-        'Psykisk helse': 'psykisk',
-        'Andre årsaker': 'annet'
-      };
-      setSessionPath(pathMap[answer] || 'generell');
-    }
-  };
-
   const handleNext = async () => {
-    // Check if minimum questions answered
+    // Sjekk om spørsmålet er påkrevd
+    if (currentQuestion.required_for_minimum && !answers[currentQuestion.question_id]) {
+      return;
+    }
+
     const answeredCount = Object.keys(answers).length;
     
     if (answeredCount >= 6 && sessionPath !== 'not_set') {
       await getNextQuestion();
     } else {
-      // Continue linear until Q6
       if (currentQuestionIndex < relevantQuestions.length - 1) {
         setCurrentQuestionIndex(currentQuestionIndex + 1);
       }
@@ -209,7 +208,7 @@ Returner JSON med:
             <CheckCircle2 className="h-10 w-10 text-emerald-600" />
           </div>
           <h2 className="text-2xl font-bold text-slate-900 mb-2">Kartlegging fullført</h2>
-          <p className="text-slate-500 mb-4">Takk for din deltakelse. Kartleggingen er lagret anonymt.</p>
+          <p className="text-slate-500 mb-4">Takk for din deltakelse. Din kartlegging er fullstendig anonymisert.</p>
           
           {riskAssessment && (
             <div className="bg-slate-50 rounded-xl p-6 mb-6 text-left">
@@ -248,26 +247,23 @@ Returner JSON med:
 
   return (
     <div className="max-w-2xl mx-auto">
-      {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Adaptiv helsekartle gging</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Adaptiv helsekartlegging</h1>
         <p className="text-slate-500 mt-2">
-          AI-styrt kartlegging som tilpasses dine svar
+          AI-styrt kartlegging som tilpasses dine svar - fullstendig anonym
         </p>
       </div>
 
-      {/* Privacy notice */}
       <div className="flex items-start gap-3 p-4 rounded-xl bg-emerald-50 border border-emerald-100 mb-8">
         <Shield className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
         <div>
-          <p className="text-sm font-medium text-emerald-800">Personvern og datasikkerhet</p>
+          <p className="text-sm font-medium text-emerald-800">100% Anonym</p>
           <p className="text-sm text-emerald-700 mt-0.5">
-            Dine svar behandles anonymt og aggregeres med andre. Data kan ikke spores til enkeltpersoner.
+            Dine svar kan ikke spores tilbake til deg. Data aggregeres kun på avdelingsnivå.
           </p>
         </div>
       </div>
 
-      {/* Progress */}
       <div className="mb-8">
         <div className="flex justify-between text-sm text-slate-600 mb-2">
           <span>Spørsmål {Object.keys(answers).length} av ~{relevantQuestions.length}</span>
@@ -276,7 +272,6 @@ Returner JSON med:
         <Progress value={progress} className="h-2" />
       </div>
 
-      {/* Question Card */}
       <AnimatePresence mode="wait">
         <motion.div
           key={currentQuestion?.question_id}
@@ -299,11 +294,9 @@ Returner JSON med:
                   question={currentQuestion}
                   answer={answers[currentQuestion.question_id]}
                   onAnswer={handleAnswer}
-                  onNext={handleNext}
                 />
               )}
 
-              {/* Navigation */}
               <div className="flex gap-3 pt-4">
                 <Button
                   variant="outline"
@@ -316,7 +309,7 @@ Returner JSON med:
                 </Button>
                 <Button
                   onClick={handleNext}
-                  disabled={!answers[currentQuestion?.question_id] || isAnalyzing}
+                  disabled={(currentQuestion?.required_for_minimum && !answers[currentQuestion?.question_id]) || isAnalyzing}
                   className="flex-1 bg-emerald-600 hover:bg-emerald-700"
                 >
                   {isAnalyzing ? (
@@ -326,7 +319,7 @@ Returner JSON med:
                     </>
                   ) : (
                     <>
-                      Neste
+                      {currentQuestion?.required_for_minimum ? 'Neste' : 'Hopp over'}
                       <ArrowRight className="h-4 w-4 ml-2" />
                     </>
                   )}
@@ -337,7 +330,6 @@ Returner JSON med:
         </motion.div>
       </AnimatePresence>
 
-      {/* AI Status */}
       {isAnalyzing && (
         <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <div className="flex items-center gap-3">
