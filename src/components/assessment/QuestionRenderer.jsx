@@ -2,38 +2,28 @@ import React from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 
-export default function QuestionRenderer({ question, answer, onAnswer, onNext }) {
+export default function QuestionRenderer({ question, answer, onAnswer }) {
   const [localAnswer, setLocalAnswer] = React.useState(answer || '');
   const [multiAnswers, setMultiAnswers] = React.useState(
     answer ? (Array.isArray(answer) ? answer : [answer]) : []
   );
 
-  const handleNext = () => {
+  React.useEffect(() => {
     if (question.answer_type === 'multichoice') {
-      onAnswer(multiAnswers);
+      onAnswer(multiAnswers.length > 0 ? multiAnswers : null);
     } else {
-      onAnswer(localAnswer);
+      onAnswer(localAnswer || null);
     }
-    onNext();
-  };
-
-  const isValid = () => {
-    if (question.answer_type === 'multichoice') {
-      return multiAnswers.length > 0;
-    }
-    return localAnswer && localAnswer.toString().trim() !== '';
-  };
+  }, [localAnswer, multiAnswers, question.answer_type]);
 
   if (question.answer_type === 'scale') {
     const scale = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
     return (
       <div className="space-y-4">
-        <Label className="text-base font-semibold text-slate-900">{question.text}</Label>
         <div className="flex gap-2 flex-wrap">
           {scale.map((val) => (
             <button
@@ -61,19 +51,16 @@ export default function QuestionRenderer({ question, answer, onAnswer, onNext })
 
   if (question.answer_type === 'choice') {
     return (
-      <div className="space-y-4">
-        <Label className="text-base font-semibold text-slate-900">{question.text}</Label>
+      <div className="space-y-2">
         <RadioGroup value={localAnswer} onValueChange={setLocalAnswer}>
-          <div className="space-y-2">
-            {question.answer_options?.map((option) => (
-              <div key={option} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-slate-50 border border-slate-200">
-                <RadioGroupItem value={option} id={option} />
-                <Label htmlFor={option} className="flex-1 cursor-pointer text-slate-700">
-                  {option}
-                </Label>
-              </div>
-            ))}
-          </div>
+          {question.answer_options?.map((option) => (
+            <div key={option} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-slate-50 border border-slate-200">
+              <RadioGroupItem value={option} id={option} />
+              <Label htmlFor={option} className="flex-1 cursor-pointer text-slate-700">
+                {option}
+              </Label>
+            </div>
+          ))}
         </RadioGroup>
       </div>
     );
@@ -81,58 +68,49 @@ export default function QuestionRenderer({ question, answer, onAnswer, onNext })
 
   if (question.answer_type === 'multichoice') {
     return (
-      <div className="space-y-4">
-        <Label className="text-base font-semibold text-slate-900">{question.text}</Label>
-        <div className="space-y-2">
-          {question.answer_options?.map((option) => (
-            <div key={option} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-slate-50 border border-slate-200">
-              <Checkbox
-                id={option}
-                checked={multiAnswers.includes(option)}
-                onCheckedChange={(checked) => {
-                  if (checked) {
-                    setMultiAnswers([...multiAnswers, option]);
-                  } else {
-                    setMultiAnswers(multiAnswers.filter(a => a !== option));
-                  }
-                }}
-              />
-              <Label htmlFor={option} className="flex-1 cursor-pointer text-slate-700">
-                {option}
-              </Label>
-            </div>
-          ))}
-        </div>
+      <div className="space-y-2">
+        {question.answer_options?.map((option) => (
+          <div key={option} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-slate-50 border border-slate-200">
+            <Checkbox
+              id={option}
+              checked={multiAnswers.includes(option)}
+              onCheckedChange={(checked) => {
+                if (checked) {
+                  setMultiAnswers([...multiAnswers, option]);
+                } else {
+                  setMultiAnswers(multiAnswers.filter(a => a !== option));
+                }
+              }}
+            />
+            <Label htmlFor={option} className="flex-1 cursor-pointer text-slate-700">
+              {option}
+            </Label>
+          </div>
+        ))}
       </div>
     );
   }
 
   if (question.answer_type === 'number') {
     return (
-      <div className="space-y-4">
-        <Label className="text-base font-semibold text-slate-900">{question.text}</Label>
-        <Input
-          type="number"
-          value={localAnswer}
-          onChange={(e) => setLocalAnswer(e.target.value)}
-          placeholder="Skriv tall..."
-          className="text-base"
-        />
-      </div>
+      <Input
+        type="number"
+        value={localAnswer}
+        onChange={(e) => setLocalAnswer(e.target.value)}
+        placeholder="Skriv tall..."
+        className="text-base"
+      />
     );
   }
 
   // text
   return (
-    <div className="space-y-4">
-      <Label className="text-base font-semibold text-slate-900">{question.text}</Label>
-      <Textarea
-        value={localAnswer}
-        onChange={(e) => setLocalAnswer(e.target.value)}
-        placeholder="Skriv ditt svar her..."
-        rows={4}
-        className="text-base"
-      />
-    </div>
+    <Textarea
+      value={localAnswer}
+      onChange={(e) => setLocalAnswer(e.target.value)}
+      placeholder="Skriv ditt svar her..."
+      rows={4}
+      className="text-base"
+    />
   );
 }
