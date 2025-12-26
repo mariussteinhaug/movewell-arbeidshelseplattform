@@ -276,8 +276,10 @@ Ta kontakt med den ansatte for oppfølging.
     }
 
     const answeredCount = Object.keys(answers).length;
+    const isLastQuestion = currentQuestionIndex === relevantQuestions.length - 1;
 
-    if (answeredCount >= 6 && sessionPath !== 'not_set') {
+    // Hvis siste spørsmål eller nok svar, kjør AI-analyse
+    if (isLastQuestion || (answeredCount >= 6 && sessionPath !== 'not_set')) {
       await getNextQuestion();
     } else {
       if (currentQuestionIndex < relevantQuestions.length - 1) {
