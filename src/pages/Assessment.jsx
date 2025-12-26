@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, Shield, Activity, Brain, Briefcase, Moon, Zap } from 'lucide-react';
+import { CheckCircle2, Shield, Activity, Brain, Briefcase, Moon, Zap, AlertCircle } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -71,6 +71,21 @@ export default function Assessment() {
       mental: false,
       work: false
   });
+
+  const handleScoreChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Adaptive branching: show follow-up if score <= 3
+    if (field === 'physical_load' && value <= 3) {
+      setShowAdaptiveQuestions(prev => ({ ...prev, physical: true }));
+    }
+    if (field === 'mental_wellbeing' && value <= 3) {
+      setShowAdaptiveQuestions(prev => ({ ...prev, mental: true }));
+    }
+    if (field === 'work_environment' && value <= 3) {
+      setShowAdaptiveQuestions(prev => ({ ...prev, work: true }));
+    }
+  };
 
   const { data: departments = [] } = useQuery({
     queryKey: ['departments'],
@@ -190,27 +205,81 @@ export default function Assessment() {
                 <CardContent className="space-y-8">
                   <ScoreSelector
                     value={formData.physical_load}
-                    onChange={(v) => setFormData({...formData, physical_load: v})}
+                    onChange={(v) => handleScoreChange('physical_load', v)}
                     icon={Activity}
                     label="Fysisk belastning"
                     description="Hvordan opplever du den fysiske arbeidsbelastningen?"
                   />
                   
+                  {showAdaptiveQuestions.physical && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                      <div className="flex items-start gap-3 mb-3">
+                        <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
+                        <p className="font-medium text-slate-900">Hva opplever du som mest utfordrende fysisk?</p>
+                      </div>
+                      <Textarea
+                        placeholder="F.eks: Tunge løft, repetitive bevegelser, stående/sittende arbeid..."
+                        rows="2"
+                        className="bg-white"
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          comments: (prev.comments || '') + '\n[Fysisk]: ' + e.target.value
+                        }))}
+                      />
+                    </div>
+                  )}
+                  
                   <ScoreSelector
                     value={formData.mental_wellbeing}
-                    onChange={(v) => setFormData({...formData, mental_wellbeing: v})}
+                    onChange={(v) => handleScoreChange('mental_wellbeing', v)}
                     icon={Brain}
                     label="Mental helse"
                     description="Hvordan har du det mentalt og følelsesmessig?"
                   />
                   
+                  {showAdaptiveQuestions.mental && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                      <div className="flex items-start gap-3 mb-3">
+                        <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
+                        <p className="font-medium text-slate-900">Hva påvirker din mentale helse mest?</p>
+                      </div>
+                      <Textarea
+                        placeholder="F.eks: Arbeidsmengde, stress, bekymringer, søvnproblemer..."
+                        rows="2"
+                        className="bg-white"
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          comments: (prev.comments || '') + '\n[Mental]: ' + e.target.value
+                        }))}
+                      />
+                    </div>
+                  )}
+                  
                   <ScoreSelector
                     value={formData.work_environment}
-                    onChange={(v) => setFormData({...formData, work_environment: v})}
+                    onChange={(v) => handleScoreChange('work_environment', v)}
                     icon={Briefcase}
                     label="Arbeidsforhold"
                     description="Hvordan opplever du arbeidsmiljøet og forholdene?"
                   />
+                  
+                  {showAdaptiveQuestions.work && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                      <div className="flex items-start gap-3 mb-3">
+                        <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
+                        <p className="font-medium text-slate-900">Hva er hovedutfordringen i arbeidsmiljøet?</p>
+                      </div>
+                      <Textarea
+                        placeholder="F.eks: Støy, dårlig ergonomi, manglende utstyr, samarbeid..."
+                        rows="2"
+                        className="bg-white"
+                        onChange={(e) => setFormData(prev => ({
+                          ...prev,
+                          comments: (prev.comments || '') + '\n[Arbeidsmiljø]: ' + e.target.value
+                        }))}
+                      />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
