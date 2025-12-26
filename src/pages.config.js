@@ -3,8 +3,8 @@ import Dashboard from './pages/Dashboard';
 import Departments from './pages/Departments';
 import Landing from './pages/Landing';
 import Recommendations from './pages/Recommendations';
-import Settings from './pages/Settings';
 import Reports from './pages/Reports';
+import Settings from './pages/Settings';
 import __Layout from './Layout.jsx';
 
 
@@ -14,8 +14,8 @@ export const PAGES = {
     "Departments": Departments,
     "Landing": Landing,
     "Recommendations": Recommendations,
-    "Settings": Settings,
     "Reports": Reports,
+    "Settings": Settings,
 }
 
 export const pagesConfig = {

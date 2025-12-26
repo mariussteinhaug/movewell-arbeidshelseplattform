@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, Shield, Activity, Brain, Briefcase, Moon, Zap, AlertCircle } from 'lucide-react';
+import { CheckCircle2, Shield, Activity, Brain, Briefcase, Moon, Zap, AlertCircle, Loader2 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -66,24 +66,138 @@ export default function Assessment() {
       comments: ''
   });
 
-  const [showAdaptiveQuestions, setShowAdaptiveQuestions] = useState({
-      physical: false,
-      mental: false,
-      work: false
-  });
+  const [adaptiveQuestions, setAdaptiveQuestions] = useState([]);
+  const [currentAdaptiveQ, setCurrentAdaptiveQ] = useState(null);
+  const [isGeneratingQuestion, setIsGeneratingQuestion] = useState(false);
+  const [adaptiveResponses, setAdaptiveResponses] = useState([]);
 
-  const handleScoreChange = (field, value) => {
+  const handleScoreChange = async (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
-    // Adaptive branching: show follow-up if score <= 3
-    if (field === 'physical_load' && value <= 3) {
-      setShowAdaptiveQuestions(prev => ({ ...prev, physical: true }));
+    // AI-drevet adaptiv oppfølging hvis score <= 3
+    if (value <= 3 && !currentAdaptiveQ) {
+      await generateAdaptiveQuestion(field, value);
     }
-    if (field === 'mental_wellbeing' && value <= 3) {
-      setShowAdaptiveQuestions(prev => ({ ...prev, mental: true }));
+  };
+
+  const generateAdaptiveQuestion = async (field, score) => {
+    setIsGeneratingQuestion(true);
+    
+    const categoryMap = {
+      physical_load: 'fysisk belastning',
+      mental_wellbeing: 'mental helse',
+      work_environment: 'arbeidsmiljø',
+      recovery: 'restitusjon og søvn',
+      stress_level: 'stress'
+    };
+
+    const category = categoryMap[field];
+    const dept = departments.find(d => d.name === formData.department);
+    
+    const prompt = `Du er en arbeidshelse-ekspert som gjennomfører en adaptiv helseundersøkelse for en industriarbeider.
+
+Kontekst:
+- Arbeidsområde: ${dept?.sector ? dept.sector.replace('_', ' ') : 'ikke spesifisert'}
+- Skiftordning: ${dept?.shift_type ? dept.shift_type.replace('_', ' ') : 'ikke spesifisert'}
+- Ansatt har vurdert "${category}" til ${score}/5 (lavt nivå)
+
+Tidligere oppfølgingsspørsmål: ${adaptiveResponses.map(r => r.question).join(', ') || 'Ingen'}
+
+Generer ETT spesifikt oppfølgingsspørsmål som:
+1. Går dypere inn i problemet
+2. Er konkret og relevant for industriarbeid
+3. Hjelper med å identifisere underliggende årsaker
+4. Er annerledes enn tidligere spørsmål
+
+Returner kun spørsmålet, intet annet.`;
+
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: prompt
+      });
+
+      setCurrentAdaptiveQ({
+        question: result,
+        category: field,
+        score: score
+      });
+    } catch (error) {
+      console.error('Feil ved generering av spørsmål:', error);
+    } finally {
+      setIsGeneratingQuestion(false);
     }
-    if (field === 'work_environment' && value <= 3) {
-      setShowAdaptiveQuestions(prev => ({ ...prev, work: true }));
+  };
+
+  const handleAdaptiveAnswer = async (answer) => {
+    if (!answer.trim()) return;
+
+    const newResponse = {
+      question: currentAdaptiveQ.question,
+      answer: answer,
+      category: currentAdaptiveQ.category
+    };
+
+    const updatedResponses = [...adaptiveResponses, newResponse];
+    setAdaptiveResponses(updatedResponses);
+    
+    // Sjekk om vi trenger å stille flere spørsmål
+    if (updatedResponses.length < 3) {
+      const shouldContinue = await checkIfMoreQuestionsNeeded(updatedResponses, currentAdaptiveQ.score);
+      
+      if (shouldContinue) {
+        await generateFollowUpQuestion(updatedResponses, currentAdaptiveQ.category);
+      } else {
+        setCurrentAdaptiveQ(null);
+      }
+    } else {
+      setCurrentAdaptiveQ(null);
+    }
+  };
+
+  const checkIfMoreQuestionsNeeded = async (responses, score) => {
+    if (score >= 4) return false; // God score trenger ikke mer oppfølging
+    if (responses.length >= 3) return false; // Maks 3 oppfølginger
+    
+    const prompt = `Basert på disse svarene fra en industriarbeider:
+
+${responses.map((r, i) => `Q${i+1}: ${r.question}\nA${i+1}: ${r.answer}`).join('\n\n')}
+
+Har vi identifisert et tydelig mønster eller konkret problemområde? Svar kun JA eller NEI.`;
+
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({ prompt });
+      return !result.toLowerCase().includes('ja');
+    } catch {
+      return false;
+    }
+  };
+
+  const generateFollowUpQuestion = async (responses, category) => {
+    setIsGeneratingQuestion(true);
+    
+    const prompt = `Basert på disse svarene fra en industriarbeider:
+
+${responses.map((r, i) => `Q${i+1}: ${r.question}\nA${i+1}: ${r.answer}`).join('\n\n')}
+
+Generer ett dypere oppfølgingsspørsmål som:
+- Utforsker underliggende årsaker
+- Er spesifikt og konkret
+- Hjelper med å identifisere tydelige tiltak
+
+Returner kun spørsmålet.`;
+
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({ prompt });
+      setCurrentAdaptiveQ({
+        question: result,
+        category: category,
+        score: null
+      });
+    } catch (error) {
+      console.error('Feil:', error);
+      setCurrentAdaptiveQ(null);
+    } finally {
+      setIsGeneratingQuestion(false);
     }
   };
 
@@ -93,17 +207,58 @@ export default function Assessment() {
   });
 
   const createAssessment = useMutation({
-    mutationFn: (data) => {
+    mutationFn: async (data) => {
       const now = new Date();
       const week = `${now.getFullYear()}-${String(Math.ceil((now - new Date(now.getFullYear(), 0, 1)) / (7 * 24 * 60 * 60 * 1000))).padStart(2, '0')}`;
+      
+      // AI-analyse av risikoindikatorer
+      let riskIndicators = [];
+      if (adaptiveResponses.length > 0) {
+        try {
+          const analysisPrompt = `Analyser disse kartleggingssvarene:
+
+Scores:
+- Fysisk: ${data.physical_load}/5
+- Mental: ${data.mental_wellbeing}/5  
+- Arbeidsmiljø: ${data.work_environment}/5
+
+Oppfølgingssvar:
+${adaptiveResponses.map((r, i) => `Q: ${r.question}\nA: ${r.answer}`).join('\n\n')}
+
+Identifiser 3-5 konkrete risikofaktorer eller problemområder. 
+Returner som JSON array av strings.`;
+
+          const analysis = await base44.integrations.Core.InvokeLLM({
+            prompt: analysisPrompt,
+            response_json_schema: {
+              type: "object",
+              properties: {
+                risk_indicators: {
+                  type: "array",
+                  items: { type: "string" }
+                }
+              }
+            }
+          });
+          
+          riskIndicators = analysis.risk_indicators || [];
+        } catch (error) {
+          console.error('Feil ved risikoanalyse:', error);
+        }
+      }
+      
       return base44.entities.HealthAssessment.create({
         ...data,
-        assessment_week: week
+        assessment_week: week,
+        adaptive_responses: adaptiveResponses,
+        risk_indicators: riskIndicators
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['assessments'] });
       setSubmitted(true);
+      setAdaptiveResponses([]);
+      setCurrentAdaptiveQ(null);
     }
   });
 
@@ -211,24 +366,6 @@ export default function Assessment() {
                     description="Hvordan opplever du den fysiske arbeidsbelastningen?"
                   />
                   
-                  {showAdaptiveQuestions.physical && (
-                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                      <div className="flex items-start gap-3 mb-3">
-                        <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
-                        <p className="font-medium text-slate-900">Hva opplever du som mest utfordrende fysisk?</p>
-                      </div>
-                      <Textarea
-                        placeholder="F.eks: Tunge løft, repetitive bevegelser, stående/sittende arbeid..."
-                        rows="2"
-                        className="bg-white"
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev,
-                          comments: (prev.comments || '') + '\n[Fysisk]: ' + e.target.value
-                        }))}
-                      />
-                    </div>
-                  )}
-                  
                   <ScoreSelector
                     value={formData.mental_wellbeing}
                     onChange={(v) => handleScoreChange('mental_wellbeing', v)}
@@ -237,24 +374,6 @@ export default function Assessment() {
                     description="Hvordan har du det mentalt og følelsesmessig?"
                   />
                   
-                  {showAdaptiveQuestions.mental && (
-                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                      <div className="flex items-start gap-3 mb-3">
-                        <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
-                        <p className="font-medium text-slate-900">Hva påvirker din mentale helse mest?</p>
-                      </div>
-                      <Textarea
-                        placeholder="F.eks: Arbeidsmengde, stress, bekymringer, søvnproblemer..."
-                        rows="2"
-                        className="bg-white"
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev,
-                          comments: (prev.comments || '') + '\n[Mental]: ' + e.target.value
-                        }))}
-                      />
-                    </div>
-                  )}
-                  
                   <ScoreSelector
                     value={formData.work_environment}
                     onChange={(v) => handleScoreChange('work_environment', v)}
@@ -262,22 +381,79 @@ export default function Assessment() {
                     label="Arbeidsforhold"
                     description="Hvordan opplever du arbeidsmiljøet og forholdene?"
                   />
-                  
-                  {showAdaptiveQuestions.work && (
-                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                      <div className="flex items-start gap-3 mb-3">
-                        <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
-                        <p className="font-medium text-slate-900">Hva er hovedutfordringen i arbeidsmiljøet?</p>
-                      </div>
-                      <Textarea
-                        placeholder="F.eks: Støy, dårlig ergonomi, manglende utstyr, samarbeid..."
-                        rows="2"
-                        className="bg-white"
-                        onChange={(e) => setFormData(prev => ({
-                          ...prev,
-                          comments: (prev.comments || '') + '\n[Arbeidsmiljø]: ' + e.target.value
-                        }))}
-                      />
+
+                  {/* AI-generert adaptivt oppfølgingsspørsmål */}
+                  <AnimatePresence>
+                    {isGeneratingQuestion && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="bg-blue-50 border border-blue-200 rounded-lg p-4"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />
+                          <p className="text-sm text-blue-800">AI genererer oppfølgingsspørsmål...</p>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {currentAdaptiveQ && !isGeneratingQuestion && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 space-y-3"
+                      >
+                        <div className="flex items-start gap-3">
+                          <Brain className="h-5 w-5 text-emerald-600 mt-0.5 flex-shrink-0" />
+                          <div className="flex-1">
+                            <p className="font-medium text-slate-900 mb-1">AI Oppfølging</p>
+                            <p className="text-sm text-slate-700 mb-3">{currentAdaptiveQ.question}</p>
+                            <Textarea
+                              placeholder="Skriv ditt svar her..."
+                              rows="3"
+                              className="bg-white mb-2"
+                              id="adaptive-answer"
+                            />
+                            <div className="flex gap-2">
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => {
+                                  const answer = document.getElementById('adaptive-answer').value;
+                                  handleAdaptiveAnswer(answer);
+                                  document.getElementById('adaptive-answer').value = '';
+                                }}
+                                className="bg-emerald-600 hover:bg-emerald-700"
+                              >
+                                Send svar
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setCurrentAdaptiveQ(null)}
+                              >
+                                Hopp over
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Vis tidligere adaptive svar */}
+                  {adaptiveResponses.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-slate-600">Dine oppfølgingssvar:</p>
+                      {adaptiveResponses.map((resp, idx) => (
+                        <div key={idx} className="bg-slate-50 rounded-lg p-3 text-sm">
+                          <p className="font-medium text-slate-700 mb-1">Q: {resp.question}</p>
+                          <p className="text-slate-600">A: {resp.answer}</p>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </CardContent>
