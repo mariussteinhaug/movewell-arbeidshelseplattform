@@ -44,6 +44,7 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Dashboard', page: 'Dashboard', icon: LayoutDashboard, adminOnly: true },
     { name: 'Kartlegging', page: 'Assessment', icon: ClipboardCheck },
     { name: 'Mine meldinger', page: 'MyMessages', icon: Heart },
+    { name: 'Kartleggingsdata', page: 'AssessmentResults', icon: FileText, adminOnly: true },
     { name: 'AI-Rapporter', page: 'Reports', icon: FileText, adminOnly: true },
     { name: 'Trendanalyse', page: 'TrendAnalysis', icon: LayoutDashboard, adminOnly: true },
     { name: 'Avdelinger', page: 'Departments', icon: Building2, adminOnly: true },
