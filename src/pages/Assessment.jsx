@@ -35,8 +35,6 @@ export default function Assessment() {
     queryFn: () => base44.entities.Department.list()
   });
 
-  const currentQuestion = allQuestions[currentQuestionIndex];
-  
   // Filter questions based on path
   const relevantQuestions = React.useMemo(() => {
     if (!allQuestions.length) return [];
@@ -52,6 +50,8 @@ export default function Assessment() {
     
     return generalQuestions;
   }, [allQuestions, sessionPath]);
+
+  const currentQuestion = relevantQuestions[currentQuestionIndex];
 
   const handleAnswer = (answer) => {
     const newAnswers = { ...answers, [currentQuestion.question_id]: answer };
@@ -153,58 +153,64 @@ Returner JSON med:
       });
 
       if (result.stop_assessment) {
-        setRiskAssessment(result);
         await saveSession(result);
+        setRiskAssessment(result);
         setCompleted(true);
         queryClient.invalidateQueries({ queryKey: ['assessment-sessions'] });
       } else {
         const nextIndex = relevantQuestions.findIndex(
           q => q.question_id === result.next_question_id
         );
-        if (nextIndex !== -1) {
+        if (nextIndex !== -1 && nextIndex > currentQuestionIndex) {
           setCurrentQuestionIndex(nextIndex);
         } else {
-          // Hvis AI ikke finner neste spørsmål, avslutt
-          setRiskAssessment(result);
+          // Hvis AI ikke finner neste spørsmål eller vi er på siste, avslutt
           await saveSession(result);
+          setRiskAssessment(result);
           setCompleted(true);
           queryClient.invalidateQueries({ queryKey: ['assessment-sessions'] });
         }
       }
     } catch (error) {
       console.error('AI analysis error:', error);
+      alert('Det oppstod en feil ved analysen. Prøv igjen.');
     } finally {
       setIsAnalyzing(false);
     }
   };
 
   const saveSession = async (assessment) => {
-    const now = new Date();
-    const week = `${now.getFullYear()}-${String(Math.ceil((now - new Date(now.getFullYear(), 0, 1)) / (7 * 24 * 60 * 60 * 1000))).padStart(2, '0')}`;
-    
-    const anonymousId = `anon_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
-    const answeredQuestions = Object.keys(answers).map(qid => ({
-      question_id: qid,
-      answer: answers[qid],
-      timestamp: new Date().toISOString()
-    }));
+    try {
+      const now = new Date();
+      const week = `${now.getFullYear()}-${String(Math.ceil((now - new Date(now.getFullYear(), 0, 1)) / (7 * 24 * 60 * 60 * 1000))).padStart(2, '0')}`;
+      
+      const anonymousId = `anon_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      const answeredQuestions = Object.keys(answers).map(qid => ({
+        question_id: qid,
+        answer: answers[qid],
+        timestamp: new Date().toISOString()
+      }));
 
-    await base44.entities.AssessmentSession.create({
-      anonymous_id: anonymousId,
-      department: selectedDepartment || 'Ikke oppgitt',
-      path: sessionPath,
-      answered_questions: answeredQuestions,
-      risk_signals: assessment.risk_signals || [],
-      risk_level: assessment.risk_level || 'unknown',
-      confidence: assessment.confidence || 0,
-      completed: true,
-      session_week: week,
-      uploaded_documents: uploadedFiles.map(f => f.url)
-    });
+      await base44.entities.AssessmentSession.create({
+        anonymous_id: anonymousId,
+        department: selectedDepartment || 'Ikke oppgitt',
+        path: sessionPath,
+        answered_questions: answeredQuestions,
+        risk_signals: assessment.risk_signals || [],
+        risk_level: assessment.risk_level || 'unknown',
+        confidence: assessment.confidence || 0,
+        completed: true,
+        session_week: week,
+        uploaded_documents: uploadedFiles.map(f => f.url)
+      });
 
-    // Send e-post til leder og HR med AI-forslag
-    await sendManagerNotification(assessment, answeredQuestions);
+      // Send e-post til leder og HR med AI-forslag
+      await sendManagerNotification(assessment, answeredQuestions);
+    } catch (error) {
+      console.error('Feil ved lagring av sesjon:', error);
+      throw error;
+    }
   };
 
   const sendManagerNotification = async (assessment, answeredQuestions) => {
