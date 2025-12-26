@@ -11,7 +11,10 @@ import {
   X,
   Shield,
   Heart,
-  FileText
+  FileText,
+  Mail,
+  TrendingUp,
+  Wrench
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { cn } from "@/lib/utils";
@@ -43,14 +46,14 @@ export default function Layout({ children, currentPageName }) {
   const navigation = [
     { name: 'Dashboard', page: 'Dashboard', icon: LayoutDashboard, adminOnly: true },
     { name: 'Kartlegging', page: 'Assessment', icon: ClipboardCheck },
-    { name: 'Mine meldinger', page: 'MyMessages', icon: Heart },
+    { name: 'Mine meldinger', page: 'MyMessages', icon: Mail },
     { name: 'Kartleggingsdata', page: 'AssessmentResults', icon: FileText, adminOnly: true },
     { name: 'AI-Rapporter', page: 'Reports', icon: FileText, adminOnly: true },
-    { name: 'Trendanalyse', page: 'TrendAnalysis', icon: LayoutDashboard, adminOnly: true },
-    { name: 'Tilrettelegging', page: 'Accommodation', icon: ClipboardCheck, adminOnly: true },
+    { name: 'Trendanalyse', page: 'TrendAnalysis', icon: TrendingUp, adminOnly: true },
+    { name: 'Tilrettelegging', page: 'Accommodation', icon: Wrench, adminOnly: true },
     { name: 'Avdelinger', page: 'Departments', icon: Building2, adminOnly: true },
     { name: 'Anbefalinger', page: 'Recommendations', icon: Lightbulb, adminOnly: true },
-    { name: 'Meldingssenter', page: 'MessageCenter', icon: Heart, adminOnly: true },
+    { name: 'Meldingssenter', page: 'MessageCenter', icon: Mail, adminOnly: true },
     { name: 'Innstillinger', page: 'Settings', icon: Settings, adminOnly: true },
   ].filter(item => !item.adminOnly || isAdmin);
 

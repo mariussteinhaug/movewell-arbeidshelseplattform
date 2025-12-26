@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageSquare, Heart, Info, Settings as SettingsIcon, Send, Mail, Inbox, CheckCircle2 } from 'lucide-react';
+import { MessageSquare, Heart, Info, Settings as SettingsIcon, Send, Mail, Inbox, CheckCircle2, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -21,7 +21,7 @@ export default function MyMessages() {
     queryFn: () => base44.auth.me()
   });
 
-  const { data: myMessages = [] } = useQuery({
+  const { data: myMessages = [], isLoading } = useQuery({
     queryKey: ['my-messages'],
     queryFn: async () => {
       const user = await base44.auth.me();
@@ -88,6 +88,14 @@ export default function MyMessages() {
   };
 
   const unreadCount = myMessages.filter(m => m.status === 'ulest').length;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">

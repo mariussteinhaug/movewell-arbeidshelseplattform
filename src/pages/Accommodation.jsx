@@ -448,7 +448,7 @@ export default function Accommodation() {
                     <p className="text-slate-600 font-medium">Ingen tiltak funnet</p>
                   </div>
                 ) : (
-                  (tab === 'alle' ? accommodations : filteredByStatus(tab)).map((item) => {
+                  accommodations.map((item) => {
                     const StatusIcon = statusConfig[item.status].icon;
                     return (
                       <div 
@@ -511,11 +511,190 @@ export default function Accommodation() {
                           ))}
                         </div>
                       </div>
-                    );
-                  })
-                )}
-              </TabsContent>
-            ))}
+                  );
+                })
+              )}
+            </TabsContent>
+
+            <TabsContent value="planlagt" className="space-y-3 mt-4">
+              {filteredByStatus('planlagt').length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-slate-600">Ingen planlagte tiltak</p>
+                </div>
+              ) : (
+                filteredByStatus('planlagt').map((item) => {
+                  const StatusIcon = statusConfig[item.status].icon;
+                  return (
+                    <div 
+                      key={item.id}
+                      className={`p-4 rounded-lg border-2 ${riskColors[item.risk_level || 'moderate']}`}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="font-semibold text-slate-900">{item.accommodation_type}</h3>
+                            <Badge className={statusConfig[item.status].color}>
+                              <StatusIcon className="h-3 w-3 mr-1" />
+                              {statusConfig[item.status].label}
+                            </Badge>
+                          </div>
+                          <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
+                            <p className="text-slate-600">
+                              <span className="font-medium">Ansatt:</span> {item.employee_name}
+                            </p>
+                            <p className="text-slate-600">
+                              <span className="font-medium">Avdeling:</span> {item.department}
+                            </p>
+                            <p className="text-slate-600">
+                              <span className="font-medium">Ansvarlig:</span> {item.responsible_person || 'Ikke tildelt'}
+                            </p>
+                            <p className="text-slate-600">
+                              <span className="font-medium">Sist oppdatert:</span> {item.last_updated ? format(new Date(item.last_updated), 'dd. MMM yyyy', { locale: nb }) : 'Aldri'}
+                            </p>
+                          </div>
+                          {item.description && (
+                            <p className="text-sm text-slate-700 mt-2">{item.description}</p>
+                          )}
+                        </div>
+                        <Button size="sm" variant="ghost" onClick={() => handleEdit(item)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="flex gap-2 pt-3 border-t border-slate-200">
+                        <p className="text-xs text-slate-500 mr-2">Oppdater status:</p>
+                        {['planlagt', 'pågår', 'fullført'].map((status) => (
+                          <Button
+                            key={status}
+                            size="sm"
+                            variant={item.status === status ? 'default' : 'outline'}
+                            onClick={() => handleQuickStatusUpdate(item, status)}
+                            disabled={item.status === status}
+                            className="h-7 text-xs"
+                          >
+                            {statusConfig[status].label}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </TabsContent>
+
+            <TabsContent value="pågår" className="space-y-3 mt-4">
+              {filteredByStatus('pågår').length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-slate-600">Ingen pågående tiltak</p>
+                </div>
+              ) : (
+                filteredByStatus('pågår').map((item) => {
+                  const StatusIcon = statusConfig[item.status].icon;
+                  return (
+                    <div 
+                      key={item.id}
+                      className={`p-4 rounded-lg border-2 ${riskColors[item.risk_level || 'moderate']}`}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="font-semibold text-slate-900">{item.accommodation_type}</h3>
+                            <Badge className={statusConfig[item.status].color}>
+                              <StatusIcon className="h-3 w-3 mr-1" />
+                              {statusConfig[item.status].label}
+                            </Badge>
+                          </div>
+                          <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
+                            <p className="text-slate-600">
+                              <span className="font-medium">Ansatt:</span> {item.employee_name}
+                            </p>
+                            <p className="text-slate-600">
+                              <span className="font-medium">Avdeling:</span> {item.department}
+                            </p>
+                            <p className="text-slate-600">
+                              <span className="font-medium">Ansvarlig:</span> {item.responsible_person || 'Ikke tildelt'}
+                            </p>
+                            <p className="text-slate-600">
+                              <span className="font-medium">Sist oppdatert:</span> {item.last_updated ? format(new Date(item.last_updated), 'dd. MMM yyyy', { locale: nb }) : 'Aldri'}
+                            </p>
+                          </div>
+                          {item.description && (
+                            <p className="text-sm text-slate-700 mt-2">{item.description}</p>
+                          )}
+                        </div>
+                        <Button size="sm" variant="ghost" onClick={() => handleEdit(item)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="flex gap-2 pt-3 border-t border-slate-200">
+                        <p className="text-xs text-slate-500 mr-2">Oppdater status:</p>
+                        {['planlagt', 'pågår', 'fullført'].map((status) => (
+                          <Button
+                            key={status}
+                            size="sm"
+                            variant={item.status === status ? 'default' : 'outline'}
+                            onClick={() => handleQuickStatusUpdate(item, status)}
+                            disabled={item.status === status}
+                            className="h-7 text-xs"
+                          >
+                            {statusConfig[status].label}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </TabsContent>
+
+            <TabsContent value="fullført" className="space-y-3 mt-4">
+              {filteredByStatus('fullført').length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-slate-600">Ingen fullførte tiltak</p>
+                </div>
+              ) : (
+                filteredByStatus('fullført').map((item) => {
+                  const StatusIcon = statusConfig[item.status].icon;
+                  return (
+                    <div 
+                      key={item.id}
+                      className={`p-4 rounded-lg border-2 ${riskColors[item.risk_level || 'moderate']}`}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="font-semibold text-slate-900">{item.accommodation_type}</h3>
+                            <Badge className={statusConfig[item.status].color}>
+                              <StatusIcon className="h-3 w-3 mr-1" />
+                              {statusConfig[item.status].label}
+                            </Badge>
+                          </div>
+                          <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
+                            <p className="text-slate-600">
+                              <span className="font-medium">Ansatt:</span> {item.employee_name}
+                            </p>
+                            <p className="text-slate-600">
+                              <span className="font-medium">Avdeling:</span> {item.department}
+                            </p>
+                            <p className="text-slate-600">
+                              <span className="font-medium">Ansvarlig:</span> {item.responsible_person || 'Ikke tildelt'}
+                            </p>
+                            <p className="text-slate-600">
+                              <span className="font-medium">Sist oppdatert:</span> {item.last_updated ? format(new Date(item.last_updated), 'dd. MMM yyyy', { locale: nb }) : 'Aldri'}
+                            </p>
+                          </div>
+                          {item.description && (
+                            <p className="text-sm text-slate-700 mt-2">{item.description}</p>
+                          )}
+                        </div>
+                        <Button size="sm" variant="ghost" onClick={() => handleEdit(item)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
