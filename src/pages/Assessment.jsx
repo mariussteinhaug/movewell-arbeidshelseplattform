@@ -338,6 +338,14 @@ Returner JSON med:
         >
           <Card>
             <CardHeader>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2 text-sm">
+                  <Shield className="h-4 w-4 text-emerald-600" />
+                  <span className="text-emerald-700 font-medium">Anonym besvarelse</span>
+                  <span className="text-slate-400">•</span>
+                  <span className="text-slate-600">{selectedDepartment}</span>
+                </div>
+              </div>
               <CardTitle className="text-lg">
                 {currentQuestion?.text}
               </CardTitle>
