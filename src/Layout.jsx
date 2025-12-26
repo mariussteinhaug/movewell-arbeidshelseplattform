@@ -13,6 +13,7 @@ import {
   Heart,
   FileText
 } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 import { cn } from "@/lib/utils";
 
 export default function Layout({ children, currentPageName }) {
@@ -23,15 +24,33 @@ export default function Layout({ children, currentPageName }) {
     return <>{children}</>;
   }
 
+  const [user, setUser] = React.useState(null);
+
+  React.useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const currentUser = await base44.auth.me();
+        setUser(currentUser);
+      } catch (error) {
+        console.error('Could not fetch user:', error);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  const isAdmin = user?.role === 'admin';
+
   const navigation = [
-    { name: 'Dashboard', page: 'Dashboard', icon: LayoutDashboard },
+    { name: 'Dashboard', page: 'Dashboard', icon: LayoutDashboard, adminOnly: true },
     { name: 'Kartlegging', page: 'Assessment', icon: ClipboardCheck },
-    { name: 'AI-Rapporter', page: 'Reports', icon: FileText },
-    { name: 'Trendanalyse', page: 'TrendAnalysis', icon: LayoutDashboard },
-    { name: 'Avdelinger', page: 'Departments', icon: Building2 },
-    { name: 'Anbefalinger', page: 'Recommendations', icon: Lightbulb },
-    { name: 'Innstillinger', page: 'Settings', icon: Settings },
-  ];
+    { name: 'Mine meldinger', page: 'MyMessages', icon: Heart },
+    { name: 'AI-Rapporter', page: 'Reports', icon: FileText, adminOnly: true },
+    { name: 'Trendanalyse', page: 'TrendAnalysis', icon: LayoutDashboard, adminOnly: true },
+    { name: 'Avdelinger', page: 'Departments', icon: Building2, adminOnly: true },
+    { name: 'Anbefalinger', page: 'Recommendations', icon: Lightbulb, adminOnly: true },
+    { name: 'Meldingssenter', page: 'MessageCenter', icon: Heart, adminOnly: true },
+    { name: 'Innstillinger', page: 'Settings', icon: Settings, adminOnly: true },
+  ].filter(item => !item.adminOnly || isAdmin);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50/30">

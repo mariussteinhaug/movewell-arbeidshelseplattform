@@ -6,6 +6,8 @@ import Recommendations from './pages/Recommendations';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import TrendAnalysis from './pages/TrendAnalysis';
+import MessageCenter from './pages/MessageCenter';
+import MyMessages from './pages/MyMessages';
 import __Layout from './Layout.jsx';
 
 
@@ -18,6 +20,8 @@ export const PAGES = {
     "Reports": Reports,
     "Settings": Settings,
     "TrendAnalysis": TrendAnalysis,
+    "MessageCenter": MessageCenter,
+    "MyMessages": MyMessages,
 }
 
 export const pagesConfig = {
