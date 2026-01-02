@@ -9,28 +9,61 @@ import AlertList from '../components/dashboard/AlertList';
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Dashboard() {
+  const { data: currentUser } = useQuery({
+    queryKey: ['current-user'],
+    queryFn: () => base44.auth.me()
+  });
+
   const { data: assessments = [], isLoading: loadingAssessments } = useQuery({
     queryKey: ['assessments'],
-    queryFn: () => base44.entities.HealthAssessment.list('-created_date', 500)
+    queryFn: () => base44.entities.HealthAssessment.list('-created_date', 500),
+    enabled: !!currentUser
   });
 
   const { data: departments = [], isLoading: loadingDepartments } = useQuery({
     queryKey: ['departments'],
-    queryFn: () => base44.entities.Department.list()
+    queryFn: () => base44.entities.Department.list(),
+    enabled: !!currentUser
   });
 
   const { data: recommendations = [] } = useQuery({
     queryKey: ['recommendations'],
-    queryFn: () => base44.entities.ActionRecommendation.filter({ status: 'ny' }, '-created_date', 10)
+    queryFn: () => base44.entities.ActionRecommendation.filter({ status: 'ny' }, '-created_date', 10),
+    enabled: !!currentUser
   });
 
-  const stats = useMemo(() => {
-    if (!assessments.length) return null;
+  // Filter based on role
+  const isAdmin = currentUser?.role === 'admin';
+  const userDepartment = currentUser?.department;
 
-    const avgPhysical = assessments.reduce((sum, a) => sum + (a.physical_load || 0), 0) / assessments.length;
-    const avgMental = assessments.reduce((sum, a) => sum + (a.mental_wellbeing || 0), 0) / assessments.length;
-    const avgWork = assessments.reduce((sum, a) => sum + (a.work_environment || 0), 0) / assessments.length;
-    const totalResponses = assessments.length;
+  const filteredAssessments = useMemo(() => {
+    if (!currentUser) return [];
+    if (isAdmin) return assessments;
+    // Leader - only own department
+    if (userDepartment) {
+      return assessments.filter(a => a.department === userDepartment);
+    }
+    // Employee - no access to dashboard
+    return [];
+  }, [assessments, currentUser, isAdmin, userDepartment]);
+
+  // Check if user has dashboard access
+  if (currentUser && currentUser.role !== 'admin' && !userDepartment) {
+    return (
+      <div className="text-center py-16">
+        <h2 className="text-xl font-semibold text-slate-900 mb-2">Ingen tilgang</h2>
+        <p className="text-slate-600">Denne siden er kun tilgjengelig for HR og ledere.</p>
+      </div>
+    );
+  }
+
+  const stats = useMemo(() => {
+    if (!filteredAssessments.length) return null;
+
+    const avgPhysical = filteredAssessments.reduce((sum, a) => sum + (a.physical_load || 0), 0) / filteredAssessments.length;
+    const avgMental = filteredAssessments.reduce((sum, a) => sum + (a.mental_wellbeing || 0), 0) / filteredAssessments.length;
+    const avgWork = filteredAssessments.reduce((sum, a) => sum + (a.work_environment || 0), 0) / filteredAssessments.length;
+    const totalResponses = filteredAssessments.length;
 
     return {
       physical: avgPhysical,
@@ -38,13 +71,13 @@ export default function Dashboard() {
       work: avgWork,
       responses: totalResponses
     };
-  }, [assessments]);
+  }, [filteredAssessments]);
 
   const departmentScores = useMemo(() => {
-    if (!assessments.length) return [];
+    if (!filteredAssessments.length) return [];
 
     const byDept = {};
-    assessments.forEach(a => {
+    filteredAssessments.forEach(a => {
       if (!byDept[a.department]) {
         byDept[a.department] = { scores: [], count: 0 };
       }
@@ -58,13 +91,13 @@ export default function Dashboard() {
       score: data.scores.reduce((a, b) => a + b, 0) / data.scores.length,
       count: data.count
     })).sort((a, b) => a.score - b.score);
-  }, [assessments]);
+  }, [filteredAssessments]);
 
   const trendData = useMemo(() => {
-    if (!assessments.length) return [];
+    if (!filteredAssessments.length) return [];
 
     const byWeek = {};
-    assessments.forEach(a => {
+    filteredAssessments.forEach(a => {
       const week = a.assessment_week || 'ukjent';
       if (!byWeek[week]) {
         byWeek[week] = { fysisk: [], mental: [], arbeid: [] };
@@ -82,7 +115,7 @@ export default function Dashboard() {
         arbeid: data.arbeid.reduce((a, b) => a + b, 0) / data.arbeid.length
       }))
       .slice(-8);
-  }, [assessments]);
+  }, [filteredAssessments]);
 
   const getRiskLevel = (score) => {
     if (score >= 4) return 'low';
