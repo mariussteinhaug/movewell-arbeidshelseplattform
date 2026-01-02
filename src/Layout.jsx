@@ -14,7 +14,8 @@ import {
   FileText,
   Mail,
   TrendingUp,
-  Wrench
+  Wrench,
+  User
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { cn } from "@/lib/utils";
@@ -46,6 +47,7 @@ export default function Layout({ children, currentPageName }) {
   const navigation = [
     { name: 'Dashboard', page: 'Dashboard', icon: LayoutDashboard, adminOnly: true },
     { name: 'Kartlegging', page: 'Assessment', icon: ClipboardCheck },
+    { name: 'Min profil', page: 'Profile', icon: Shield },
     { name: 'Mine meldinger', page: 'MyMessages', icon: Mail },
     { name: 'Kartleggingsdata', page: 'AssessmentResults', icon: FileText, adminOnly: true },
     { name: 'AI-Rapporter', page: 'Reports', icon: FileText, adminOnly: true },

@@ -11,6 +11,7 @@ import Recommendations from './pages/Recommendations';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import TrendAnalysis from './pages/TrendAnalysis';
+import Profile from './pages/Profile';
 import __Layout from './Layout.jsx';
 
 
@@ -28,6 +29,7 @@ export const PAGES = {
     "Reports": Reports,
     "Settings": Settings,
     "TrendAnalysis": TrendAnalysis,
+    "Profile": Profile,
 }
 
 export const pagesConfig = {
