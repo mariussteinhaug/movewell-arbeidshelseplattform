@@ -70,7 +70,8 @@ export default function Layout({ children, currentPageName }) {
             <img 
               src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694db50ccf9dcb239e37fc6a/bdae0c18b_image.png"
               alt="MoveWell Logo"
-              className="h-16 w-auto"
+              className="h-16 w-auto object-contain"
+              style={{ background: 'transparent' }}
             />
           </div>
 
@@ -131,7 +132,8 @@ export default function Layout({ children, currentPageName }) {
             <img 
               src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694db50ccf9dcb239e37fc6a/bdae0c18b_image.png"
               alt="MoveWell Logo"
-              className="h-10 w-auto"
+              className="h-10 w-auto object-contain"
+              style={{ background: 'transparent' }}
             />
           </div>
           <button
