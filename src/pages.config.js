@@ -3,6 +3,7 @@ import Assessment from './pages/Assessment';
 import AssessmentResults from './pages/AssessmentResults';
 import Dashboard from './pages/Dashboard';
 import Departments from './pages/Departments';
+import EmployeeProfile from './pages/EmployeeProfile';
 import Landing from './pages/Landing';
 import MessageCenter from './pages/MessageCenter';
 import MyMessages from './pages/MyMessages';
@@ -10,7 +11,6 @@ import Recommendations from './pages/Recommendations';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import TrendAnalysis from './pages/TrendAnalysis';
-import EmployeeProfile from './pages/EmployeeProfile';
 import __Layout from './Layout.jsx';
 
 
@@ -20,6 +20,7 @@ export const PAGES = {
     "AssessmentResults": AssessmentResults,
     "Dashboard": Dashboard,
     "Departments": Departments,
+    "EmployeeProfile": EmployeeProfile,
     "Landing": Landing,
     "MessageCenter": MessageCenter,
     "MyMessages": MyMessages,
@@ -27,7 +28,6 @@ export const PAGES = {
     "Reports": Reports,
     "Settings": Settings,
     "TrendAnalysis": TrendAnalysis,
-    "EmployeeProfile": EmployeeProfile,
 }
 
 export const pagesConfig = {

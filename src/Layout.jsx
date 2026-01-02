@@ -64,14 +64,12 @@ export default function Layout({ children, currentPageName }) {
       <aside className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col">
         <div className="flex flex-col flex-grow bg-white/80 backdrop-blur-xl border-r border-slate-200/60 pt-8 pb-4 overflow-y-auto">
           {/* Logo */}
-          <div className="flex items-center gap-3 px-8 mb-12">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-              <Heart className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-semibold text-slate-900 tracking-tight">MoveWell</h1>
-              <p className="text-xs text-slate-500">Forebyggende arbeidshelse</p>
-            </div>
+          <div className="flex items-center px-8 mb-12">
+            <img 
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694db50ccf9dcb239e37fc6a/8532ab92c_movewell-high-resolution-logo-transparent.png"
+              alt="MoveWell Logo"
+              className="h-16 w-auto"
+            />
           </div>
 
           {/* Navigation */}
@@ -115,11 +113,12 @@ export default function Layout({ children, currentPageName }) {
       {/* Mobile header */}
       <div className="lg:hidden sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200/60">
         <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-              <Heart className="h-4 w-4 text-white" />
-            </div>
-            <span className="font-semibold text-slate-900">MoveWell</span>
+          <div className="flex items-center">
+            <img 
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694db50ccf9dcb239e37fc6a/8532ab92c_movewell-high-resolution-logo-transparent.png"
+              alt="MoveWell Logo"
+              className="h-10 w-auto"
+            />
           </div>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
