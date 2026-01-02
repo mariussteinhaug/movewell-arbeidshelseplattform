@@ -48,7 +48,8 @@ export default function MessageCenter() {
 
   const { data: allMessages = [] } = useQuery({
     queryKey: ['messages'],
-    queryFn: () => base44.entities.Message.list('-created_date', 200)
+    queryFn: () => base44.entities.Message.list('-created_date', 200),
+    enabled: !!currentUser
   });
 
   const sendMessage = useMutation({
@@ -117,7 +118,25 @@ export default function MessageCenter() {
     høy: 'bg-red-100 text-red-700'
   };
 
-  const sentMessages = allMessages.filter(m => m.sender_email === currentUser?.email);
+  // Filter based on role
+  const isAdmin = currentUser?.role === 'admin';
+  const userDepartment = currentUser?.department;
+
+  const sentMessages = React.useMemo(() => {
+    if (!currentUser) return [];
+    if (isAdmin) {
+      return allMessages.filter(m => m.sender_email === currentUser.email);
+    }
+    // Leader - only messages to employees in own department
+    if (userDepartment) {
+      return allMessages.filter(m => 
+        m.sender_email === currentUser.email && 
+        m.related_department === userDepartment
+      );
+    }
+    return [];
+  }, [allMessages, currentUser, isAdmin, userDepartment]);
+
   const unansweredMessages = sentMessages.filter(m => m.status !== 'besvart');
 
   return (

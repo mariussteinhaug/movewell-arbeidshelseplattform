@@ -38,7 +38,8 @@ export default function Accommodation() {
 
   const { data: accommodations = [], isLoading } = useQuery({
     queryKey: ['accommodations'],
-    queryFn: () => base44.entities.Accommodation.list('-last_updated', 100)
+    queryFn: () => base44.entities.Accommodation.list('-last_updated', 100),
+    enabled: !!currentUser
   });
 
   const { data: users = [] } = useQuery({
@@ -129,6 +130,21 @@ export default function Accommodation() {
     });
   };
 
+  // Filter based on role
+  const isAdmin = currentUser?.role === 'admin';
+  const userDepartment = currentUser?.department;
+
+  const filteredAccommodations = React.useMemo(() => {
+    if (!currentUser) return [];
+    if (isAdmin) return accommodations;
+    // Leader - only own department
+    if (userDepartment) {
+      return accommodations.filter(a => a.department === userDepartment);
+    }
+    // Employee - only own accommodations
+    return accommodations.filter(a => a.employee_email === currentUser.email);
+  }, [accommodations, currentUser, isAdmin, userDepartment]);
+
   const statusConfig = {
     planlagt: { icon: Clock, color: 'bg-slate-100 text-slate-700', label: 'Planlagt' },
     pågår: { icon: PlayCircle, color: 'bg-blue-100 text-blue-700', label: 'Pågår' },
@@ -141,12 +157,12 @@ export default function Accommodation() {
     high: 'bg-red-50 border-red-200'
   };
 
-  const filteredByStatus = (status) => accommodations.filter(a => a.status === status);
+  const filteredByStatus = (status) => filteredAccommodations.filter(a => a.status === status);
 
   // Ansatte som trenger tilrettelegging (fra kartlegginger med høy/moderat risiko)
   const employeesNeedingAccommodation = assessments
     .filter(a => a.completed && (a.risk_level === 'high' || a.risk_level === 'moderate'))
-    .filter(a => !accommodations.find(acc => acc.employee_email === a.created_by))
+    .filter(a => !filteredAccommodations.find(acc => acc.employee_email === a.created_by))
     .map(a => {
       const user = users.find(u => u.email === a.created_by);
       return { assessment: a, user };
@@ -356,7 +372,7 @@ export default function Accommodation() {
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>Totalt antall tiltak</CardDescription>
-            <CardTitle className="text-3xl">{accommodations.length}</CardTitle>
+            <CardTitle className="text-3xl">{filteredAccommodations.length}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
@@ -434,20 +450,20 @@ export default function Accommodation() {
         <CardContent>
           <Tabs defaultValue="alle">
             <TabsList>
-              <TabsTrigger value="alle">Alle ({accommodations.length})</TabsTrigger>
+              <TabsTrigger value="alle">Alle ({filteredAccommodations.length})</TabsTrigger>
               <TabsTrigger value="planlagt">Planlagt ({filteredByStatus('planlagt').length})</TabsTrigger>
               <TabsTrigger value="pågår">Pågår ({filteredByStatus('pågår').length})</TabsTrigger>
               <TabsTrigger value="fullført">Fullført ({filteredByStatus('fullført').length})</TabsTrigger>
             </TabsList>
 
             <TabsContent value="alle" className="space-y-3 mt-4">
-              {accommodations.length === 0 ? (
+              {filteredAccommodations.length === 0 ? (
                 <div className="text-center py-8">
                   <ClipboardList className="h-10 w-10 text-slate-300 mx-auto mb-3" />
                   <p className="text-slate-600 font-medium">Ingen tiltak funnet</p>
                 </div>
               ) : (
-                accommodations.map((item) => {
+                filteredAccommodations.map((item) => {
                   const StatusIcon = statusConfig[item.status].icon;
                   return (
                     <div 

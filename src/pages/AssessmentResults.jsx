@@ -33,7 +33,22 @@ export default function AssessmentResults() {
     queryFn: () => base44.entities.QuestionBank.list('order')
   });
 
-  const filteredSessions = sessions.filter(session => {
+  // Filter based on role
+  const isAdmin = currentUser?.role === 'admin';
+  const userDepartment = currentUser?.department;
+
+  const accessFilteredSessions = React.useMemo(() => {
+    if (!currentUser) return [];
+    if (isAdmin) return sessions;
+    // Leader - only own department
+    if (userDepartment) {
+      return sessions.filter(s => s.department === userDepartment);
+    }
+    // Employee - only own sessions
+    return sessions.filter(s => s.created_by === currentUser.email);
+  }, [sessions, currentUser, isAdmin, userDepartment]);
+
+  const filteredSessions = accessFilteredSessions.filter(session => {
     const matchesDept = selectedDepartment === 'all' || session.department === selectedDepartment;
     const matchesRisk = selectedRiskLevel === 'all' || session.risk_level === selectedRiskLevel;
     const matchesSearch = !searchTerm || 
