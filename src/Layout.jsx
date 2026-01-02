@@ -66,7 +66,7 @@ export default function Layout({ children, currentPageName }) {
           {/* Logo */}
           <div className="flex items-center px-8 mb-12">
             <img 
-              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694db50ccf9dcb239e37fc6a/8532ab92c_movewell-high-resolution-logo-transparent.png"
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694db50ccf9dcb239e37fc6a/bdae0c18b_image.png"
               alt="MoveWell Logo"
               className="h-16 w-auto"
             />
@@ -127,7 +127,7 @@ export default function Layout({ children, currentPageName }) {
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center">
             <img 
-              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694db50ccf9dcb239e37fc6a/8532ab92c_movewell-high-resolution-logo-transparent.png"
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694db50ccf9dcb239e37fc6a/bdae0c18b_image.png"
               alt="MoveWell Logo"
               className="h-10 w-auto"
             />
