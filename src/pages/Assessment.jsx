@@ -153,7 +153,8 @@ Returner JSON med:
       });
 
       if (result.stop_assessment) {
-        await saveSession(result);
+        const sessionId = await saveSession(result);
+        await createInAppNotification(result, sessionId);
         setRiskAssessment(result);
         setCompleted(true);
         queryClient.invalidateQueries({ queryKey: ['assessment-sessions'] });
@@ -184,7 +185,7 @@ Returner JSON med:
       const now = new Date();
       const week = `${now.getFullYear()}-${String(Math.ceil((now - new Date(now.getFullYear(), 0, 1)) / (7 * 24 * 60 * 60 * 1000))).padStart(2, '0')}`;
       
-      const anonymousId = `anon_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const currentUser = await base44.auth.me();
       
       const answeredQuestions = Object.keys(answers).map(qid => ({
         question_id: qid,
@@ -192,8 +193,8 @@ Returner JSON med:
         timestamp: new Date().toISOString()
       }));
 
-      await base44.entities.AssessmentSession.create({
-        anonymous_id: anonymousId,
+      const session = await base44.entities.AssessmentSession.create({
+        anonymous_id: `session_${Date.now()}`,
         department: selectedDepartment || 'Ikke oppgitt',
         path: sessionPath,
         answered_questions: answeredQuestions,
@@ -205,33 +206,28 @@ Returner JSON med:
         uploaded_documents: uploadedFiles.map(f => f.url)
       });
 
-      // Send e-post til leder og HR med AI-forslag
-      await sendManagerNotification(assessment, answeredQuestions);
+      return session.id;
     } catch (error) {
       console.error('Feil ved lagring av sesjon:', error);
       throw error;
     }
   };
 
-  const sendManagerNotification = async (assessment, answeredQuestions) => {
+  const createInAppNotification = async (assessment, sessionId) => {
     try {
-      // Hent nåværende bruker
       const currentUser = await base44.auth.me();
-      
-      // Hent avdelingsinformasjon
       const deptList = await base44.entities.Department.list();
       const dept = deptList.find(d => d.name === selectedDepartment);
 
       // Generer AI-forslag for tiltak
-      const answeredData = answeredQuestions.map(aq => {
-        const q = allQuestions.find(question => question.question_id === aq.question_id);
-        return `Spørsmål: ${q?.text}\nSvar: ${aq.answer}`;
+      const answeredData = Object.keys(answers).map(qid => {
+        const q = allQuestions.find(question => question.question_id === qid);
+        return `Spørsmål: ${q?.text}\nSvar: ${answers[qid]}`;
       }).join('\n\n');
 
-      // Ekstraher smertedata for mer spesifikke anbefalinger
-      const painLocation = answeredQuestions.find(q => q.question_id === 'Q13')?.answer;
-      const painIntensity = answeredQuestions.find(q => q.question_id === 'Q14')?.answer;
-      const painFrequency = answeredQuestions.find(q => q.question_id === 'Q15')?.answer;
+      const painLocation = answers['Q13'];
+      const painIntensity = answers['Q14'];
+      const painFrequency = answers['Q15'];
 
       const aiPrompt = `Du er en ekspert på arbeidshelse, ergonomi og tilrettelegging. 
 
@@ -291,17 +287,8 @@ Vær KONKRET, KONSTRUKTIV og EMPATISK. Unngå generelle råd - gi spesifikke han
       const users = await base44.entities.User.list();
       const adminUsers = users.filter(u => u.role === 'admin');
 
-      // Send e-post til hver admin
-      for (const admin of adminUsers) {
-        await base44.integrations.Core.SendEmail({
-          to: admin.email,
-          subject: `Ny helsekartlegging fra ${currentUser.full_name} - ${selectedDepartment}`,
-          body: `
-Hei,
-
-En ansatt har fullført en helsekartlegging som krever oppfølging:
-
-ANSATT INFORMASJON:
+      // Opprett in-app varsler til alle admins
+      const messageContent = `ANSATT INFORMASJON:
 - Navn: ${currentUser.full_name}
 - E-post: ${currentUser.email}
 - Avdeling: ${selectedDepartment}
@@ -315,21 +302,35 @@ AI-ANBEFALINGER:
 ${aiRecommendations}
 
 ---
-Denne e-posten er generert automatisk fra MoveWell helsekartlegging.
-Vennligst følg opp med den ansatte innen 2 virkedager.
-          `
+Dette er en systemgenerert varsling. Vennligst følg opp med den ansatte innen 2 virkedager.`;
+
+      for (const admin of adminUsers) {
+        await base44.entities.Message.create({
+          recipient_email: admin.email,
+          recipient_name: admin.full_name,
+          sender_email: 'system@movewell.no',
+          sender_name: 'MoveWell System',
+          subject: `Ny helsekartlegging: ${currentUser.full_name} - ${selectedDepartment}`,
+          content: messageContent,
+          category: 'oppfølging',
+          priority: assessment.risk_level === 'high' ? 'høy' : assessment.risk_level === 'moderate' ? 'normal' : 'lav',
+          status: 'ulest',
+          related_department: selectedDepartment,
+          related_assessment_id: sessionId,
+          sent_at: new Date().toISOString(),
+          replies: []
         });
       }
 
-      // Send også til avdelingsleder hvis oppgitt
-      if (dept?.manager_name && dept?.manager_email) {
-        await base44.integrations.Core.SendEmail({
-          to: dept.manager_email,
-          subject: `Ny helsekartlegging i din avdeling - ${selectedDepartment}`,
-          body: `
-Hei ${dept.manager_name},
-
-En ansatt i din avdeling har fullført en helsekartlegging:
+      // Opprett varsel til avdelingsleder hvis oppgitt
+      if (dept?.manager_email && !adminUsers.find(u => u.email === dept.manager_email)) {
+        await base44.entities.Message.create({
+          recipient_email: dept.manager_email,
+          recipient_name: dept.manager_name,
+          sender_email: 'system@movewell.no',
+          sender_name: 'MoveWell System',
+          subject: `Ny helsekartlegging i din avdeling: ${selectedDepartment}`,
+          content: `En ansatt i din avdeling har fullført en helsekartlegging:
 
 ANSATT: ${currentUser.full_name}
 RISIKONIVÅ: ${assessment.risk_level === 'low' ? 'Lav' : assessment.risk_level === 'moderate' ? 'Moderat' : 'Høy'}
@@ -337,8 +338,14 @@ RISIKONIVÅ: ${assessment.risk_level === 'low' ? 'Lav' : assessment.risk_level =
 AI-ANBEFALINGER:
 ${aiRecommendations}
 
-Ta kontakt med den ansatte for oppfølging.
-          `
+Ta kontakt med den ansatte for oppfølging.`,
+          category: 'oppfølging',
+          priority: assessment.risk_level === 'high' ? 'høy' : 'normal',
+          status: 'ulest',
+          related_department: selectedDepartment,
+          related_assessment_id: sessionId,
+          sent_at: new Date().toISOString(),
+          replies: []
         });
       }
 
@@ -354,12 +361,13 @@ Ta kontakt med den ansatte for oppfølging.
           responsible_person: dept?.manager_name || 'Ikke tildelt',
           responsible_email: dept?.manager_email || '',
           risk_level: assessment.risk_level,
+          related_assessment_id: sessionId,
           last_updated: new Date().toISOString(),
           notes: `Automatisk opprettet fra kartlegging ${new Date().toLocaleDateString('nb-NO')}`
         });
       }
     } catch (error) {
-      console.error('Feil ved sending av varsel:', error);
+      console.error('Feil ved opprettelse av varsling:', error);
     }
   };
 
