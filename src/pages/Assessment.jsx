@@ -232,57 +232,68 @@ Returner JSON med:
 
       const aiPrompt = `Du er en ekspert på arbeidshelse, ergonomi og tilrettelegging. 
 
-En ansatt har fullført en helsekartlegging med følgende informasjon:
+      En ansatt har fullført en helsekartlegging med følgende informasjon:
 
-ANSATT INFORMASJON:
-- Navn: ${currentUser.full_name} (${currentUser.email})
-- Avdeling: ${selectedDepartment}
-- Risikonivå: ${assessment.risk_level}
-- Risikosignaler: ${assessment.risk_signals?.join(', ')}
+      ANSATT INFORMASJON:
+      - Navn: ${currentUser.full_name} (${currentUser.email})
+      - Avdeling: ${selectedDepartment}
+      - Risikonivå: ${assessment.risk_level}
+      - Risikosignaler: ${assessment.risk_signals?.join(', ')}
 
-DETALJERT SMERTEANALYSE:
-${painLocation ? `- Smertelokalisering: ${Array.isArray(painLocation) ? painLocation.join(', ') : painLocation}` : ''}
-${painIntensity ? `- Smerteintensitet: ${painIntensity}/10` : ''}
-${painFrequency ? `- Frekvens: ${painFrequency}` : ''}
+      DETALJERT SMERTEANALYSE:
+      ${painLocation ? `- Smertelokalisering: ${Array.isArray(painLocation) ? painLocation.join(', ') : painLocation}` : ''}
+      ${painIntensity ? `- Smerteintensitet: ${painIntensity}/10` : ''}
+      ${painFrequency ? `- Frekvens: ${painFrequency}` : ''}
 
-Svar fra fullstendig kartlegging:
-${answeredData}
+      Svar fra fullstendig kartlegging:
+      ${answeredData}
 
-Basert på denne informasjonen, gi KONKRETE og MÅLRETTEDE anbefalinger til leder og HR:
+      Basert på denne informasjonen, gi KONKRETE og MÅLRETTEDE anbefalinger til leder og HR.
 
-1. UMIDDELBARE TILTAK (0-2 uker):
-   ${painLocation ? `- Spesifikke tiltak for ${Array.isArray(painLocation) ? painLocation.join(' og ') : painLocation}-plager` : '- Generelle førstetiltak'}
-   ${painIntensity && parseInt(painIntensity) >= 7 ? '- KRITISK: Høy smerte krever rask handling' : ''}
-   - Konkrete arbeidsplassendringer
-   - Nødvendige verktøy/hjelpemidler
+      VIKTIG: Skriv svaret i et naturlig, menneskelig språk UTEN markdown-formatering (ingen **, ##, eller *). Bruk vanlig tekst med linjeskift og punktlister med bindestrek.
 
-2. TILPASNINGER OG TILRETTELEGGING:
-   ${painLocation ? `- Ergonomiske tilpasninger spesifikt for ${Array.isArray(painLocation) ? painLocation.join('/') : painLocation}` : '- Generelle ergonomiske tilpasninger'}
-   - Arbeidstidsordninger
-   - Arbeidsoppgaver som bør justeres/unngås
-   - Fysiske tilpasninger på arbeidsplassen
+      Strukturer svaret slik:
 
-3. OPPFØLGINGSPLAN:
-   - Konkret tidsplan for oppfølgingsmøter
-   - Målbare milepæler
-   - Ansvarsfordeling (leder, HR, tillitsvalgt, verneombud)
+      1. UMIDDELBARE TILTAK (0-2 uker):
+      ${painLocation ? `- Spesifikke tiltak for ${Array.isArray(painLocation) ? painLocation.join(' og ') : painLocation}-plager` : '- Generelle førstetiltak'}
+      ${painIntensity && parseInt(painIntensity) >= 7 ? '- KRITISK: Høy smerte krever rask handling' : ''}
+      - Konkrete arbeidsplassendringer
+      - Nødvendige verktøy/hjelpemidler
 
-4. EKSTERNE RESSURSER:
-   ${painLocation && painIntensity ? '- SPESIFIKKE fagpersoner basert på smertelokalisering og intensitet:' : '- Relevante fagpersoner:'}
-   - Fysioterapeut/manuellterapeut (når og hvorfor)
-   - Ergoterapeut/ergonomirådgiver (spesifikke områder)
-   - Bedriftshelsetjeneste (hvilke tjenester)
-   - Eventuelt psykolog/coach hvis relevant
-   
-5. FOREBYGGENDE TILTAK FOR AVDELINGEN:
-   - Læringspunkter fra denne saken
-   - Tiltak for å unngå lignende situasjoner
+      2. TILPASNINGER OG TILRETTELEGGING:
+      ${painLocation ? `- Ergonomiske tilpasninger spesifikt for ${Array.isArray(painLocation) ? painLocation.join('/') : painLocation}` : '- Generelle ergonomiske tilpasninger'}
+      - Arbeidstidsordninger
+      - Arbeidsoppgaver som bør justeres/unngås
+      - Fysiske tilpasninger på arbeidsplassen
 
-Vær KONKRET, KONSTRUKTIV og EMPATISK. Unngå generelle råd - gi spesifikke handlingspunkter basert på smertelokalisering og intensitet.`;
+      3. OPPFØLGINGSPLAN:
+      - Konkret tidsplan for oppfølgingsmøter
+      - Målbare milepæler
+      - Ansvarsfordeling (leder, HR, tillitsvalgt, verneombud)
+
+      4. EKSTERNE RESSURSER:
+      ${painLocation && painIntensity ? '- SPESIFIKKE fagpersoner basert på smertelokalisering og intensitet:' : '- Relevante fagpersoner:'}
+      - Fysioterapeut/manuellterapeut (når og hvorfor)
+      - Ergoterapeut/ergonomirådgiver (spesifikke områder)
+      - Bedriftshelsetjeneste (hvilke tjenester)
+      - Eventuelt psykolog/coach hvis relevant
+
+      5. FOREBYGGENDE TILTAK FOR AVDELINGEN:
+      - Læringspunkter fra denne saken
+      - Tiltak for å unngå lignende situasjoner
+
+      Vær KONKRET, KONSTRUKTIV og EMPATISK. Unngå generelle råd - gi spesifikke handlingspunkter basert på smertelokalisering og intensitet.`;
 
       const aiRecommendations = await base44.integrations.Core.InvokeLLM({
         prompt: aiPrompt
       });
+
+      // Fjern markdown-formatering (stjerner, hashtags, etc.)
+      const cleanRecommendations = aiRecommendations
+        .replace(/\*\*/g, '')
+        .replace(/\*/g, '')
+        .replace(/##/g, '')
+        .replace(/#/g, '');
 
       // Hent admin-brukere (HR/Ledere)
       const users = await base44.entities.User.list();
@@ -290,20 +301,20 @@ Vær KONKRET, KONSTRUKTIV og EMPATISK. Unngå generelle råd - gi spesifikke han
 
       // Opprett in-app varsler til alle admins
       const messageContent = `ANSATT INFORMASJON:
-- Navn: ${currentUser.full_name}
-- E-post: ${currentUser.email}
-- Avdeling: ${selectedDepartment}
+      - Navn: ${currentUser.full_name}
+      - E-post: ${currentUser.email}
+      - Avdeling: ${selectedDepartment}
 
-RESULTAT:
-- Risikonivå: ${assessment.risk_level === 'low' ? 'Lav' : assessment.risk_level === 'moderate' ? 'Moderat' : 'Høy'}
-- Identifiserte risikosignaler: ${assessment.risk_signals?.join(', ') || 'Ingen spesifikke'}
-- Begrunnelse: ${assessment.reason}
+      RESULTAT:
+      - Risikonivå: ${assessment.risk_level === 'low' ? 'Lav' : assessment.risk_level === 'moderate' ? 'Moderat' : 'Høy'}
+      - Identifiserte risikosignaler: ${assessment.risk_signals?.join(', ') || 'Ingen spesifikke'}
+      - Begrunnelse: ${assessment.reason}
 
-AI-ANBEFALINGER:
-${aiRecommendations}
+      ANBEFALINGER:
+      ${cleanRecommendations}
 
----
-Dette er en systemgenerert varsling. Vennligst følg opp med den ansatte innen 2 virkedager.`;
+      ---
+      Dette er en systemgenerert varsling. Vennligst følg opp med den ansatte innen 2 virkedager.`;
 
       for (const admin of adminUsers) {
         await base44.entities.Message.create({
@@ -333,13 +344,13 @@ Dette er en systemgenerert varsling. Vennligst følg opp med den ansatte innen 2
           subject: `Ny helsekartlegging i din avdeling: ${selectedDepartment}`,
           content: `En ansatt i din avdeling har fullført en helsekartlegging:
 
-ANSATT: ${currentUser.full_name}
-RISIKONIVÅ: ${assessment.risk_level === 'low' ? 'Lav' : assessment.risk_level === 'moderate' ? 'Moderat' : 'Høy'}
+      ANSATT: ${currentUser.full_name}
+      RISIKONIVÅ: ${assessment.risk_level === 'low' ? 'Lav' : assessment.risk_level === 'moderate' ? 'Moderat' : 'Høy'}
 
-AI-ANBEFALINGER:
-${aiRecommendations}
+      ANBEFALINGER:
+      ${cleanRecommendations}
 
-Ta kontakt med den ansatte for oppfølging.`,
+      Ta kontakt med den ansatte for oppfølging.`,
           category: 'oppfølging',
           priority: assessment.risk_level === 'high' ? 'høy' : 'normal',
           status: 'ulest',
@@ -357,7 +368,7 @@ Ta kontakt med den ansatte for oppfølging.`,
           employee_name: currentUser.full_name,
           department: selectedDepartment,
           accommodation_type: assessment.risk_level === 'high' ? 'Høy prioritet - krever tilrettelegging' : 'Moderat prioritet - oppfølging anbefalt',
-          description: `Basert på helsekartlegging:\n\nRISIKOSIGNALER:\n${assessment.risk_signals?.join('\n') || 'Ingen spesifikke'}\n\nBEGRUNNELSE:\n${assessment.reason}\n\nAI-ANBEFALINGER:\n${aiRecommendations}`,
+          description: `Basert på helsekartlegging:\n\nRISIKOSIGNALER:\n${assessment.risk_signals?.join('\n') || 'Ingen spesifikke'}\n\nBEGRUNNELSE:\n${assessment.reason}\n\nANBEFALINGER:\n${cleanRecommendations}`,
           status: 'planlagt',
           responsible_person: dept?.manager_name || 'Ikke tildelt',
           responsible_email: dept?.manager_email || '',
