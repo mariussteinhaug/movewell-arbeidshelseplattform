@@ -107,8 +107,20 @@ export default function Layout({ children, currentPageName }) {
               All data er anonymisert og aggregert. Ansatte eier sine egne data.
             </p>
           </div>
-        </div>
-      </aside>
+
+          {/* Logout button */}
+          {user && (
+            <div className="mx-4 mt-2">
+              <button
+                onClick={() => base44.auth.logout()}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-red-50 hover:text-red-600 transition-all duration-200"
+              >
+                <span className="text-sm font-medium">Logg ut</span>
+              </button>
+            </div>
+          )}
+          </div>
+          </aside>
 
       {/* Mobile header */}
       <div className="lg:hidden sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200/60">
@@ -154,6 +166,14 @@ export default function Layout({ children, currentPageName }) {
                 </Link>
               );
             })}
+            {user && (
+              <button
+                onClick={() => base44.auth.logout()}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors"
+              >
+                <span className="font-medium">Logg ut</span>
+              </button>
+            )}
           </nav>
         )}
       </div>
