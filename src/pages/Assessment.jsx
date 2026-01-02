@@ -166,7 +166,8 @@ Returner JSON med:
           setCurrentQuestionIndex(nextIndex);
         } else {
           // Hvis AI ikke finner neste spørsmål eller vi er på siste, avslutt
-          await saveSession(result);
+          const sessionId = await saveSession(result);
+          await createInAppNotification(result, sessionId);
           setRiskAssessment(result);
           setCompleted(true);
           queryClient.invalidateQueries({ queryKey: ['assessment-sessions'] });
