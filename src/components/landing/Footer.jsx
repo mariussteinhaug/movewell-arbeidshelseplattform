@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Facebook, Linkedin, Instagram } from "lucide-react";
 
 export default function Footer() {
-  const scrollTo = (id: string) => {
+  const scrollTo = (id) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
