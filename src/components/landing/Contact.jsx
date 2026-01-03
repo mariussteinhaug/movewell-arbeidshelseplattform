@@ -23,18 +23,17 @@ export default function Contact() {
   };
 
   return (
-    <section id="contact" className="py-24 bg-white">
+    <section id="contact" className="py-32 bg-gradient-to-b from-white to-slate-50">
       <div className="container mx-auto px-4">
-        <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
+        <div className="grid lg:grid-cols-2 gap-16 max-w-6xl mx-auto">
           {/* Left column - Info */}
           <div>
-            <p className="text-emerald-600 font-semibold mb-3">Kontakt oss</p>
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6">
-              Klar til å redusere sykefraværet?
+            <p className="text-emerald-600 font-bold text-sm uppercase tracking-wider mb-4">Kontakt oss</p>
+            <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6 leading-tight">
+              Klar til å redusere <span className="block">sykefraværet?</span>
             </h2>
-            <p className="text-slate-600 text-lg mb-8 leading-relaxed">
-              Book en uforpliktende demo og se hvordan MoveWell kan hjelpe din 
-              bedrift med å bygge en sunnere arbeidsplass.
+            <p className="text-slate-600 text-xl font-light mb-10 leading-relaxed">
+              Book en uforpliktende demo og se hvordan MoveWell kan hjelpe din bedrift med å bygge en sunnere arbeidsplass.
             </p>
             
             {/* Contact info */}
@@ -76,18 +75,18 @@ export default function Contact() {
           </div>
           
           {/* Right column - Form */}
-          <div className="bg-slate-50 rounded-2xl p-8 border border-slate-200">
+          <div className="bg-white rounded-3xl p-10 border-2 border-slate-200 shadow-xl">
             {submitted ? (
-              <div className="flex flex-col items-center justify-center py-12">
-                <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mb-4">
-                  <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+              <div className="flex flex-col items-center justify-center py-16">
+                <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mb-6">
+                  <CheckCircle2 className="w-10 h-10 text-emerald-600" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-2">Takk for din henvendelse!</h3>
-                <p className="text-slate-600 text-center">Vi tar kontakt med deg innen 24 timer.</p>
+                <h3 className="text-2xl font-bold text-slate-900 mb-3">Takk for din henvendelse!</h3>
+                <p className="text-slate-600 text-center text-lg">Vi tar kontakt med deg innen 24 timer.</p>
               </div>
             ) : (
               <>
-                <h3 className="text-xl font-bold text-slate-900 mb-6">
+                <h3 className="text-2xl font-bold text-slate-900 mb-8">
                   Book en demo
                 </h3>
                 
@@ -136,13 +135,13 @@ export default function Contact() {
                   <Button 
                     type="submit" 
                     size="lg" 
-                    className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-90 transition-opacity"
+                    className="w-full bg-slate-900 hover:bg-slate-800 text-white py-7 rounded-full font-semibold transition-all hover:scale-105"
                   >
                     Send forespørsel
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </Button>
                   
-                  <p className="text-xs text-slate-500 text-center">
+                  <p className="text-sm text-slate-500 text-center">
                     Vi svarer vanligvis innen 24 timer. Ingen spam, vi lover.
                   </p>
                 </form>

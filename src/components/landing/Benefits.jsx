@@ -38,58 +38,58 @@ const targetIndustries = [
 
 export default function Benefits() {
   return (
-    <section id="benefits" className="py-24 bg-slate-50">
+    <section id="benefits" className="py-32 bg-gradient-to-b from-slate-50 to-white">
       <div className="container mx-auto px-4">
         {/* Section header */}
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <p className="text-emerald-600 font-semibold mb-3">Fordeler</p>
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-            Målbar effekt for din bedrift
+        <div className="text-center max-w-3xl mx-auto mb-20">
+          <p className="text-emerald-600 font-bold text-sm uppercase tracking-wider mb-4">Fordeler</p>
+          <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6 leading-tight">
+            Målbar effekt for <span className="block">din bedrift</span>
           </h2>
-          <p className="text-slate-600 text-lg">
+          <p className="text-slate-600 text-xl font-light">
             MoveWell leverer resultater som kan dokumenteres og måles
           </p>
         </div>
         
         {/* Benefits grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-20">
           {benefits.map((benefit, index) => (
             <div 
               key={index}
-              className="group p-6 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+              className="group p-8 rounded-3xl bg-white border-2 border-slate-200 hover:border-emerald-300 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2"
             >
-              <div className="w-14 h-14 rounded-xl bg-emerald-100 flex items-center justify-center mb-5 group-hover:bg-gradient-to-r group-hover:from-emerald-600 group-hover:to-teal-600 transition-all duration-300">
-                <benefit.icon className="w-7 h-7 text-emerald-600 group-hover:text-white transition-colors duration-300" />
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-700 flex items-center justify-center mb-6 shadow-xl">
+                <benefit.icon className="w-8 h-8 text-white" />
               </div>
               
-              <p className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2">
+              <p className="text-3xl font-bold text-slate-900 mb-3">
                 {benefit.stats}
               </p>
-              <h3 className="text-lg font-bold text-slate-900 mb-2">{benefit.title}</h3>
-              <p className="text-slate-600 text-sm leading-relaxed">{benefit.description}</p>
+              <h3 className="text-xl font-bold text-slate-900 mb-3">{benefit.title}</h3>
+              <p className="text-slate-600 leading-relaxed">{benefit.description}</p>
             </div>
           ))}
         </div>
         
         {/* Target industries */}
-        <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl p-8 md:p-12">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="bg-slate-900 rounded-3xl p-12 md:p-16 shadow-2xl">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-10">
             <div className="text-center md:text-left">
-              <h3 className="text-2xl font-bold text-white mb-2">
-                Skreddersydd for din bransje
+              <h3 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                Skreddersydd for <span className="block">din bransje</span>
               </h3>
-              <p className="text-white/90">
+              <p className="text-slate-300 text-lg">
                 Vi forstår de unike utfordringene i ulike sektorer
               </p>
             </div>
             
-            <div className="flex flex-wrap justify-center gap-3">
+            <div className="flex flex-wrap justify-center gap-4">
               {targetIndustries.map((industry, index) => (
                 <span 
                   key={index}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 text-white text-sm font-medium backdrop-blur-sm border border-white/30"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-white/10 text-white font-semibold backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-colors"
                 >
-                  <CheckCircle2 className="w-4 h-4" />
+                  <CheckCircle2 className="w-5 h-5" />
                   {industry}
                 </span>
               ))}

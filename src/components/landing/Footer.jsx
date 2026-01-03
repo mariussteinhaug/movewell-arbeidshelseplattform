@@ -3,15 +3,17 @@ import { Heart } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="bg-slate-900 py-12">
+    <footer className="bg-slate-900 py-16 border-t border-slate-800">
       <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-8">
           {/* Logo */}
-          <a href="#" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
-              <Heart className="h-4 w-4 text-white" />
-            </div>
-            <span className="text-xl font-bold text-white">MoveWell</span>
+          <a href="#" className="flex items-center gap-3">
+            <img 
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694db50ccf9dcb239e37fc6a/bdae0c18b_image.png"
+              alt="MoveWell Logo"
+              className="h-12 w-auto object-contain"
+              style={{ background: 'transparent', filter: 'brightness(0) invert(1)' }}
+            />
           </a>
           
           {/* Links */}
