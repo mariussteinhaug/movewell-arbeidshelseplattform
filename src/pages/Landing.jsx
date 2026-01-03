@@ -22,6 +22,8 @@ export default function Landing() {
       <LandingHeader />
       <main className="pt-16">
         <Hero />
+        <ImageSection />
+        <LogoSection />
         <HowItWorks />
         <Benefits />
         <Contact />
