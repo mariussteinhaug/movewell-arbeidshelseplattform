@@ -13,13 +13,13 @@ export default function LandingHeader() {
     { href: "#contact", label: "Kontakt" },
   ];
 
-  const scrollToId = (id: string) => {
+  const scrollToId = (id) => {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   useEffect(() => {
-    const onKeyDown = (e: any) => {
+    const onKeyDown = (e) => {
       if (e.key === "Escape") setIsMenuOpen(false);
     };
     window.addEventListener("keydown", onKeyDown);
