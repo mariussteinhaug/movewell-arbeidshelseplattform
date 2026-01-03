@@ -19,14 +19,9 @@ import {
 import { base44 } from "@/api/base44Client";
 import { cn } from "@/lib/utils";
 
-type LayoutProps = {
-  children: React.ReactNode;
-  currentPageName: string;
-};
-
-export default function Layout({ children, currentPageName }: LayoutProps) {
+export default function Layout({ children, currentPageName }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState(null);
 
   // Don't show layout on Landing page
   if (currentPageName === "Landing") {
