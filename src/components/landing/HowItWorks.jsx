@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import { ClipboardCheck, LineChart, Lightbulb } from "lucide-react";
 
 const steps = [
@@ -6,68 +6,65 @@ const steps = [
     icon: ClipboardCheck,
     step: "01",
     title: "Kartlegging",
-    description: "Enkel onboarding for HR/leder. Anonyme, ukentlige kartlegginger av fysisk belastning, mental helse og arbeidsforhold."
+    description:
+      "Kom i gang på minutter. Anonyme kartlegginger gir ærlige svar om belastning, trivsel og arbeidsforhold.",
   },
   {
     icon: LineChart,
-    step: "02", 
-    title: "Analyse & Innsikt",
-    description: "Vi aggregerer data på avdelingsnivå og identifiserer risikofaktorer tidlig. Få tydelige, handlingsrettede tiltak med oversiktlige dashboards."
+    step: "02",
+    title: "Analyse & innsikt",
+    description:
+      "Data aggregeres per avdeling. Se trender tidlig og få anbefalte tiltak i et oversiktlig dashboard.",
   },
   {
     icon: Lightbulb,
     step: "03",
-    title: "Handling & Oppfølging",
-    description: "Implementer tiltak basert på innsikter. Følg med på utvikling over tid og juster strategien for kontinuerlig forbedring."
-  }
+    title: "Handling & oppfølging",
+    description:
+      "Sett inn tiltak og følg utviklingen over tid. Juster kursen med konkrete forbedringspunkter.",
+  },
 ];
 
 export default function HowItWorks() {
   return (
-    <section id="how-it-works" className="py-32 bg-gradient-to-b from-white to-slate-50">
-      <div className="container mx-auto px-4">
-        {/* Section header */}
-        <div className="text-center max-w-3xl mx-auto mb-20">
-          <p className="text-emerald-600 font-bold text-sm uppercase tracking-wider mb-4">Slik fungerer det</p>
-          <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6 leading-tight">
-            Fra innsikt til handling <span className="block">på tre steg</span>
+    <section id="how-it-works" className="py-20 md:py-28 bg-white">
+      <div className="container mx-auto px-6 md:px-20">
+        {/* Header */}
+        <div className="text-center max-w-3xl mx-auto">
+          <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
+            Slik fungerer det
+          </p>
+          <h2 className="mt-3 text-3xl md:text-5xl font-semibold tracking-tight text-slate-900">
+            Fra innsikt til handling på tre steg
           </h2>
-          <p className="text-slate-600 text-xl font-light">
-            MoveWell gjør det enkelt å komme i gang med forebyggende helsearbeid
+          <p className="mt-4 text-slate-600 text-base md:text-lg">
+            En enkel prosess som gir tydeligere prioriteringer for HR og ledere.
           </p>
         </div>
-        
+
         {/* Steps */}
-        <div className="grid md:grid-cols-3 gap-10 max-w-6xl mx-auto">
-          {steps.map((step, index) => (
-            <div 
+        <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          {steps.map((s, index) => (
+            <div
               key={index}
-              className="relative group"
+              className="relative rounded-3xl border border-slate-200 bg-white p-8 shadow-sm hover:shadow-md transition-shadow"
             >
-              {/* Connector line */}
-              {index < steps.length - 1 && (
-                <div className="hidden md:block absolute top-20 left-1/2 w-full h-1 bg-gradient-to-r from-emerald-200 to-transparent" />
-              )}
-              
-              <div className="relative bg-white rounded-3xl p-10 border-2 border-slate-200 hover:border-emerald-300 hover:shadow-2xl transition-all duration-300">
-                {/* Step number badge */}
-                <div className="absolute -top-5 -left-5 w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-700 flex items-center justify-center shadow-xl">
-                  <span className="text-white text-xl font-bold">{step.step}</span>
+              {/* Top row */}
+              <div className="flex items-start justify-between">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100">
+                  <s.icon className="h-6 w-6 text-slate-700" />
                 </div>
-                
-                {/* Icon */}
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                  <step.icon className="w-10 h-10 text-emerald-600" />
-                </div>
-                
-                {/* Content */}
-                <h3 className="text-2xl font-bold text-slate-900 mb-4">
-                  {step.title}
-                </h3>
-                <p className="text-slate-600 text-base leading-relaxed">
-                  {step.description}
-                </p>
+                <span className="text-sm font-semibold text-slate-400">
+                  {s.step}
+                </span>
               </div>
+
+              <h3 className="mt-6 text-xl font-semibold text-slate-900">
+                {s.title}
+              </h3>
+              <p className="mt-3 text-slate-600 leading-relaxed text-sm md:text-base">
+                {s.description}
+              </p>
             </div>
           ))}
         </div>
