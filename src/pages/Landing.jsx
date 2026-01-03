@@ -28,6 +28,7 @@ export default function Landing() {
         <ImageSection />
         <LogoSection />
 
+        {/* 1) Første produktseksjon */}
         <ProductSection
           badge="Kartlegging"
           title="AI-drevet kartlegging som gir innsikt"
@@ -41,9 +42,10 @@ export default function Landing() {
           ]}
         />
 
-        {/* Mini-CTA (valgfri, men anbefalt) */}
-        {/* <CTASection /> */}
+        {/* 2) Flyttet opp for tidligere “proof” */}
+        <TestimonialsSection />
 
+        {/* 3) Resten av produktseksjonene */}
         <ProductSection
           badge="Oppfølging"
           title="Oppfølging som skaper resultater"
@@ -71,7 +73,7 @@ export default function Landing() {
           ]}
         />
 
-        <TestimonialsSection />
+        {/* 4) Forklaring + fordeler + CTA */}
         <HowItWorks />
         <Benefits />
         <CTASection />
