@@ -1,5 +1,4 @@
 import React from 'react';
-import { Quote } from "lucide-react";
 
 export default function TestimonialsSection() {
   const testimonials = [
@@ -24,35 +23,31 @@ export default function TestimonialsSection() {
   ];
 
   return (
-    <section className="bg-slate-50 py-20 md:py-28">
-      <div className="container mx-auto px-6 md:px-20">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4 leading-tight">
-            Hva sier våre kunder?
-          </h2>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            Se hvordan norske bedrifter bruker MoveWell til å forbedre arbeidshelsen
-          </p>
-        </div>
+    <section className="relative bg-emerald-100 py-40 overflow-hidden">
+      <div className="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJhIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiPjxwYXRoIGQ9Ik0wIDQwTDQwIDBaIiBzdHJva2U9IiMwMDAiIGZpbGw9Im5vbmUiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjYSkiLz48L3N2Zz4=')] bg-cover pointer-events-none" />
+      
+      <div className="relative z-10 container mx-auto px-6 md:px-20">
+        <h2 className="text-4xl md:text-5xl font-bold text-slate-900 text-center mb-16 leading-tight">
+          Hva sier våre kunder?
+        </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {testimonials.map((testimonial, index) => (
-            <div key={index} className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow">
-              <Quote className="w-10 h-10 text-emerald-500 mb-6" />
-              <p className="text-slate-700 mb-6 leading-relaxed">
-                "{testimonial.quote}"
-              </p>
-              <div className="flex items-center gap-4">
+            <div key={index} className="bg-white rounded-2xl p-8">
+              <div className="flex items-center gap-4 mb-6">
                 <img 
                   src={testimonial.image} 
                   alt={testimonial.name}
-                  className="w-12 h-12 rounded-full object-cover"
+                  className="w-[72px] h-[72px] rounded-full object-cover border-4 border-emerald-500"
                 />
                 <div>
-                  <p className="font-semibold text-slate-900">{testimonial.name}</p>
-                  <p className="text-sm text-slate-600">{testimonial.role}</p>
+                  <p className="text-2xl font-bold text-slate-900 leading-9">{testimonial.name}</p>
+                  <p className="text-sm text-emerald-600">{testimonial.role}</p>
                 </div>
               </div>
+              <p className="text-slate-700 leading-relaxed">
+                "{testimonial.quote}"
+              </p>
             </div>
           ))}
         </div>
