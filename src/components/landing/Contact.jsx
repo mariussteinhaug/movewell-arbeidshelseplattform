@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,139 +10,166 @@ export default function Contact() {
     name: "",
     email: "",
     company: "",
-    message: ""
+    message: "",
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: any) => {
     e.preventDefault();
+
+    // TODO: Replace with real submit (Base44 action / email integration)
     setSubmitted(true);
+
     setTimeout(() => {
       setSubmitted(false);
       setFormData({ name: "", email: "", company: "", message: "" });
-    }, 3000);
+    }, 2500);
   };
 
   return (
-    <section id="contact" className="py-32 bg-gradient-to-b from-white to-slate-50">
-      <div className="container mx-auto px-4">
-        <div className="grid lg:grid-cols-2 gap-16 max-w-6xl mx-auto">
-          {/* Left column - Info */}
+    <section id="contact" className="py-20 md:py-28 bg-white">
+      <div className="container mx-auto px-6 md:px-20">
+        <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
+          {/* Left: Info */}
           <div>
-            <p className="text-emerald-600 font-bold text-sm uppercase tracking-wider mb-4">Kontakt oss</p>
-            <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6 leading-tight">
-              Klar til å redusere <span className="block">sykefraværet?</span>
-            </h2>
-            <p className="text-slate-600 text-xl font-light mb-10 leading-relaxed">
-              Book en uforpliktende demo og se hvordan MoveWell kan hjelpe din bedrift med å bygge en sunnere arbeidsplass.
+            <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
+              Kontakt
             </p>
-            
-            {/* Contact info */}
-            <div className="space-y-4 mb-8">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center">
-                  <Mail className="w-5 h-5 text-emerald-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-slate-900">E-post</p>
-                  <a href="mailto:hei@movewell.no" className="text-slate-600 hover:text-emerald-600 transition-colors">
-                    hei@movewell.no
-                  </a>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center">
-                  <Phone className="w-5 h-5 text-emerald-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-slate-900">Telefon</p>
-                  <a href="tel:+4722334455" className="text-slate-600 hover:text-emerald-600 transition-colors">
-                    +47 22 33 44 55
-                  </a>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center">
-                  <MapPin className="w-5 h-5 text-emerald-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-slate-900">Kontor</p>
-                  <p className="text-slate-600">Oslo, Norge</p>
+            <h2 className="mt-3 text-3xl md:text-5xl font-semibold tracking-tight text-slate-900 leading-tight">
+              Book en uforpliktende demo
+            </h2>
+            <p className="mt-4 text-slate-600 text-base md:text-lg leading-relaxed max-w-xl">
+              Se hvordan MoveWell kan gi tidlige signaler og en enklere oppfølgingsflyt for HR og ledere.
+            </p>
+
+            {/* Contact cards */}
+            <div className="mt-10 grid gap-4 max-w-xl">
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                    <Mail className="h-5 w-5 text-slate-700" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">E-post</p>
+                    <a
+                      href="mailto:hei@movewell.no"
+                      className="text-sm text-slate-600 hover:text-slate-900 transition-colors"
+                    >
+                      hei@movewell.no
+                    </a>
+                  </div>
                 </div>
               </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                    <Phone className="h-5 w-5 text-slate-700" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">Telefon</p>
+                    <a
+                      href="tel:+4722334455"
+                      className="text-sm text-slate-600 hover:text-slate-900 transition-colors"
+                    >
+                      +47 22 33 44 55
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                    <MapPin className="h-5 w-5 text-slate-700" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">Kontor</p>
+                    <p className="text-sm text-slate-600">Oslo, Norge</p>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-sm text-slate-500">
+                Foretrekker du e-post? Send kort hva du ønsker å se, så foreslår vi et tidspunkt.
+              </p>
             </div>
           </div>
-          
-          {/* Right column - Form */}
-          <div className="bg-white rounded-3xl p-10 border-2 border-slate-200 shadow-xl">
+
+          {/* Right: Form */}
+          <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-8 md:p-10">
             {submitted ? (
-              <div className="flex flex-col items-center justify-center py-16">
-                <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mb-6">
-                  <CheckCircle2 className="w-10 h-10 text-emerald-600" />
+              <div className="flex flex-col items-center justify-center py-14">
+                <div className="h-16 w-16 rounded-full bg-slate-100 flex items-center justify-center mb-6">
+                  <CheckCircle2 className="h-8 w-8 text-slate-800" />
                 </div>
-                <h3 className="text-2xl font-bold text-slate-900 mb-3">Takk for din henvendelse!</h3>
-                <p className="text-slate-600 text-center text-lg">Vi tar kontakt med deg innen 24 timer.</p>
+                <h3 className="text-xl md:text-2xl font-semibold text-slate-900">
+                  Takk!
+                </h3>
+                <p className="mt-2 text-slate-600 text-center">
+                  Vi tar kontakt med deg innen 24 timer.
+                </p>
               </div>
             ) : (
               <>
-                <h3 className="text-2xl font-bold text-slate-900 mb-8">
-                  Book en demo
+                <h3 className="text-xl md:text-2xl font-semibold text-slate-900">
+                  Send forespørsel
                 </h3>
-                
-                <form onSubmit={handleSubmit} className="space-y-5">
-                  <div>
-                    <Input
-                      placeholder="Ditt navn"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                      className="h-12 bg-white"
-                    />
-                  </div>
-                  
-                  <div>
-                    <Input
-                      type="email"
-                      placeholder="E-postadresse"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      required
-                      className="h-12 bg-white"
-                    />
-                  </div>
-                  
-                  <div>
-                    <Input
-                      placeholder="Bedriftsnavn"
-                      value={formData.company}
-                      onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                      required
-                      className="h-12 bg-white"
-                    />
-                  </div>
-                  
-                  <div>
-                    <Textarea
-                      placeholder="Hva ønsker du å vite mer om?"
-                      value={formData.message}
-                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                      rows={4}
-                      className="bg-white"
-                    />
-                  </div>
-                  
-                  <Button 
-                    type="submit" 
-                    size="lg" 
-                    className="w-full bg-slate-900 hover:bg-slate-800 text-white py-7 rounded-full font-semibold transition-all hover:scale-105"
+                <p className="mt-2 text-slate-600">
+                  Uforpliktende • 15 min • Ingen spam
+                </p>
+
+                <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+                  <Input
+                    placeholder="Navn"
+                    value={formData.name}
+                    onChange={(e: any) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
+                    required
+                    className="h-12"
+                  />
+
+                  <Input
+                    type="email"
+                    placeholder="E-post"
+                    value={formData.email}
+                    onChange={(e: any) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
+                    required
+                    className="h-12"
+                  />
+
+                  <Input
+                    placeholder="Bedrift"
+                    value={formData.company}
+                    onChange={(e: any) =>
+                      setFormData({ ...formData, company: e.target.value })
+                    }
+                    required
+                    className="h-12"
+                  />
+
+                  <Textarea
+                    placeholder="Hva ønsker du å se i demoen?"
+                    value={formData.message}
+                    onChange={(e: any) =>
+                      setFormData({ ...formData, message: e.target.value })
+                    }
+                    rows={4}
+                  />
+
+                  <Button
+                    type="submit"
+                    size="lg"
+                    className="w-full rounded-full py-6 bg-slate-900 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
                   >
                     Send forespørsel
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </Button>
-                  
-                  <p className="text-sm text-slate-500 text-center">
-                    Vi svarer vanligvis innen 24 timer. Ingen spam, vi lover.
+
+                  <p className="text-xs text-slate-500 text-center">
+                    Ved å sende inn godtar du at vi kan kontakte deg om demoen.
                   </p>
                 </form>
               </>
