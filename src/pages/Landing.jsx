@@ -1,34 +1,34 @@
-import React, { useEffect } from 'react';
-import LandingHeader from '../components/landing/LandingHeader';
-import Hero from '../components/landing/Hero';
-import ImageSection from '../components/landing/ImageSection';
-import LogoSection from '../components/landing/LogoSection';
-import ProductSection from '../components/landing/ProductSection';
-import TestimonialsSection from '../components/landing/TestimonialsSection';
-import CTASection from '../components/landing/CTASection';
-import HowItWorks from '../components/landing/HowItWorks';
-import Benefits from '../components/landing/Benefits';
-import Contact from '../components/landing/Contact';
-import Footer from '../components/landing/Footer';
+import React, { useEffect } from "react";
+import LandingHeader from "../components/landing/LandingHeader";
+import Hero from "../components/landing/Hero";
+import ImageSection from "../components/landing/ImageSection";
+import LogoSection from "../components/landing/LogoSection";
+import ProductSection from "../components/landing/ProductSection";
+import TestimonialsSection from "../components/landing/TestimonialsSection";
+import CTASection from "../components/landing/CTASection";
+import HowItWorks from "../components/landing/HowItWorks";
+import Benefits from "../components/landing/Benefits";
+import Contact from "../components/landing/Contact";
+import Footer from "../components/landing/Footer";
 
 export default function Landing() {
-  // Hide the layout by adding a class to body
   useEffect(() => {
-    document.body.classList.add('no-layout');
+    document.body.classList.add("no-layout");
     return () => {
-      document.body.classList.remove('no-layout');
+      document.body.classList.remove("no-layout");
     };
   }, []);
 
   return (
-    <div className="min-h-screen bg-white fixed inset-0 z-50 overflow-auto">
+    <div className="min-h-screen bg-white overflow-x-hidden">
       <LandingHeader />
+
       <main className="pt-16">
         <Hero />
         <ImageSection />
         <LogoSection />
-        
-        <ProductSection 
+
+        <ProductSection
           badge="Kartlegging"
           title="AI-drevet kartlegging som gir innsikt"
           description="Vårt adaptive system tilpasser spørsmålene basert på svarene, og bruker kunstig intelligens til å identifisere risikofaktorer før de blir et problem."
@@ -37,11 +37,14 @@ export default function Landing() {
             "Anonyme kartlegginger som gir ærlige svar",
             "AI-analyse av trender og risikomønstre",
             "Automatiske varsler til HR ved høy risiko",
-            "GDPR-sikker datahåndtering"
+            "GDPR-sikker datahåndtering",
           ]}
         />
-        
-        <ProductSection 
+
+        {/* Mini-CTA (valgfri, men anbefalt) */}
+        {/* <CTASection /> */}
+
+        <ProductSection
           badge="Oppfølging"
           title="Oppfølging som skaper resultater"
           description="Fra kartlegging til handling - vårt system hjelper deg med konkrete tiltak og oppfølging av ansatte som trenger det."
@@ -50,12 +53,12 @@ export default function Landing() {
             "Automatisk genererte handlingsplaner",
             "Direkte kommunikasjon mellom HR og ansatte",
             "Tilretteleggingsverktøy og dokumentasjon",
-            "Måling av effekt over tid"
+            "Måling av effekt over tid",
           ]}
           reversed
         />
-        
-        <ProductSection 
+
+        <ProductSection
           badge="Rapportering"
           title="Innsikt som driver endring"
           description="Få AI-genererte rapporter som gir deg oversikt over arbeidshelsen i din bedrift, med konkrete anbefalinger for forbedring."
@@ -64,19 +67,17 @@ export default function Landing() {
             "Ukentlige trendrapporter per avdeling",
             "Identifisering av risikofaktorer",
             "Sammenligning på tvers av avdelinger",
-            "Målbart resultat av tiltak"
+            "Målbart resultat av tiltak",
           ]}
         />
-        
+
         <TestimonialsSection />
-        
         <HowItWorks />
         <Benefits />
-        
         <CTASection />
-        
         <Contact />
       </main>
+
       <Footer />
     </div>
   );
