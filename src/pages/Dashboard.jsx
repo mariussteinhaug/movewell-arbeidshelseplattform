@@ -7,6 +7,7 @@ import {
   Brain,
   Briefcase,
   RefreshCw,
+  BarChart3,
 } from "lucide-react";
 
 import RiskCard from "../components/dashboard/RiskCard";
@@ -17,7 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 /* ---------------------------
-   Role helpers
+   Roles (MoveWell)
 --------------------------- */
 const ROLE = {
   EMPLOYEE: "employee",
@@ -38,7 +39,7 @@ function normalizeRole(rawRole) {
 function getManagedDepartmentKeys(user) {
   const ids = Array.isArray(user?.managed_department_ids) ? user.managed_department_ids : [];
   const singleId = user?.department_id ? [user.department_id] : [];
-  const singleName = user?.department ? [user.department] : []; // legacy
+  const singleName = user?.department ? [user.department] : []; // legacy string
   return {
     ids: Array.from(new Set([...ids, ...singleId])),
     names: Array.from(new Set([...singleName])),
@@ -46,37 +47,81 @@ function getManagedDepartmentKeys(user) {
 }
 
 /* ---------------------------
-   Mini components (Simployer-ish)
+   Utils
 --------------------------- */
 function clamp(n, min, max) {
   return Math.max(min, Math.min(max, n));
 }
 
+function avg(arr) {
+  if (!arr.length) return 0;
+  return arr.reduce((a, b) => a + b, 0) / arr.length;
+}
+
+/* ---------------------------
+   Cool units
+--------------------------- */
+
+/** 1) SVG Gauge (speedometer) – stable */
 function GaugeCard({
   title = "Helseindeks",
-  value = 3.8,
+  value = 3.4,
   min = 0,
   max = 5,
   delta = 0,
-  subtitle = "Siste 8 uker",
+  subtitle = "Basert på fysisk, mental og arbeidsforhold",
   footnote = "Aggregert",
 }) {
-  const pct = (clamp(value, min, max) - min) / (max - min);
-  const deg = -120 + pct * 240;
-  const display = typeof value === "number" ? value.toFixed(1) : value;
+  const v = typeof value === "number" ? value : Number(value || 0);
+  const pct = (clamp(v, min, max) - min) / (max - min);
+
+  // SVG arc geometry (240°)
+  const size = 320;
+  const cx = size / 2;
+  const cy = size / 2;
+  const r = 120;
+  const stroke = 18;
+
+  const startAngle = (-120 * Math.PI) / 180;
+  const endAngle = (120 * Math.PI) / 180;
+
+  const polar = (angle) => ({
+    x: cx + r * Math.cos(angle),
+    y: cy + r * Math.sin(angle),
+  });
+
+  const start = polar(startAngle);
+  const end = polar(endAngle);
+
+  // full track path
+  const trackPath = `M ${start.x} ${start.y} A ${r} ${r} 0 1 1 ${end.x} ${end.y}`;
+
+  // approximate arc length for dash
+  const arcLength = Math.PI * r * (240 / 180);
+  const dash = arcLength * pct;
+  const gap = arcLength - dash;
+
+  const needleAngle = -120 + pct * 240;
 
   const deltaText =
     typeof delta === "number"
       ? `${delta > 0 ? "↑" : delta < 0 ? "↓" : "→"} ${Math.abs(delta).toFixed(1)}`
       : null;
 
+  // simple risk label
+  const riskLabel = v >= 4 ? "Lav risiko" : v >= 3 ? "Moderat" : "Høy risiko";
+
   return (
     <div className="bg-white rounded-3xl border border-slate-200 p-6">
       <div className="flex items-start justify-between gap-4">
-        <div>
+        <div className="min-w-0">
           <p className="text-sm font-medium text-slate-600">{title}</p>
+
           <div className="mt-2 flex items-baseline gap-3">
-            <span className="text-4xl font-semibold text-slate-900">{display}</span>
+            <span className="text-4xl font-semibold text-slate-900">
+              {Number.isFinite(v) ? v.toFixed(1) : "—"}
+            </span>
+
             {deltaText && (
               <span
                 className={cn(
@@ -88,7 +133,13 @@ function GaugeCard({
               </span>
             )}
           </div>
+
           <p className="text-sm text-slate-500 mt-1">{subtitle}</p>
+
+          <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1">
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+            <span className="text-xs font-medium text-slate-700">{riskLabel}</span>
+          </div>
         </div>
 
         <span className="text-xs px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
@@ -96,34 +147,49 @@ function GaugeCard({
         </span>
       </div>
 
-      <div className="mt-6 relative h-36">
-        <div className="absolute inset-x-0 bottom-0 mx-auto w-64 h-32">
-          <div className="absolute inset-0 rounded-t-full border-[14px] border-slate-100 border-b-0" />
+      <div className="mt-6 flex items-center justify-center">
+        <svg viewBox={`0 0 ${size} ${size}`} className="w-full max-w-[560px] h-[210px]">
+          {/* Track */}
+          <path
+            d={trackPath}
+            fill="none"
+            stroke="#E2E8F0"
+            strokeWidth={stroke}
+            strokeLinecap="round"
+          />
+          {/* Progress */}
+          <path
+            d={trackPath}
+            fill="none"
+            stroke="#10B981"
+            strokeWidth={stroke}
+            strokeLinecap="round"
+            strokeDasharray={`${dash} ${gap}`}
+          />
+          {/* Needle */}
+          <g transform={`rotate(${needleAngle} ${cx} ${cy})`}>
+            <line
+              x1={cx}
+              y1={cy}
+              x2={cx}
+              y2={cy - 95}
+              stroke="#0F172A"
+              strokeWidth="4"
+              strokeLinecap="round"
+              opacity="0.85"
+            />
+          </g>
+          {/* Center */}
+          <circle cx={cx} cy={cy} r="10" fill="#0F172A" />
 
-          {/* subtle progress tint */}
-          <div
-            className="absolute inset-0 rounded-t-full border-[14px] border-emerald-500 border-b-0"
-            style={{
-              clipPath: `polygon(0% 100%, 0% 0%, 100% 0%, 100% 100%)`,
-              transformOrigin: "50% 100%",
-              transform: `rotate(${pct * 240 - 120}deg)`,
-              opacity: 0.18,
-            }}
-          />
-
-          {/* needle */}
-          <div
-            className="absolute left-1/2 bottom-0 h-28 w-0.5 bg-slate-900/80"
-            style={{
-              transform: `translateX(-50%) rotate(${deg}deg)`,
-              transformOrigin: "bottom",
-            }}
-          />
-          <div
-            className="absolute left-1/2 bottom-0 h-4 w-4 rounded-full bg-slate-900"
-            style={{ transform: "translate(-50%, 50%)" }}
-          />
-        </div>
+          {/* Min/Max labels */}
+          <text x="36" y="265" className="fill-slate-500" style={{ fontSize: 12 }}>
+            {min}
+          </text>
+          <text x="272" y="265" className="fill-slate-500" style={{ fontSize: 12 }}>
+            {max}
+          </text>
+        </svg>
       </div>
 
       <div className="flex justify-between text-xs text-slate-500">
@@ -134,13 +200,9 @@ function GaugeCard({
   );
 }
 
-function ProgressRingCard({
-  title = "Svarprosent",
-  value = 65,
-  delta = 0,
-  subtitle = "Siste 30 dager",
-}) {
-  const pct = Math.max(0, Math.min(100, value));
+/** 2) Progress ring (response rate) */
+function ProgressRingCard({ title = "Svarprosent", value = 0, subtitle = "Siste 30 dager", footnote = "Live" }) {
+  const pct = clamp(Number(value || 0), 0, 100);
   const r = 34;
   const c = 2 * Math.PI * r;
   const dash = (pct / 100) * c;
@@ -152,8 +214,9 @@ function ProgressRingCard({
           <p className="text-sm font-medium text-slate-600">{title}</p>
           <p className="text-sm text-slate-500 mt-1">{subtitle}</p>
         </div>
+
         <span className="text-xs px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
-          {delta > 0 ? `↑ ${delta}%` : delta < 0 ? `↓ ${Math.abs(delta)}%` : "→ 0%"}
+          {footnote}
         </span>
       </div>
 
@@ -173,13 +236,23 @@ function ProgressRingCard({
           />
           <text
             x="60"
-            y="60"
+            y="58"
             textAnchor="middle"
             dominantBaseline="central"
             className="fill-slate-900"
-            style={{ fontSize: 24, fontWeight: 700 }}
+            style={{ fontSize: 26, fontWeight: 800 }}
           >
-            {pct}%
+            {Math.round(pct)}%
+          </text>
+          <text
+            x="60"
+            y="78"
+            textAnchor="middle"
+            dominantBaseline="central"
+            className="fill-slate-500"
+            style={{ fontSize: 12 }}
+          >
+            fullført
           </text>
         </svg>
       </div>
@@ -187,8 +260,47 @@ function ProgressRingCard({
   );
 }
 
+/** 3) Segment bars (like Simployer engagement breakdown) */
+function SegmentBars({ title = "Kategori-score", items = [] }) {
+  return (
+    <div className="bg-white rounded-3xl border border-slate-200 p-6">
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-sm font-medium text-slate-600">{title}</p>
+          <p className="text-sm text-slate-500 mt-1">Skalert 1–5</p>
+        </div>
+        <BarChart3 className="h-5 w-5 text-slate-400" />
+      </div>
+
+      <div className="mt-5 space-y-4">
+        {items.map((it) => {
+          const v = clamp(Number(it.value || 0), 0, 5);
+          const pct = (v / 5) * 100;
+          return (
+            <div key={it.key} className="space-y-1">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-700 font-medium">{it.label}</span>
+                <span className="text-slate-500">{v.toFixed(1)}</span>
+              </div>
+              <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                <div
+                  className={cn(
+                    "h-full rounded-full",
+                    v >= 4 ? "bg-emerald-500" : v >= 3 ? "bg-amber-500" : "bg-red-500"
+                  )}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /* ---------------------------
-   Dashboard
+   Dashboard page
 --------------------------- */
 export default function Dashboard() {
   const { data: currentUser } = useQuery({
@@ -200,7 +312,6 @@ export default function Dashboard() {
   const canSeeDashboard = role === ROLE.HR || role === ROLE.MANAGER;
   const scope = useMemo(() => getManagedDepartmentKeys(currentUser), [currentUser]);
 
-  // Stop fetch for employees
   const { data: assessments = [], isLoading: loadingAssessments } = useQuery({
     queryKey: ["assessments"],
     queryFn: () => base44.entities.HealthAssessment.list("-created_date", 500),
@@ -219,7 +330,6 @@ export default function Dashboard() {
     enabled: !!currentUser && canSeeDashboard,
   });
 
-  // Gate for employees
   if (currentUser && !canSeeDashboard) {
     return (
       <div className="text-center py-16">
@@ -229,7 +339,6 @@ export default function Dashboard() {
     );
   }
 
-  // Filter: HR = all, Manager = own departments
   const filteredAssessments = useMemo(() => {
     if (!currentUser) return [];
     if (role === ROLE.HR) return assessments;
@@ -272,56 +381,68 @@ export default function Dashboard() {
   const stats = useMemo(() => {
     if (!filteredAssessments.length) return null;
 
-    const avg = (key) =>
-      filteredAssessments.reduce((sum, a) => sum + (Number(a[key]) || 0), 0) / filteredAssessments.length;
+    const physical = avg(filteredAssessments.map((a) => Number(a.physical_load) || 0));
+    const mental = avg(filteredAssessments.map((a) => Number(a.mental_wellbeing) || 0));
+    const work = avg(filteredAssessments.map((a) => Number(a.work_environment) || 0));
 
     return {
-      physical: avg("physical_load"),
-      mental: avg("mental_wellbeing"),
-      work: avg("work_environment"),
+      physical,
+      mental,
+      work,
       responses: filteredAssessments.length,
     };
   }, [filteredAssessments]);
 
-  // HealthIndex for gauge (0-5)
   const healthIndex = useMemo(() => {
     if (!stats) return null;
     return (stats.physical + stats.mental + stats.work) / 3;
   }, [stats]);
 
-  // Department scores for bar chart
+  // Response rate (best effort): use employee_count if present
+  const responseRate = useMemo(() => {
+    if (!stats) return 0;
+
+    const totalEmployees = filteredDepartments.reduce(
+      (sum, d) => sum + (Number(d.employee_count) || 0),
+      0
+    );
+
+    if (totalEmployees > 0) {
+      return clamp((stats.responses / totalEmployees) * 100, 0, 100);
+    }
+
+    // fallback if no employee_count
+    return clamp((stats.responses / 50) * 100, 0, 100);
+  }, [stats, filteredDepartments]);
+
   const departmentScores = useMemo(() => {
     if (!filteredAssessments.length) return [];
-
     const byDept = new Map();
+
     filteredAssessments.forEach((a) => {
       const key = a.department_id || a.department || "Ukjent";
       const name = a.department || "Ukjent";
-
       if (!byDept.has(key)) byDept.set(key, { name, scores: [], count: 0 });
 
       const row = byDept.get(key);
-      const avgScore =
-        ((Number(a.physical_load) || 0) + (Number(a.mental_wellbeing) || 0) + (Number(a.work_environment) || 0)) / 3;
-
-      row.scores.push(avgScore);
+      const score = ((Number(a.physical_load) || 0) + (Number(a.mental_wellbeing) || 0) + (Number(a.work_environment) || 0)) / 3;
+      row.scores.push(score);
       row.count += 1;
     });
 
     return Array.from(byDept.values())
       .map((d) => ({
         name: d.name,
-        score: d.scores.reduce((x, y) => x + y, 0) / d.scores.length,
+        score: avg(d.scores),
         respondent_count: d.count,
       }))
       .sort((a, b) => a.score - b.score);
   }, [filteredAssessments]);
 
-  // Trend data (last 8 weeks)
   const trendData = useMemo(() => {
     if (!filteredAssessments.length) return [];
-
     const byWeek = new Map();
+
     filteredAssessments.forEach((a) => {
       const weekRaw = a.assessment_week || "ukjent";
       if (!byWeek.has(weekRaw)) byWeek.set(weekRaw, { fysisk: [], mental: [], arbeid: [] });
@@ -332,14 +453,14 @@ export default function Dashboard() {
       w.arbeid.push(Number(a.work_environment) || 3);
     });
 
-    return Array.from(byWeek.entries())
-      .map(([week, d]) => ({
-        week: week.split("-")[1] || week,
-        fysisk: d.fysisk.reduce((x, y) => x + y, 0) / d.fysisk.length,
-        mental: d.mental.reduce((x, y) => x + y, 0) / d.mental.length,
-        arbeid: d.arbeid.reduce((x, y) => x + y, 0) / d.arbeid.length,
-      }))
-      .slice(-8);
+    const rows = Array.from(byWeek.entries()).map(([week, d]) => ({
+      week: week.split("-")[1] || week,
+      fysisk: avg(d.fysisk),
+      mental: avg(d.mental),
+      arbeid: avg(d.arbeid),
+    }));
+
+    return rows.slice(-8);
   }, [filteredAssessments]);
 
   const getRiskLevel = (score) => {
@@ -349,14 +470,6 @@ export default function Dashboard() {
   };
 
   const isLoading = loadingAssessments || loadingDepartments;
-
-  // Simple response rate proxy (just to give the ring something).
-  // If you later have employee_count, swap this calculation.
-  const responseRate = useMemo(() => {
-    if (!filteredAssessments.length) return 0;
-    // “best effort”: cap at 95 so it doesn’t look fake-perfect
-    return Math.min(95, Math.round((filteredAssessments.length / 50) * 100));
-  }, [filteredAssessments]);
 
   return (
     <div className="space-y-8">
@@ -372,30 +485,31 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* TOP: Ring + Gauge (Simployer-ish) */}
+      {/* TOP: Simployer-ish grid */}
       {isLoading ? (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-4 bg-white rounded-3xl border border-slate-200 p-6">
-            <Skeleton className="h-4 w-28 mb-3" />
+            <Skeleton className="h-4 w-24 mb-3" />
             <Skeleton className="h-3 w-40 mb-6" />
             <Skeleton className="h-32 w-32 rounded-full mx-auto" />
           </div>
           <div className="lg:col-span-8 bg-white rounded-3xl border border-slate-200 p-6">
-            <Skeleton className="h-4 w-32 mb-3" />
-            <Skeleton className="h-10 w-20 mb-2" />
-            <Skeleton className="h-3 w-40 mb-8" />
-            <Skeleton className="h-36 w-full" />
+            <Skeleton className="h-4 w-40 mb-3" />
+            <Skeleton className="h-10 w-24 mb-2" />
+            <Skeleton className="h-3 w-64 mb-8" />
+            <Skeleton className="h-48 w-full" />
+          </div>
+          <div className="lg:col-span-12 bg-white rounded-3xl border border-slate-200 p-6">
+            <Skeleton className="h-4 w-40 mb-6" />
+            <Skeleton className="h-3 w-full mb-2" />
+            <Skeleton className="h-3 w-full mb-2" />
+            <Skeleton className="h-3 w-full" />
           </div>
         </div>
       ) : stats ? (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-4">
-            <ProgressRingCard
-              title="Svarprosent"
-              value={responseRate}
-              delta={+0}
-              subtitle="Siste 30 dager"
-            />
+            <ProgressRingCard title="Svarprosent" value={responseRate} subtitle="Siste 30 dager" footnote="Live" />
           </div>
 
           <div className="lg:col-span-8">
@@ -404,9 +518,20 @@ export default function Dashboard() {
               value={healthIndex ?? 0}
               min={0}
               max={5}
-              delta={+0.0}
+              delta={0}
               subtitle="Basert på fysisk, mental og arbeidsforhold"
               footnote="Aggregert"
+            />
+          </div>
+
+          <div className="lg:col-span-12">
+            <SegmentBars
+              title="Kategori-score"
+              items={[
+                { key: "physical", label: "Fysisk belastning", value: stats.physical },
+                { key: "mental", label: "Mental helse", value: stats.mental },
+                { key: "work", label: "Arbeidsforhold", value: stats.work },
+              ]}
             />
           </div>
         </div>
@@ -420,18 +545,8 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Key numbers */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-white rounded-2xl border border-slate-200 p-6">
-              <Skeleton className="h-4 w-24 mb-3" />
-              <Skeleton className="h-8 w-16 mb-2" />
-              <Skeleton className="h-3 w-32" />
-            </div>
-          ))}
-        </div>
-      ) : stats ? (
+      {/* Key numbers row */}
+      {stats && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <RiskCard
             title="Fysisk belastning"
@@ -465,7 +580,7 @@ export default function Dashboard() {
             icon={Users}
           />
         </div>
-      ) : null}
+      )}
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
