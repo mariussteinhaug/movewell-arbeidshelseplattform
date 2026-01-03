@@ -1,25 +1,51 @@
-import React from 'react';
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 
 export default function CTASection() {
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
-    <section className="container mx-auto px-6 md:px-20 py-20 md:py-28">
-      <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-12 md:p-20 text-center shadow-2xl">
-        <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
-          Klar til å ta neste steg?
-        </h2>
-        <p className="text-xl text-white/80 mb-10 max-w-2xl mx-auto leading-relaxed">
-          La oss vise deg hvordan MoveWell kan redusere sykefravær og forbedre arbeidshelsen i din bedrift.
-        </p>
-        <Button 
-          size="lg" 
-          className="bg-white hover:bg-slate-100 text-slate-900 px-10 py-7 rounded-full font-bold text-lg transition-all hover:scale-105 shadow-xl"
-          onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
-        >
-          Book et møte i dag
-          <ArrowRight className="w-6 h-6 ml-2" />
-        </Button>
+    <section className="py-20 md:py-28 bg-white">
+      <div className="container mx-auto px-6 md:px-20">
+        <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-slate-950 px-8 py-12 md:px-16 md:py-16 text-center shadow-[0_25px_60px_rgba(0,0,0,0.25)]">
+          {/* subtle highlight */}
+          <div className="pointer-events-none absolute -top-40 left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-white/10 blur-3xl" />
+
+          <h2 className="relative text-3xl md:text-5xl font-semibold tracking-tight text-white leading-tight">
+            Klar til å ta neste steg?
+          </h2>
+
+          <p className="relative mt-5 text-base md:text-xl text-white/75 max-w-2xl mx-auto leading-relaxed">
+            La oss vise deg hvordan MoveWell kan gi tidlige signaler, tydelig oppfølging og bedre beslutningsgrunnlag.
+          </p>
+
+          <div className="relative mt-10 flex flex-col sm:flex-row gap-3 justify-center">
+            <Button
+              size="lg"
+              className="rounded-full px-8 py-6 bg-white text-slate-950 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+              onClick={() => scrollTo("contact")}
+            >
+              Book et møte
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
+
+            <Button
+              size="lg"
+              variant="ghost"
+              className="rounded-full px-8 py-6 bg-white/10 text-white hover:bg-white/15 border border-white/15 transition-all"
+              onClick={() => scrollTo("how-it-works")}
+            >
+              Se hvordan det fungerer
+            </Button>
+          </div>
+
+          <p className="relative mt-6 text-sm text-white/60">
+            Uforpliktende • 15 min • Svar innen 24 timer
+          </p>
+        </div>
       </div>
     </section>
   );
