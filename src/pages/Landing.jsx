@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import LandingHeader from "../components/landing/LandingHeader";
 import Hero from "../components/landing/Hero";
-import ImageSection from "../components/landing/ImageSection";
 import LogoSection from "../components/landing/LogoSection";
 import ProductSection from "../components/landing/ProductSection";
 import TestimonialsSection from "../components/landing/TestimonialsSection";
@@ -25,7 +24,6 @@ export default function Landing() {
 
       <main className="pt-16">
         <Hero />
-        <ImageSection />
         <LogoSection />
 
         {/* 1) Første produktseksjon */}
