@@ -19,6 +19,29 @@ import {
 import { base44 } from "@/api/base44Client";
 import { cn } from "@/lib/utils";
 
+const ROLE = {
+  EMPLOYEE: "employee",
+  MANAGER: "manager", // leder
+  HR: "hr",
+  ADMIN: "admin", // hvis du har legacy admin i Base44
+};
+
+// Normaliser role fra Base44 (så du ikke knekker hvis den heter "admin" i dag)
+function normalizeRole(rawRole) {
+  if (!rawRole) return ROLE.EMPLOYEE;
+  const r = String(rawRole).toLowerCase();
+  if (r === "hr") return ROLE.HR;
+  if (r === "manager" || r === "leader" || r === "leder") return ROLE.MANAGER;
+  if (r === "admin") return ROLE.HR; // ofte er "admin" i praksis HR i MoveWell
+  return ROLE.EMPLOYEE;
+}
+
+// RBAC helper
+function hasRole(userRole, allowedRoles) {
+  if (!allowedRoles || allowedRoles.length === 0) return true;
+  return allowedRoles.includes(userRole);
+}
+
 export default function Layout({ children, currentPageName }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
@@ -35,33 +58,38 @@ export default function Layout({ children, currentPageName }) {
         setUser(currentUser);
       } catch (error) {
         console.error("Could not fetch user:", error);
+        setUser(null);
       }
     };
     fetchUser();
   }, []);
 
-  const isAdmin = user?.role === "admin";
+  const userRole = normalizeRole(user?.role);
 
-  const navigation = useMemo(
-    () =>
-      [
-        { name: "Dashboard", page: "Dashboard", icon: LayoutDashboard, adminOnly: true },
-        { name: "Kartlegging", page: "Assessment", icon: ClipboardCheck },
-        { name: "Min profil", page: "Profile", icon: User },
-        { name: "Mine meldinger", page: "MyMessages", icon: Mail },
+  const navigation = useMemo(() => {
+    const items = [
+      // Employee (alle)
+      { name: "Kartlegging", page: "Assessment", icon: ClipboardCheck, roles: [ROLE.EMPLOYEE, ROLE.MANAGER, ROLE.HR] },
+      { name: "Min profil", page: "Profile", icon: User, roles: [ROLE.EMPLOYEE, ROLE.MANAGER, ROLE.HR] },
+      { name: "Mine meldinger", page: "MyMessages", icon: Mail, roles: [ROLE.EMPLOYEE, ROLE.MANAGER, ROLE.HR] },
 
-        { name: "Kartleggingsdata", page: "AssessmentResults", icon: FileText, adminOnly: true },
-        { name: "AI-Rapporter", page: "Reports", icon: FileText, adminOnly: true },
-        { name: "Trendanalyse", page: "TrendAnalysis", icon: TrendingUp, adminOnly: true },
-        { name: "Ansattprofil", page: "EmployeeProfile", icon: Shield, adminOnly: true },
-        { name: "Tilrettelegging", page: "Accommodation", icon: Wrench, adminOnly: true },
-        { name: "Avdelinger", page: "Departments", icon: Building2, adminOnly: true },
-        { name: "Anbefalinger", page: "Recommendations", icon: Lightbulb, adminOnly: true },
-        { name: "Meldingssenter", page: "MessageCenter", icon: Mail, adminOnly: true },
-        { name: "Innstillinger", page: "Settings", icon: Settings, adminOnly: true },
-      ].filter((item) => !item.adminOnly || isAdmin),
-    [isAdmin],
-  );
+      // Manager + HR
+      { name: "Dashboard", page: "Dashboard", icon: LayoutDashboard, roles: [ROLE.MANAGER, ROLE.HR] },
+      { name: "AI-Rapporter", page: "Reports", icon: FileText, roles: [ROLE.MANAGER, ROLE.HR] },
+      { name: "Anbefalinger", page: "Recommendations", icon: Lightbulb, roles: [ROLE.MANAGER, ROLE.HR] },
+      { name: "Meldingssenter", page: "MessageCenter", icon: Mail, roles: [ROLE.MANAGER, ROLE.HR] },
+      { name: "Tilrettelegging", page: "Accommodation", icon: Wrench, roles: [ROLE.MANAGER, ROLE.HR] },
+
+      // HR-only
+      { name: "Kartleggingsdata", page: "AssessmentResults", icon: FileText, roles: [ROLE.HR] },
+      { name: "Trendanalyse", page: "TrendAnalysis", icon: TrendingUp, roles: [ROLE.HR] },
+      { name: "Ansattprofil", page: "EmployeeProfile", icon: Shield, roles: [ROLE.HR] },
+      { name: "Avdelinger", page: "Departments", icon: Building2, roles: [ROLE.HR] },
+      { name: "Innstillinger", page: "Settings", icon: Settings, roles: [ROLE.HR] },
+    ];
+
+    return items.filter((item) => hasRole(userRole, item.roles));
+  }, [userRole]);
 
   const handleLogout = async () => {
     try {
@@ -96,13 +124,13 @@ export default function Layout({ children, currentPageName }) {
                   to={createPageUrl(item.page)}
                   className={cn(
                     "group flex items-center gap-4 px-5 py-3.5 rounded-xl transition-colors font-medium",
-                    isActive ? "bg-slate-900 text-white" : "text-slate-700 hover:bg-slate-100",
+                    isActive ? "bg-slate-900 text-white" : "text-slate-700 hover:bg-slate-100"
                   )}
                 >
                   <item.icon
                     className={cn(
                       "h-5 w-5",
-                      isActive ? "text-white" : "text-slate-400 group-hover:text-slate-700",
+                      isActive ? "text-white" : "text-slate-400 group-hover:text-slate-700"
                     )}
                   />
                   <span>{item.name}</span>
@@ -120,7 +148,7 @@ export default function Layout({ children, currentPageName }) {
               <span className="text-sm font-semibold">Personvern</span>
             </div>
             <p className="text-xs text-slate-600 leading-relaxed">
-              All data kan anonymiseres og aggregeres. Ansatte har tilgang til sin egen profil.
+              Data kan anonymiseres og aggregeres. Ansatte ser kun sin egen profil. Ledere ser kun sin avdeling. HR ser full oversikt.
             </p>
           </div>
 
@@ -174,7 +202,7 @@ export default function Layout({ children, currentPageName }) {
                   onClick={() => setMobileMenuOpen(false)}
                   className={cn(
                     "flex items-center gap-4 px-5 py-3.5 rounded-xl transition-colors font-medium",
-                    isActive ? "bg-slate-900 text-white" : "text-slate-700 hover:bg-slate-100",
+                    isActive ? "bg-slate-900 text-white" : "text-slate-700 hover:bg-slate-100"
                   )}
                 >
                   <item.icon className={cn("h-5 w-5", isActive ? "text-white" : "text-slate-400")} />
