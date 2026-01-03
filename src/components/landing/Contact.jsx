@@ -13,7 +13,7 @@ export default function Contact() {
     message: "",
   });
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
 
     // TODO: Replace with real submit (Base44 action / email integration)
@@ -122,7 +122,7 @@ export default function Contact() {
                   <Input
                     placeholder="Navn"
                     value={formData.name}
-                    onChange={(e: any) =>
+                    onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
                     }
                     required
@@ -133,7 +133,7 @@ export default function Contact() {
                     type="email"
                     placeholder="E-post"
                     value={formData.email}
-                    onChange={(e: any) =>
+                    onChange={(e) =>
                       setFormData({ ...formData, email: e.target.value })
                     }
                     required
@@ -143,7 +143,7 @@ export default function Contact() {
                   <Input
                     placeholder="Bedrift"
                     value={formData.company}
-                    onChange={(e: any) =>
+                    onChange={(e) =>
                       setFormData({ ...formData, company: e.target.value })
                     }
                     required
@@ -153,7 +153,7 @@ export default function Contact() {
                   <Textarea
                     placeholder="Hva ønsker du å se i demoen?"
                     value={formData.message}
-                    onChange={(e: any) =>
+                    onChange={(e) =>
                       setFormData({ ...formData, message: e.target.value })
                     }
                     rows={4}
