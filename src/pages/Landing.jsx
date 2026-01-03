@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
 import LandingHeader from '../components/landing/LandingHeader';
 import Hero from '../components/landing/Hero';
+import ImageSection from '../components/landing/ImageSection';
+import LogoSection from '../components/landing/LogoSection';
 import HowItWorks from '../components/landing/HowItWorks';
 import Benefits from '../components/landing/Benefits';
 import Contact from '../components/landing/Contact';
