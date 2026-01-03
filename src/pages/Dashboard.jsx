@@ -129,8 +129,8 @@ export default function Dashboard() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Dashboard</h1>
-        <p className="text-slate-500 mt-1">Aggregert oversikt over arbeidshelse på tvers av avdelinger</p>
+        <h1 className="text-4xl sm:text-5xl font-bold text-slate-900 mb-3 leading-tight">Dashboard</h1>
+        <p className="text-slate-600 text-lg">Aggregert oversikt over arbeidshelse på tvers av avdelinger</p>
       </div>
 
       {/* Stats cards */}
@@ -145,7 +145,7 @@ export default function Dashboard() {
           ))}
         </div>
       ) : stats ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <RiskCard 
             title="Fysisk belastning"
             value={stats.physical.toFixed(1)}

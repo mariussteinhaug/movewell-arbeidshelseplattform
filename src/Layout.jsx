@@ -64,19 +64,19 @@ export default function Layout({ children, currentPageName }) {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50/30">
       {/* Desktop Sidebar */}
       <aside className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col">
-        <div className="flex flex-col flex-grow bg-white/80 backdrop-blur-xl border-r border-slate-200/60 pt-8 pb-4 overflow-y-auto">
-          {/* Logo */}
-          <div className="flex items-center px-8 mb-12">
-            <img 
-              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694db50ccf9dcb239e37fc6a/bdae0c18b_image.png"
-              alt="MoveWell Logo"
-              className="h-16 w-auto object-contain"
-              style={{ background: 'transparent' }}
-            />
-          </div>
+        <div className="flex flex-col flex-grow bg-white border-r border-slate-200 pt-10 pb-6 overflow-y-auto">
+                  {/* Logo */}
+                  <div className="flex items-center px-10 mb-16">
+                    <img 
+                      src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694db50ccf9dcb239e37fc6a/bdae0c18b_image.png"
+                      alt="MoveWell Logo"
+                      className="h-14 w-auto object-contain"
+                      style={{ background: 'transparent' }}
+                    />
+                  </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 space-y-1">
+          <nav className="flex-1 px-6 space-y-2">
             {navigation.map((item) => {
               const isActive = currentPageName === item.page;
               return (
@@ -84,41 +84,43 @@ export default function Layout({ children, currentPageName }) {
                   key={item.name}
                   to={createPageUrl(item.page)}
                   className={cn(
-                    "group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
+                    "group flex items-center gap-4 px-5 py-3.5 rounded-lg transition-all duration-200 font-medium",
                     isActive 
-                      ? "bg-emerald-50 text-emerald-700" 
-                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                      ? "bg-slate-900 text-white shadow-lg" 
+                      : "text-slate-700 hover:bg-slate-100"
                   )}
                 >
                   <item.icon className={cn(
                     "h-5 w-5 transition-colors",
-                    isActive ? "text-emerald-600" : "text-slate-400 group-hover:text-slate-600"
+                    isActive ? "text-white" : "text-slate-400 group-hover:text-slate-700"
                   )} />
-                  <span className="font-medium">{item.name}</span>
+                  <span>{item.name}</span>
                 </Link>
               );
             })}
           </nav>
 
           {/* Privacy badge */}
-          <div className="mx-4 mt-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
-            <div className="flex items-center gap-2 text-slate-600 mb-2">
-              <Shield className="h-4 w-4 text-emerald-600" />
-              <span className="text-sm font-medium">Personvern</span>
+          <div className="mx-6 mt-6 p-5 rounded-2xl bg-slate-50 border-2 border-slate-200">
+            <div className="flex items-center gap-3 text-slate-700 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+                <Shield className="h-4 w-4 text-emerald-600" />
+              </div>
+              <span className="text-sm font-semibold">Personvern</span>
             </div>
-            <p className="text-xs text-slate-500 leading-relaxed">
+            <p className="text-xs text-slate-600 leading-relaxed">
               All data er anonymisert og aggregert. Ansatte eier sine egne data.
             </p>
           </div>
 
           {/* Logout button */}
           {user && (
-            <div className="mx-4 mt-2">
+            <div className="mx-6 mt-3">
               <button
                 onClick={() => base44.auth.logout()}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-red-50 hover:text-red-600 transition-all duration-200"
+                className="w-full flex items-center gap-3 px-5 py-3.5 rounded-lg text-slate-600 hover:bg-red-50 hover:text-red-600 transition-all duration-200 font-medium"
               >
-                <span className="text-sm font-medium">Logg ut</span>
+                <span className="text-sm">Logg ut</span>
               </button>
             </div>
           )}
@@ -126,8 +128,8 @@ export default function Layout({ children, currentPageName }) {
           </aside>
 
       {/* Mobile header */}
-      <div className="lg:hidden sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-slate-200/60">
-        <div className="flex items-center justify-between px-4 py-3">
+      <div className="lg:hidden sticky top-0 z-40 bg-white border-b border-slate-200">
+        <div className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center">
             <img 
               src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694db50ccf9dcb239e37fc6a/bdae0c18b_image.png"
@@ -138,19 +140,19 @@ export default function Layout({ children, currentPageName }) {
           </div>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+            className="p-3 rounded-xl hover:bg-slate-100 transition-colors"
           >
             {mobileMenuOpen ? (
-              <X className="h-5 w-5 text-slate-600" />
+              <X className="h-6 w-6 text-slate-700" />
             ) : (
-              <Menu className="h-5 w-5 text-slate-600" />
+              <Menu className="h-6 w-6 text-slate-700" />
             )}
           </button>
         </div>
 
         {/* Mobile menu */}
         {mobileMenuOpen && (
-          <nav className="px-4 pb-4 space-y-1 border-t border-slate-100 pt-4">
+          <nav className="px-6 pb-6 space-y-2 border-t border-slate-200 pt-6 bg-slate-50">
             {navigation.map((item) => {
               const isActive = currentPageName === item.page;
               return (
@@ -159,23 +161,23 @@ export default function Layout({ children, currentPageName }) {
                   to={createPageUrl(item.page)}
                   onClick={() => setMobileMenuOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-xl transition-colors",
+                    "flex items-center gap-4 px-5 py-3.5 rounded-lg transition-colors font-medium",
                     isActive 
-                      ? "bg-emerald-50 text-emerald-700" 
-                      : "text-slate-600 hover:bg-slate-50"
+                      ? "bg-slate-900 text-white shadow-lg" 
+                      : "text-slate-700 hover:bg-white"
                   )}
                 >
-                  <item.icon className={cn("h-5 w-5", isActive ? "text-emerald-600" : "text-slate-400")} />
-                  <span className="font-medium">{item.name}</span>
+                  <item.icon className={cn("h-5 w-5", isActive ? "text-white" : "text-slate-400")} />
+                  <span>{item.name}</span>
                 </Link>
               );
             })}
             {user && (
               <button
                 onClick={() => base44.auth.logout()}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors"
+                className="w-full flex items-center gap-4 px-5 py-3.5 rounded-lg text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors font-medium"
               >
-                <span className="font-medium">Logg ut</span>
+                <span>Logg ut</span>
               </button>
             )}
           </nav>
@@ -184,7 +186,7 @@ export default function Layout({ children, currentPageName }) {
 
       {/* Main content */}
       <main className="lg:pl-72">
-        <div className="px-4 py-6 sm:px-8 lg:px-12 lg:py-10 max-w-7xl mx-auto">
+        <div className="px-6 py-8 sm:px-10 lg:px-16 lg:py-12 max-w-7xl mx-auto">
           {children}
         </div>
       </main>
