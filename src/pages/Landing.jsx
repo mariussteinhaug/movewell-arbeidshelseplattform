@@ -29,6 +29,7 @@ export default function Landing() {
         <LogoSection />
         
         <ProductSection 
+          badge="Kartlegging"
           title="AI-drevet kartlegging som gir innsikt"
           description="Vårt adaptive system tilpasser spørsmålene basert på svarene, og bruker kunstig intelligens til å identifisere risikofaktorer før de blir et problem."
           image="https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&h=600&fit=crop"
@@ -41,6 +42,7 @@ export default function Landing() {
         />
         
         <ProductSection 
+          badge="Oppfølging"
           title="Oppfølging som skaper resultater"
           description="Fra kartlegging til handling - vårt system hjelper deg med konkrete tiltak og oppfølging av ansatte som trenger det."
           image="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&h=600&fit=crop"
@@ -51,6 +53,19 @@ export default function Landing() {
             "Måling av effekt over tid"
           ]}
           reversed
+        />
+        
+        <ProductSection 
+          badge="Rapportering"
+          title="Innsikt som driver endring"
+          description="Få AI-genererte rapporter som gir deg oversikt over arbeidshelsen i din bedrift, med konkrete anbefalinger for forbedring."
+          image="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=600&fit=crop"
+          features={[
+            "Ukentlige trendrapporter per avdeling",
+            "Identifisering av risikofaktorer",
+            "Sammenligning på tvers av avdelinger",
+            "Målbart resultat av tiltak"
+          ]}
         />
         
         <TestimonialsSection />
