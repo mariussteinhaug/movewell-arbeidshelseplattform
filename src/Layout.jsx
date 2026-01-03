@@ -68,10 +68,9 @@ export default function Layout({ children, currentPageName }) {
                   {/* Logo */}
                   <div className="flex items-center px-10 mb-16">
                     <img 
-                      src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694db50ccf9dcb239e37fc6a/bdae0c18b_image.png"
+                      src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694db50ccf9dcb239e37fc6a/906a80b56_movewell-high-resolution-logo-transparent.png"
                       alt="MoveWell Logo"
-                      className="h-14 w-auto object-contain"
-                      style={{ background: 'transparent' }}
+                      className="h-16 w-auto object-contain"
                     />
                   </div>
 
@@ -132,10 +131,9 @@ export default function Layout({ children, currentPageName }) {
         <div className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center">
             <img 
-              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694db50ccf9dcb239e37fc6a/bdae0c18b_image.png"
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694db50ccf9dcb239e37fc6a/906a80b56_movewell-high-resolution-logo-transparent.png"
               alt="MoveWell Logo"
-              className="h-10 w-auto object-contain"
-              style={{ background: 'transparent' }}
+              className="h-12 w-auto object-contain"
             />
           </div>
           <button

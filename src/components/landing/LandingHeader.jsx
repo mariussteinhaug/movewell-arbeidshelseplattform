@@ -20,9 +20,9 @@ export default function LandingHeader() {
           {/* Logo */}
           <a href="#" className="flex items-center">
             <img 
-              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694db50ccf9dcb239e37fc6a/bdae0c18b_image.png"
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694db50ccf9dcb239e37fc6a/906a80b56_movewell-high-resolution-logo-transparent.png"
               alt="MoveWell Logo"
-              className="h-10 w-auto object-contain"
+              className="h-16 w-auto object-contain"
             />
           </a>
           
