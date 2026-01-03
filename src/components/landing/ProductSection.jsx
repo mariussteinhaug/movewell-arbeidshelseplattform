@@ -2,16 +2,6 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle } from "lucide-react";
 
-type ProductSectionProps = {
-  badge?: string;
-  title: string;
-  description: string;
-  image: string;
-  features?: string[];
-  reversed?: boolean;
-  buttonText?: string;
-};
-
 export default function ProductSection({
   badge,
   title,
@@ -20,7 +10,7 @@ export default function ProductSection({
   features,
   reversed,
   buttonText = "Book et møte",
-}: ProductSectionProps) {
+}) {
   const scrollToContact = () => {
     document.getElementById("contact")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
