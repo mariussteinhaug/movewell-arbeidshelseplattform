@@ -1,55 +1,82 @@
-import React from 'react';
+import React from "react";
 
 export default function TestimonialsSection() {
   const testimonials = [
     {
-      name: "Erik Hansen",
-      role: "HR-direktør @ Norsk Hydro",
-      quote: "MoveWell har gitt oss verdifull innsikt i arbeidshelsen til våre ansatte. Vi har redusert sykefraværet med 25% på bare 6 måneder.",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop"
+      name: "HR-leder",
+      role: "Industri (200+ ansatte)",
+      quote:
+        "MoveWell gjorde det enkelt å fange opp tidlige signaler. Vi fikk raskt en bedre oversikt og en tydeligere plan for oppfølging.",
+      image:
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop",
     },
     {
-      name: "Maria Nilsen",
-      role: "Leder Produksjon @ Lerøy Seafood",
-      quote: "Systemet er intuitivt og gir oss konkrete handlingsplaner. Våre ansatte føler seg sett og verdsatt.",
-      image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop"
+      name: "Produksjonsleder",
+      role: "Matproduksjon",
+      quote:
+        "Systemet er intuitivt, og anbefalingene gjorde det lettere å prioritere tiltak. Ansatte opplever at vi tar arbeidshelsen på alvor.",
+      image:
+        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop",
     },
     {
-      name: "Lars Johansen",
-      role: "HMS-ansvarlig @ Posten Norge",
-      quote: "Den anonyme kartleggingen har gitt oss ærlige tilbakemeldinger som vi aldri hadde fått ellers. Viktig verktøy for oss.",
-      image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop"
-    }
+      name: "HMS-ansvarlig",
+      role: "Logistikk",
+      quote:
+        "Anonym kartlegging ga oss ærlige tilbakemeldinger vi aldri fikk før. Det har blitt et viktig verktøy i forbedringsarbeidet.",
+      image:
+        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop",
+    },
   ];
 
   return (
-    <section className="relative bg-emerald-100 py-40 overflow-hidden">
-      <div className="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxkZWZzPjxwYXR0ZXJuIGlkPSJhIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiPjxwYXRoIGQ9Ik0wIDQwTDQwIDBaIiBzdHJva2U9IiMwMDAiIGZpbGw9Im5vbmUiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjYSkiLz48L3N2Zz4=')] bg-cover pointer-events-none" />
-      
-      <div className="relative z-10 container mx-auto px-6 md:px-20">
-        <h2 className="text-4xl md:text-5xl font-bold text-slate-900 text-center mb-16 leading-tight">
-          Hva sier våre kunder?
-        </h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {testimonials.map((testimonial, index) => (
-            <div key={index} className="bg-white rounded-2xl p-8">
-              <div className="flex items-center gap-4 mb-6">
-                <img 
-                  src={testimonial.image} 
-                  alt={testimonial.name}
-                  className="w-[72px] h-[72px] rounded-full object-cover border-4 border-emerald-500"
-                />
-                <div>
-                  <p className="text-2xl font-bold text-slate-900 leading-9">{testimonial.name}</p>
-                  <p className="text-sm text-emerald-600">{testimonial.role}</p>
+    <section className="relative py-20 md:py-28 bg-white overflow-hidden">
+      {/* subtle background */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-40 left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-slate-200/40 blur-3xl" />
+      </div>
+
+      <div className="relative container mx-auto px-6 md:px-20">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
+              Erfaringer
+            </p>
+            <h2 className="mt-3 text-3xl md:text-5xl font-semibold tracking-tight text-slate-900">
+              Hva sier brukerne?
+            </h2>
+            <p className="mt-4 text-slate-600 max-w-2xl mx-auto">
+              Uttalelser kan anonymiseres i tidlig fase. Når du har godkjente caser,
+              kan vi bytte til ekte logoer og navn.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {testimonials.map((t, index) => (
+              <div
+                key={index}
+                className="rounded-3xl border border-slate-200 bg-white/70 p-8 shadow-sm backdrop-blur"
+              >
+                <div className="flex items-center gap-4 mb-6">
+                  <img
+                    src={t.image}
+                    alt={t.name}
+                    className="h-14 w-14 rounded-full object-cover border border-slate-200"
+                    loading="lazy"
+                  />
+                  <div>
+                    <p className="text-base font-semibold text-slate-900">
+                      {t.name}
+                    </p>
+                    <p className="text-sm text-slate-500">{t.role}</p>
+                  </div>
                 </div>
+
+                <p className="text-slate-700 leading-relaxed">
+                  “{t.quote}”
+                </p>
               </div>
-              <p className="text-slate-700 leading-relaxed">
-                "{testimonial.quote}"
-              </p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </section>
