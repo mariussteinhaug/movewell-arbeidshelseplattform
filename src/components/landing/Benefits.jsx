@@ -1,101 +1,117 @@
-import React from 'react';
+import React from "react";
 import { TrendingDown, Clock, Smile, PiggyBank, CheckCircle2 } from "lucide-react";
 
 const benefits = [
   {
     icon: TrendingDown,
-    title: "Redusert sykefravær",
-    description: "Forebygg fravær før det skjer med tidlig identifisering av helserisiko.",
-    stats: "Opptil 30%"
+    title: "Tidligere innsikt",
+    description: "Oppdag risikosignaler tidlig og prioriter tiltak der de gir mest effekt.",
+    stat: "Tidlige varsler",
   },
   {
     icon: Clock,
-    title: "Spar tid på administrasjon",
+    title: "Mindre administrasjon",
     description: "Automatisert oppfølging og rapportering frigjør tid for HR og ledere.",
-    stats: "5+ timer/uke"
+    stat: "Automatisert flyt",
   },
   {
     icon: Smile,
     title: "Bedre arbeidsmiljø",
-    description: "Ansatte føler seg sett og får hjelp når de trenger det.",
-    stats: "92% fornøyde"
+    description: "Enklere oppfølging gjør at ansatte opplever støtte når det trengs.",
+    stat: "Bedre opplevelse",
   },
   {
     icon: PiggyBank,
-    title: "Positiv ROI",
-    description: "Lavere fraværskostnader og høyere produktivitet gir rask tilbakebetaling.",
-    stats: "4x ROI"
-  }
+    title: "Bedre beslutninger",
+    description: "Rapporter og trender gir et tydeligere grunnlag for prioriteringer over tid.",
+    stat: "Datadrevet",
+  },
 ];
 
 const targetIndustries = [
   "Industri & produksjon",
-  "Bygg & anlegg", 
+  "Bygg & anlegg",
   "Helse & omsorg",
   "Offentlig sektor",
-  "Transport & logistikk"
+  "Transport & logistikk",
 ];
 
 export default function Benefits() {
   return (
-    <section id="benefits" className="py-32 bg-gradient-to-b from-slate-50 to-white">
-      <div className="container mx-auto px-4">
-        {/* Section header */}
-        <div className="text-center max-w-3xl mx-auto mb-20">
-          <p className="text-emerald-600 font-bold text-sm uppercase tracking-wider mb-4">Fordeler</p>
-          <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6 leading-tight">
-            Målbar effekt for <span className="block">din bedrift</span>
+    <section id="benefits" className="py-20 md:py-28 bg-white">
+      <div className="container mx-auto px-6 md:px-20">
+        {/* Header */}
+        <div className="text-center max-w-3xl mx-auto">
+          <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
+            Fordeler
+          </p>
+          <h2 className="mt-3 text-3xl md:text-5xl font-semibold tracking-tight text-slate-900">
+            Målbar forbedring over tid
           </h2>
-          <p className="text-slate-600 text-xl font-light">
-            MoveWell leverer resultater som kan dokumenteres og måles
+          <p className="mt-4 text-slate-600 text-base md:text-lg">
+            MoveWell gjør forebyggende helsearbeid enklere – og mer handlingsrettet.
           </p>
         </div>
-        
-        {/* Benefits grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-20">
-          {benefits.map((benefit, index) => (
-            <div 
+
+        {/* Grid */}
+        <div className="mt-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {benefits.map((b, index) => (
+            <div
               key={index}
-              className="group p-8 rounded-3xl bg-white border-2 border-slate-200 hover:border-emerald-300 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2"
+              className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm hover:shadow-md transition-shadow"
             >
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-700 flex items-center justify-center mb-6 shadow-xl">
-                <benefit.icon className="w-8 h-8 text-white" />
+              <div className="flex items-center justify-between">
+                <div className="h-12 w-12 rounded-2xl bg-slate-100 flex items-center justify-center">
+                  <b.icon className="h-6 w-6 text-slate-700" />
+                </div>
+                <span className="text-xs font-semibold text-slate-500 rounded-full border border-slate-200 px-3 py-1">
+                  {b.stat}
+                </span>
               </div>
-              
-              <p className="text-3xl font-bold text-slate-900 mb-3">
-                {benefit.stats}
+
+              <h3 className="mt-6 text-lg font-semibold text-slate-900">
+                {b.title}
+              </h3>
+              <p className="mt-3 text-slate-600 leading-relaxed text-sm md:text-base">
+                {b.description}
               </p>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">{benefit.title}</h3>
-              <p className="text-slate-600 leading-relaxed">{benefit.description}</p>
             </div>
           ))}
         </div>
-        
-        {/* Target industries */}
-        <div className="bg-slate-900 rounded-3xl p-12 md:p-16 shadow-2xl">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-10">
-            <div className="text-center md:text-left">
-              <h3 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                Skreddersydd for <span className="block">din bransje</span>
+
+        {/* Industries */}
+        <div className="mt-12 rounded-3xl border border-slate-200 bg-slate-950 p-10 md:p-14 shadow-[0_25px_60px_rgba(0,0,0,0.22)]">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+            <div className="text-center md:text-left max-w-xl">
+              <p className="text-sm font-medium uppercase tracking-wide text-white/60">
+                Bransjer
+              </p>
+              <h3 className="mt-3 text-2xl md:text-4xl font-semibold tracking-tight text-white">
+                Skreddersydd for din hverdag
               </h3>
-              <p className="text-slate-300 text-lg">
-                Vi forstår de unike utfordringene i ulike sektorer
+              <p className="mt-4 text-white/70">
+                Tilpasset arbeidshverdagen i bransjer med høy belastning og krav til tydelig oppfølging.
               </p>
             </div>
-            
-            <div className="flex flex-wrap justify-center gap-4">
+
+            <div className="flex flex-wrap justify-center md:justify-end gap-3">
               {targetIndustries.map((industry, index) => (
-                <span 
+                <span
                   key={index}
-                  className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-white/10 text-white font-semibold backdrop-blur-sm border border-white/20 hover:bg-white/20 transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-white text-sm border border-white/15 hover:bg-white/15 transition-colors"
                 >
-                  <CheckCircle2 className="w-5 h-5" />
+                  <CheckCircle2 className="w-4 h-4" />
                   {industry}
                 </span>
               ))}
             </div>
           </div>
         </div>
+
+        {/* Optional footnote if you later add real metrics */}
+        {/* <p className="mt-6 text-center text-sm text-slate-500">
+          Tall og effekter kan dokumenteres i pilot/case-studier.
+        </p> */}
       </div>
     </section>
   );
