@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
-import { Link } from 'react-router-dom';
-import { createPageUrl } from '../../utils';
+import { Link } from "react-router-dom";
+import { createPageUrl } from "../../utils";
 
 export default function LandingHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -13,55 +13,85 @@ export default function LandingHeader() {
     { href: "#contact", label: "Kontakt" },
   ];
 
+  const scrollToId = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  useEffect(() => {
+    const onKeyDown = (e: any) => {
+      if (e.key === "Escape") setIsMenuOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-slate-200">
       <div className="container mx-auto px-6 md:px-20">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <a href="#" className="flex items-center">
-            <img 
+          <a
+            href="/"
+            className="flex items-center"
+            onClick={(e) => {
+              e.preventDefault();
+              window.scrollTo({ top: 0, behavior: "smooth" });
+              setIsMenuOpen(false);
+            }}
+            aria-label="Gå til toppen"
+          >
+            <img
               src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694db50ccf9dcb239e37fc6a/906a80b56_movewell-high-resolution-logo-transparent.png"
               alt="MoveWell Logo"
               className="h-12 w-auto object-contain"
             />
           </a>
-          
+
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-2">
+          <nav className="hidden md:flex items-center gap-2" aria-label="Hovedmeny">
             {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
                 className="text-slate-700 hover:text-slate-900 transition-colors font-medium px-4 py-2 rounded-lg hover:bg-slate-50"
+                onClick={(e) => {
+                  e.preventDefault();
+                  scrollToId(link.href.replace("#", ""));
+                }}
               >
                 {link.label}
               </a>
             ))}
           </nav>
-          
+
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
-            <Link to={createPageUrl('Dashboard')}>
-              <Button 
-                variant="ghost" 
+            <Link to={createPageUrl("Dashboard")}>
+              <Button
+                variant="ghost"
                 className="bg-slate-100 hover:bg-slate-200 text-slate-700 border-0 rounded-full px-6"
               >
                 Logg inn
               </Button>
             </Link>
-            <Button 
+
+            <Button
               className="bg-slate-900 hover:bg-slate-800 text-white rounded-full px-6 shadow-lg"
-              onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={() => scrollToId("contact")}
             >
               Book et møte
             </Button>
           </div>
-          
+
           {/* Mobile menu button */}
           <button
             className="md:hidden p-3 rounded-lg hover:bg-slate-100"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label="Toggle menu"
+            onClick={() => setIsMenuOpen((v) => !v)}
+            aria-label="Åpne/lukk meny"
+            aria-expanded={isMenuOpen}
+            aria-controls="mobile-nav"
+            type="button"
           >
             {isMenuOpen ? (
               <X className="w-6 h-6 text-slate-700" />
@@ -70,34 +100,40 @@ export default function LandingHeader() {
             )}
           </button>
         </div>
-        
+
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden pb-6 border-t border-slate-200 pt-6">
-            <nav className="flex flex-col gap-3">
+          <div id="mobile-nav" className="md:hidden pb-6 border-t border-slate-200 pt-6">
+            <nav className="flex flex-col gap-3" aria-label="Mobilmeny">
               {navLinks.map((link) => (
                 <a
                   key={link.href}
                   href={link.href}
                   className="text-slate-700 hover:text-slate-900 transition-colors font-medium py-3 px-4 rounded-lg hover:bg-slate-50"
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsMenuOpen(false);
+                    scrollToId(link.href.replace("#", ""));
+                  }}
                 >
                   {link.label}
                 </a>
               ))}
-              <Link to={createPageUrl('Dashboard')} className="mt-2">
-                <Button 
-                  variant="ghost" 
+
+              <Link to={createPageUrl("Dashboard")} className="mt-2">
+                <Button
+                  variant="ghost"
                   className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 border-0 rounded-full py-6"
                 >
                   Logg inn
                 </Button>
               </Link>
-              <Button 
+
+              <Button
                 className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-full py-6 shadow-lg mt-2"
                 onClick={() => {
                   setIsMenuOpen(false);
-                  document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+                  scrollToId("contact");
                 }}
               >
                 Book et møte
