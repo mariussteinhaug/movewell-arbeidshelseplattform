@@ -245,6 +245,13 @@ export default function Dashboard() {
     enabled: !!currentUser && canSeeDashboard,
   });
 
+  // Meldinger (for varsler i dag)
+  const { data: messagesAll = [] } = useQuery({
+    queryKey: ["messages"],
+    queryFn: () => base44.entities.Message.list("-sent_at", 200),
+    enabled: !!currentUser && canSeeDashboard,
+  });
+
   const scopedAssessments = useMemo(() => {
     if (!currentUser) return [];
     if (role === ROLE.HR) return assessmentsRaw;
@@ -273,6 +280,18 @@ export default function Dashboard() {
   }, [recommendations, role, scope]);
 
   const start = useMemo(() => getRangeStart(range), [range]);
+
+  const alertsToday = useMemo(() => {
+    const startMs = startOfDay(new Date()).getTime();
+    const msgs = messagesAll || [];
+    return msgs.filter((m) => {
+      if (m.type !== "broadcast") return false;
+      const ts = m.sent_at ? new Date(m.sent_at).getTime() : 0;
+      if (ts < startMs) return false;
+      if (role === ROLE.HR) return true;
+      return scope.ids.includes(m.recipient_department_id);
+    }).length;
+  }, [messagesAll, role, scope]);
   const timeFilteredAssessments = useMemo(() => {
     if (!start) return scopedAssessments;
     const startMs = start.getTime();
@@ -385,6 +404,12 @@ export default function Dashboard() {
                   hint={`Basert på helseindeks (${healthIndex10.toFixed(1)}/10)`}
                   icon={ArrowUpRight}
                   chip={bandChip}
+                />
+                <StatCard
+                  label="Varsler i dag"
+                  value={`${alertsToday}`}
+                  hint="AI/system-varsler sendt i dag"
+                  icon={BarChart3}
                 />
               </div>
               {/* Charts */}

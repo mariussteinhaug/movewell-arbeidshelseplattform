@@ -30,6 +30,22 @@ export default function MyMessages() {
     }
   });
 
+  // Hent avdelingsvarsler slik at broadcasts vises i "Mine meldinger"
+  const { data: deptMessages = [] } = useQuery({
+    queryKey: ['department-messages'],
+    queryFn: () => base44.entities.Message.list('-sent_at', 200)
+  });
+
+  const departmentAlerts = React.useMemo(() => {
+    const deptId = currentUser?.department_id;
+    const isMgrHr = ['manager', 'hr', 'admin'].includes(String(currentUser?.role || '').toLowerCase());
+    return (deptMessages || []).filter((m) =>
+      m.type === 'broadcast' &&
+      (!!deptId && m.recipient_department_id === deptId) &&
+      (isMgrHr || m.visibility !== 'hr_only')
+    );
+  }, [deptMessages, currentUser?.department_id, currentUser?.role]);
+
   const markAsRead = useMutation({
     mutationFn: (messageId) => 
       base44.entities.Message.update(messageId, { status: 'lest' }),
@@ -113,6 +129,29 @@ export default function MyMessages() {
                 Du har {unreadCount} uleste melding{unreadCount !== 1 ? 'er' : ''}
               </p>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {departmentAlerts.length > 0 && (
+        <Card className="border-slate-200 bg-slate-50/60">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Info className="h-5 w-5 text-slate-400" />
+              Varsler til din avdeling
+            </CardTitle>
+            <CardDescription>System- og AI-meldinger som gjelder din avdeling</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {departmentAlerts.map((msg) => (
+              <div key={msg.id} className="p-4 rounded-lg border border-slate-200 bg-white">
+                <p className="font-medium text-slate-900">{msg.subject || 'Varsel'}</p>
+                <p className="text-xs text-slate-500 mb-2">
+                  {format(new Date(msg.sent_at), 'dd. MMM yyyy, HH:mm', { locale: nb })}
+                </p>
+                <p className="text-sm text-slate-700 whitespace-pre-wrap">{msg.content}</p>
+              </div>
+            ))}
           </CardContent>
         </Card>
       )}

@@ -168,6 +168,7 @@ export default function Assessment() {
             description: line,
             priority: recPriority,
             status: "ny",
+            owner_user_id: dept?.manager_user_id || currentUser.id,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             visibility: "manager_and_hr",
