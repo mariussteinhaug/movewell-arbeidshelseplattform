@@ -245,18 +245,6 @@ export default function Dashboard() {
     enabled: !!currentUser && canSeeDashboard,
   });
 
-  if (currentUser && !canSeeDashboard)
-    return (
-      <div className="min-h-[60vh] grid place-items-center text-center">
-        <div className="max-w-md">
-          <h2 className="text-2xl font-semibold text-slate-900">Ingen tilgang</h2>
-          <p className="text-slate-600 mt-2">
-            Denne siden er kun tilgjengelig for HR og ledere.
-          </p>
-        </div>
-      </div>
-    );
-
   const scopedAssessments = useMemo(() => {
     if (!currentUser) return [];
     if (role === ROLE.HR) return assessmentsRaw;
@@ -323,6 +311,19 @@ export default function Dashboard() {
       : "Tiltak";
 
   const isLoading = loadingAssessments || loadingDepartments;
+
+  if (currentUser && !canSeeDashboard) {
+    return (
+      <div className="min-h-[60vh] grid place-items-center text-center">
+        <div className="max-w-md">
+          <h2 className="text-2xl font-semibold text-slate-900">Ingen tilgang</h2>
+          <p className="text-slate-600 mt-2">
+            Denne siden er kun tilgjengelig for HR og ledere.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
