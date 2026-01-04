@@ -60,14 +60,6 @@ export default function AssessmentResults() {
     queryFn: () => base44.entities.QuestionBank.list("order"),
   });
 
-  if (loadingSessions) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
-      </div>
-    );
-  }
-
   // 🧮 Access rules
   const isAdmin = currentUser?.role === "admin" || currentUser?.role === "hr";
   const userDepartment = currentUser?.department;
