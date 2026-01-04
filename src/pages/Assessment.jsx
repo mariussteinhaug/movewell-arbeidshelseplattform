@@ -250,7 +250,7 @@ Besvar kort med JSON.`;
         });
 
       const session = await base44.entities.AssessmentSession.create({
-        organization_id: currentUser.organization_id || "default",
+        organization_id: currentUser?.organization_id || "default",
         department_id: dept?.id || "unknown",
         department_name: selectedDepartment || "Ikke oppgitt",
         anonymous_id: `session_${Date.now()}`,
