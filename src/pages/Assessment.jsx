@@ -176,6 +176,33 @@ export default function Assessment() {
         );
       }
 
+      // Opprett automatisk tilrettelegging for moderat/høy risiko
+      if (["high", "moderate"].includes(String(assessment?.risk_level))) {
+        const days = assessment?.risk_level === "high" ? 14 : 30;
+        const due = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+        const accPriority = assessment?.risk_level === "high" ? "hoy" : "normal";
+        const desc = lines.length ? lines.slice(0, 3).map((l) => `• ${l}`).join("\n") : (assessment?.risk_signals || []).join(", ");
+        await base44.entities.Accommodation.create({
+          organization_id: currentUser?.organization_id || "default",
+          employee_user_id: currentUser.id,
+          employee_display_name: currentUser.full_name,
+          department_id: dept?.id || "unknown",
+          department_name: selectedDepartment || dept?.name || "Ikke oppgitt",
+          accommodation_type: "AI-foreslått oppfølging",
+          description: `Basert på kartlegging (${assessment?.risk_level}).\n${desc}`,
+          status: "planlagt",
+          priority: accPriority,
+          responsible_user_id: dept?.manager_user_id || currentUser.id,
+          responsible_display_name: dept?.manager_display_name || undefined,
+          visibility: "manager_and_hr",
+          risk_level: assessment?.risk_level === "high" ? "high" : "moderate",
+          related_assessment_session_id: sessionId,
+          due_date: due,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+      }
+
       // Opprett in-app melding synlig for leder og HR i avdelingen (broadcast)
       await base44.entities.Message.create({
         organization_id: currentUser?.organization_id || "default",
@@ -193,7 +220,7 @@ export default function Assessment() {
         sent_at: new Date().toISOString(),
       });
 
-      console.log("✅ Varsel opprettet som in-app melding til leder/HR", {
+      console.log("✅ Varsel opprettet + tilrettelegging opprettet ved behov", {
         department: dept?.name,
         sessionId,
       });
@@ -300,6 +327,7 @@ export default function Assessment() {
         organization_id: currentUser?.organization_id || "default",
         department_id: dept?.id || "unknown",
         department_name: selectedDepartment || "Ikke oppgitt",
+        respondent_user_id: currentUser?.id,
         anonymous_id: `session_${Date.now()}`,
         path: sessionPath,
         answered_questions: answeredQuestions,
