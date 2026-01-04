@@ -115,14 +115,33 @@ export default function MessageCenter() {
   const priorityColors = {
     lav: 'bg-slate-100 text-slate-700',
     normal: 'bg-blue-100 text-blue-700',
-    høy: 'bg-red-100 text-red-700'
+    høy: 'bg-red-100 text-red-700',
+    hoy: 'bg-red-100 text-red-700'
   };
 
-  // Filter based on role
-  const isAdmin = currentUser?.role === 'admin';
-  const userDepartment = currentUser?.department;
+   // Filter based on role
+   const isAdmin = ['admin', 'hr'].includes(String(currentUser?.role || '').toLowerCase());
+   const userDepartment = currentUser?.department;
 
-  const sentMessages = React.useMemo(() => {
+   const managedDeptIds = React.useMemo(() => {
+     if (!currentUser) return [];
+     if (isAdmin) return departments.map(d => d.id);
+     const byManager = departments.filter(d => d.manager_user_id === currentUser.id).map(d => d.id);
+     const byName = departments.filter(d => d.name === userDepartment).map(d => d.id);
+     return Array.from(new Set([...byManager, ...byName])).filter(Boolean);
+   }, [currentUser, isAdmin, departments, userDepartment]);
+
+   const departmentMessages = React.useMemo(() => {
+     if (!currentUser) return [];
+     const allowedIds = managedDeptIds;
+     return allMessages.filter(m =>
+       m.type === 'broadcast' &&
+       m.visibility !== 'employee_only' &&
+       (isAdmin || allowedIds.includes(m.recipient_department_id))
+     );
+   }, [allMessages, currentUser, managedDeptIds, isAdmin]);
+
+   const sentMessages = React.useMemo(() => {
     if (!currentUser) return [];
     if (isAdmin) {
       return allMessages.filter(m => m.sender_email === currentUser.email);
