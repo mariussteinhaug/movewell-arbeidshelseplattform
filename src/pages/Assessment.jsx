@@ -228,6 +228,11 @@ Besvar kort med JSON.`;
      Save session
   --------------------------- */
   const saveSession = async (assessment) => {
+    if (!currentUser) {
+      console.error("No current user available");
+      return null;
+    }
+
     try {
       const week = getISOWeekString(new Date());
       const deptList = await base44.entities.Department.list();
@@ -245,7 +250,7 @@ Besvar kort med JSON.`;
         });
 
       const session = await base44.entities.AssessmentSession.create({
-        organization_id: currentUser?.organization_id || "default",
+        organization_id: currentUser.organization_id || "default",
         department_id: dept?.id || "unknown",
         department_name: selectedDepartment || "Ikke oppgitt",
         anonymous_id: `session_${Date.now()}`,
