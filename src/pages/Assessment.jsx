@@ -13,13 +13,11 @@ import {
   ArrowLeft,
   ArrowRight,
   Sparkles,
-  Info,
   RefreshCw,
 } from "lucide-react";
 
 import { motion, AnimatePresence } from "framer-motion";
 import QuestionRenderer from "../components/assessment/QuestionRenderer";
-import QuestionFeedback from "../components/assessment/QuestionFeedback";
 import DocumentUpload from "../components/assessment/DocumentUpload";
 import { cn } from "@/lib/utils";
 
@@ -37,26 +35,6 @@ function getISOWeekString(date = new Date()) {
   return `${d.getUTCFullYear()}-${String(weekNo).padStart(2, "0")}`;
 }
 
-function safeArray(v) {
-  if (!v) return [];
-  return Array.isArray(v) ? v : [v];
-}
-
-function prettyRisk(level) {
-  if (level === "low") return { label: "Lav", chip: "bg-emerald-100 text-emerald-700" };
-  if (level === "moderate") return { label: "Moderat", chip: "bg-amber-100 text-amber-800" };
-  if (level === "high") return { label: "Høy", chip: "bg-red-100 text-red-700" };
-  return { label: "Ukjent", chip: "bg-slate-100 text-slate-700" };
-}
-
-function nextUnansweredIndex(questions, answers, fromIndex) {
-  for (let i = fromIndex + 1; i < questions.length; i++) {
-    const qid = questions[i]?.question_id;
-    if (qid && answers[qid] == null) return i;
-  }
-  return -1;
-}
-
 /* ---------------------------
    Page
 --------------------------- */
@@ -71,7 +49,6 @@ export default function Assessment() {
   const [completed, setCompleted] = useState(false);
   const [riskAssessment, setRiskAssessment] = useState(null);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
-  const [showFeedback, setShowFeedback] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
 
   const { data: currentUser } = useQuery({
@@ -102,11 +79,6 @@ export default function Assessment() {
   const currentQuestion = relevantQuestions[currentQuestionIndex];
   const currentQid = currentQuestion?.question_id;
 
-  const answeredCount = useMemo(
-    () => Object.keys(answers).filter((k) => answers[k] != null).length,
-    [answers]
-  );
-
   const progress = useMemo(() => {
     if (!relevantQuestions.length) return 0;
     return ((currentQuestionIndex + 1) / relevantQuestions.length) * 100;
@@ -119,7 +91,6 @@ export default function Assessment() {
   const handleAnswer = (answer) => {
     if (!currentQid) return;
     setAnswers((prev) => ({ ...prev, [currentQid]: answer }));
-    setShowFeedback(true);
 
     if (currentQid === "Q4") {
       setSelectedDepartment(answer);
@@ -137,35 +108,100 @@ export default function Assessment() {
   };
 
   /* ---------------------------
-     Create notification
+     Varsling til HR og leder
   --------------------------- */
   const createInAppNotification = async (assessment, sessionId) => {
-    if (!currentUser) return;
-    // Placeholder for notification logic
-    console.log("Notification created:", { assessment, sessionId, user: currentUser.email });
+    try {
+      if (!currentUser) return;
+
+      const users = await base44.entities.User.list();
+      const hrUsers = users.filter((u) =>
+        ["hr", "admin"].includes(String(u.role || "").toLowerCase())
+      );
+
+      const deptList = await base44.entities.Department.list();
+      const dept = deptList.find((d) => d.name === selectedDepartment);
+      const managerEmail = dept?.manager_email;
+      const managerName = dept?.manager_name || "Avdelingsleder";
+
+      const messageContent = `
+En ansatt har fullført en helsekartlegging:
+
+👤 Navn: ${currentUser.full_name}
+📧 E-post: ${currentUser.email}
+🏢 Avdeling: ${selectedDepartment || "Ikke oppgitt"}
+📊 Risikonivå: ${assessment?.risk_level || "ukjent"}
+📍 Risikosignaler: ${(assessment?.risk_signals || []).join(", ") || "Ingen spesifikke"}
+🕓 Fullført: ${new Date().toLocaleString("nb-NO")}
+
+Sjekk dashboardet for detaljerte svar og eventuelle dokumenter.
+`;
+
+      for (const hr of hrUsers) {
+        await base44.entities.Message.create({
+          recipient_email: hr.email,
+          recipient_name: hr.full_name,
+          sender_email: "system@movewell.no",
+          sender_name: "MoveWell System",
+          subject: `Ny helsekartlegging: ${currentUser.full_name}`,
+          content: messageContent,
+          category: "oppfølging",
+          priority:
+            assessment?.risk_level === "high"
+              ? "høy"
+              : assessment?.risk_level === "moderate"
+              ? "normal"
+              : "lav",
+          status: "ulest",
+          related_department: selectedDepartment,
+          related_assessment_id: sessionId,
+          sent_at: new Date().toISOString(),
+        });
+      }
+
+      if (managerEmail && !hrUsers.find((u) => u.email === managerEmail)) {
+        await base44.entities.Message.create({
+          recipient_email: managerEmail,
+          recipient_name: managerName,
+          sender_email: "system@movewell.no",
+          sender_name: "MoveWell System",
+          subject: `Ny helsekartlegging i ${selectedDepartment}`,
+          content: messageContent,
+          category: "oppfølging",
+          priority:
+            assessment?.risk_level === "high"
+              ? "høy"
+              : assessment?.risk_level === "moderate"
+              ? "normal"
+              : "lav",
+          status: "ulest",
+          related_department: selectedDepartment,
+          related_assessment_id: sessionId,
+          sent_at: new Date().toISOString(),
+        });
+      }
+
+      console.log("✅ Varsel sendt til HR og leder:", {
+        hrCount: hrUsers.length,
+        managerEmail,
+      });
+    } catch (error) {
+      console.error("Feil ved opprettelse av varsling:", error);
+    }
   };
 
   /* ---------------------------
-     AI: decide next step (failsafe)
+     AI: determine next step
   --------------------------- */
   const getNextQuestionAI = async () => {
     if (!currentUser) return;
     setIsAnalyzing(true);
 
     try {
-      const answeredIds = Object.keys(answers).filter((qid) => answers[qid] != null);
-      const answeredData = answeredIds.map((qid) => {
-        const q = allQuestions.find((qq) => qq.question_id === qid);
-        return { question: q?.text, answer: answers[qid] };
-      });
-
-      const prompt = `Du er en ekspert på arbeidshelse og sykefraværsanalyse.
-Besvar kort med JSON.`;
-
       let result = null;
       try {
         result = await base44.integrations.Core.InvokeLLM({
-          prompt,
+          prompt: `Du er en ekspert på arbeidshelse. Gi en kort JSON-beslutning.`,
           response_json_schema: {
             type: "object",
             properties: {
@@ -178,18 +214,16 @@ Besvar kort med JSON.`;
             },
           },
         });
-      } catch (err) {
-        console.warn("⚠️ AI disabled or failed, falling back.");
+      } catch {
+        console.warn("⚠️ AI disabled or failed, using fallback.");
       }
 
-      // fallback if no AI
       if (!result || result.error) {
         result = {
           stop_assessment: true,
           risk_level: "moderate",
           risk_signals: ["Fullført uten AI"],
           confidence: 1.0,
-          reason: "AI ikke aktivert i Base44",
         };
       }
 
@@ -204,29 +238,25 @@ Besvar kort med JSON.`;
 
       const nextId = result?.next_question_id;
       const idx = relevantQuestions.findIndex((q) => q.question_id === nextId);
-      if (idx !== -1) {
-        setCurrentQuestionIndex(idx);
-        return;
+      if (idx !== -1) setCurrentQuestionIndex(idx);
+      else {
+        const sessionId = await saveSession(result);
+        await createInAppNotification(result, sessionId);
+        setRiskAssessment(result);
+        setCompleted(true);
+        queryClient.invalidateQueries({ queryKey: ["assessment-sessions"] });
       }
-
-      // fallback to finish
-      const sessionId = await saveSession(result);
-      await createInAppNotification(result, sessionId);
-      setRiskAssessment(result);
-      setCompleted(true);
-      queryClient.invalidateQueries({ queryKey: ["assessment-sessions"] });
     } catch (error) {
-      console.error("AI analysis error:", error);
-      // fallback complete
-      const fake = {
+      console.error("AI error:", error);
+      const fallback = {
         stop_assessment: true,
         risk_level: "moderate",
         risk_signals: ["AI-feil"],
         confidence: 0.8,
-        reason: "Fullført uten AI-analyse",
       };
-      const sessionId = await saveSession(fake);
-      setRiskAssessment(fake);
+      const sessionId = await saveSession(fallback);
+      await createInAppNotification(fallback, sessionId);
+      setRiskAssessment(fallback);
       setCompleted(true);
     } finally {
       setIsAnalyzing(false);
@@ -237,10 +267,7 @@ Besvar kort med JSON.`;
      Save session
   --------------------------- */
   const saveSession = async (assessment) => {
-    if (!currentUser) {
-      console.error("No current user available");
-      return null;
-    }
+    if (!currentUser) return null;
 
     try {
       const week = getISOWeekString(new Date());
@@ -249,14 +276,13 @@ Besvar kort med JSON.`;
 
       const answeredQuestions = Object.keys(answers)
         .filter((qid) => answers[qid] != null)
-        .map((qid) => {
-          const answer = answers[qid];
-          return {
-            question_id: qid,
-            answer: Array.isArray(answer) ? answer.join(", ") : String(answer),
-            timestamp: new Date().toISOString(),
-          };
-        });
+        .map((qid) => ({
+          question_id: qid,
+          answer: Array.isArray(answers[qid])
+            ? answers[qid].join(", ")
+            : String(answers[qid]),
+          timestamp: new Date().toISOString(),
+        }));
 
       const session = await base44.entities.AssessmentSession.create({
         organization_id: currentUser?.organization_id || "default",
@@ -286,21 +312,12 @@ Besvar kort med JSON.`;
   --------------------------- */
   const handleNext = async () => {
     if (!canGoNext || isAnalyzing) return;
-    setShowFeedback(false);
     const isLast = currentQuestionIndex >= relevantQuestions.length - 1;
-
-    // ✅ Fullfør lokalt hvis siste spørsmål
     if (isLast) {
       await getNextQuestionAI();
-      return;
+    } else {
+      setCurrentQuestionIndex((i) => Math.min(i + 1, relevantQuestions.length - 1));
     }
-
-    if (isLast) {
-      await getNextQuestionAI();
-      return;
-    }
-
-    setCurrentQuestionIndex((i) => Math.min(i + 1, relevantQuestions.length - 1));
   };
 
   const handlePrevious = () => {
@@ -316,7 +333,6 @@ Besvar kort med JSON.`;
     setRiskAssessment(null);
     setSelectedDepartment(null);
     setUploadedFiles([]);
-    setShowFeedback(false);
   };
 
   /* ---------------------------
@@ -346,32 +362,38 @@ Besvar kort med JSON.`;
      Completed screen
   --------------------------- */
   if (completed) {
-    const risk = prettyRisk(riskAssessment?.risk_level);
     return (
       <div className="max-w-2xl mx-auto">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="py-10">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="py-10"
+        >
           <div className="text-center">
             <div className="h-20 w-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-6">
               <CheckCircle2 className="h-10 w-10 text-emerald-600" />
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">Kartlegging fullført</h2>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">
+              Kartlegging fullført
+            </h2>
             <p className="text-slate-500 mb-6">
-              Takk! Svarene dine hjelper med å forbedre arbeidsmiljø og tilrettelegging.
+              Takk! Svarene dine hjelper med å forbedre arbeidsmiljø og
+              tilrettelegging.
             </p>
           </div>
 
           <Card className="rounded-3xl border-slate-200">
             <CardHeader>
               <CardTitle>Oppsummering</CardTitle>
-              <CardDescription>AI- eller systemgenerert vurdering</CardDescription>
+              <CardDescription>
+                Svarene dine er sendt til HR og leder for eventuell oppfølging.
+              </CardDescription>
             </CardHeader>
 
             <CardContent className="space-y-4">
               <p className="text-sm text-slate-600">
-  Takk for at du fullførte helsekartleggingen. 
-</p>
-
-
+                Takk for at du fullførte helsekartleggingen. Du trenger ikke gjøre noe mer.
+              </p>
               <Button onClick={handleRestart} variant="outline" className="w-full rounded-xl">
                 Start ny kartlegging
               </Button>
@@ -388,9 +410,12 @@ Besvar kort med JSON.`;
   return (
     <div className="max-w-2xl mx-auto pb-28">
       <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Adaptiv helsekartlegging</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
+          Adaptiv helsekartlegging
+        </h1>
         <p className="text-slate-500 mt-2">
-          AI-styrt kartlegging som tilpasses svarene dine – for bedre oppfølging og forebygging.
+          AI-styrt kartlegging som tilpasses svarene dine – for bedre oppfølging
+          og forebygging.
         </p>
       </div>
 
@@ -403,7 +428,8 @@ Besvar kort med JSON.`;
             {selectedDepartment ? `Kartlegging for ${selectedDepartment}` : "Helsekartlegging"}
           </p>
           <p className="text-sm text-emerald-800/80 mt-0.5">
-            Ærlige svar hjelper med å identifisere forbedringsområder og tilrettelegging.
+            Ærlige svar hjelper med å identifisere forbedringsområder og
+            tilrettelegging.
           </p>
         </div>
       </div>
@@ -469,7 +495,10 @@ Besvar kort med JSON.`;
               )}
 
               {currentQuestionIndex === relevantQuestions.length - 1 && (
-                <DocumentUpload uploadedFiles={uploadedFiles} onFilesChange={setUploadedFiles} />
+                <DocumentUpload
+                  uploadedFiles={uploadedFiles}
+                  onFilesChange={setUploadedFiles}
+                />
               )}
             </CardContent>
           </Card>
@@ -483,7 +512,9 @@ Besvar kort med JSON.`;
               <Sparkles className="h-5 w-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-blue-900">AI vurderer neste steg…</p>
+              <p className="text-sm font-semibold text-blue-900">
+                AI vurderer neste steg…
+              </p>
               <p className="text-xs text-blue-800/80 mt-0.5">
                 Basert på svarene dine velger AI det mest relevante oppfølgingsspørsmålet.
               </p>
