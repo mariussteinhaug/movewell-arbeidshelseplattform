@@ -116,7 +116,10 @@ export default function Assessment() {
     return ((currentQuestionIndex + 1) / relevantQuestions.length) * 100;
   }, [currentQuestionIndex, relevantQuestions.length]);
 
-  const canGoNext = !!currentQid && answers[currentQid] != null && answers[currentQid] !== "";
+  const canGoNext = !!currentQid && (
+   answers[currentQid] != null ||
+  (currentQid === "Q4" && selectedDepartment)
+);
 
   const handleAnswer = (answer) => {
     if (!currentQid) return;
