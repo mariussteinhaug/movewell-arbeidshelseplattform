@@ -8,7 +8,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,31 +25,55 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import {
-  Search,
-  FileText,
-  AlertCircle,
-  Calendar,
-  User,
-  Building2,
-  ChevronDown,
-  ChevronUp,
-  Loader2,
-  Sparkles,
-} from "lucide-react";
+import { Search, Loader2, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
+
+/** Fancy loader mens AI genererer */
+function AISkeleton() {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
+      <div className="flex items-center gap-3">
+        <div className="h-9 w-9 rounded-xl bg-slate-900 text-white grid place-items-center shadow-sm">
+          <Sparkles className="h-4 w-4 animate-pulse" />
+        </div>
+        <div className="flex-1">
+          <div className="h-3 w-44 rounded bg-slate-200 animate-pulse" />
+          <div className="mt-2 h-2 w-72 rounded bg-slate-100 animate-pulse" />
+        </div>
+        <div className="text-xs text-slate-500">Tenker…</div>
+      </div>
+
+      <div className="mt-4 space-y-3">
+        <div className="h-4 rounded-lg bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 animate-pulse" />
+        <div className="h-4 w-11/12 rounded-lg bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 animate-pulse" />
+        <div className="h-4 w-10/12 rounded-lg bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100 animate-pulse" />
+      </div>
+
+      <div className="mt-4 flex items-center gap-2 text-xs text-slate-500">
+        <span>Genererer tiltak</span>
+        <span className="inline-flex gap-1">
+          <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:-0.2s]" />
+          <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce [animation-delay:-0.1s]" />
+          <span className="h-1.5 w-1.5 rounded-full bg-slate-400 animate-bounce" />
+        </span>
+      </div>
+    </div>
+  );
+}
 
 export default function AssessmentResults() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [selectedRiskLevel, setSelectedRiskLevel] = useState("all");
   const [expandedSessions, setExpandedSessions] = useState(new Set());
+
   const [selectedProfileUserId, setSelectedProfileUserId] = useState(null);
   const [selectedProfileDept, setSelectedProfileDept] = useState(null);
   const [selectedProfileName, setSelectedProfileName] = useState("");
   const [profileSession, setProfileSession] = useState(null);
   const [profileOpen, setProfileOpen] = useState(false);
+
   const [aiSuggestion, setAiSuggestion] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
 
@@ -52,10 +81,12 @@ export default function AssessmentResults() {
   React.useEffect(() => {
     if (profileSession?.ai_summary) {
       setAiSuggestion(profileSession.ai_summary);
+    } else {
+      setAiSuggestion(""); // tom hvis det ikke finnes lagret
     }
-  }, [profileSession?.id]);
+  }, [profileSession?.id]); // bevisst: kun når session byttes
 
-  // Rens og formater AI-tekst: fjern stjerner/markdown og nummerér 1), 2), 3)
+  // Rens og formater AI-tekst: fjern stjerner/markdown og behold maks 3 tiltak (én pr linje)
   const formatSuggestion = React.useCallback((raw) => {
     if (!raw) return "";
     const txt = String(raw).replace(/\*\*/g, "");
@@ -70,15 +101,8 @@ export default function AssessmentResults() {
         .replace(/^\s+/, "")
         .replace(/^\d+[\.)]\s*/, "")
     );
-    return items.slice(0, 3).join("\n\n");
+    return items.slice(0, 3).join("\n");
   }, []);
-
-  // Auto-generer AI-forslag når profil åpnes (kun hvis ikke lagret fra før)
-  React.useEffect(() => {
-    if (profileOpen && profileSession && !aiLoading && !aiSuggestion && !profileSession.ai_summary) {
-      generateAISuggestion();
-    }
-  }, [profileOpen, profileSession]);
 
   // 🧠 Get current user
   const { data: currentUser } = useQuery({
@@ -112,21 +136,27 @@ export default function AssessmentResults() {
   // 🧮 Access rules
   const isAdmin = currentUser?.role === "admin" || currentUser?.role === "hr";
   const userDepartment = currentUser?.department;
-  const canEdit = ["admin", "hr", "manager"].includes(String(currentUser?.role || "").toLowerCase());
+  const canEdit = ["admin", "hr", "manager"].includes(
+    String(currentUser?.role || "").toLowerCase()
+  );
 
   const accessFilteredSessions = React.useMemo(() => {
     if (!currentUser) return [];
     if (isAdmin) return sessions;
     if (userDepartment)
-      return sessions.filter((s) => (s.department_name || s.department) === userDepartment);
+      return sessions.filter(
+        (s) => (s.department_name || s.department) === userDepartment
+      );
     return sessions.filter((s) => s.created_by === currentUser.email);
   }, [sessions, currentUser, isAdmin, userDepartment]);
 
   // 🧹 Filters
   const filteredSessions = accessFilteredSessions.filter((session) => {
     const deptName = session.department_name || session.department;
-    const matchesDept = selectedDepartment === "all" || deptName === selectedDepartment;
-    const matchesRisk = selectedRiskLevel === "all" || session.risk_level === selectedRiskLevel;
+    const matchesDept =
+      selectedDepartment === "all" || deptName === selectedDepartment;
+    const matchesRisk =
+      selectedRiskLevel === "all" || session.risk_level === selectedRiskLevel;
     const matchesSearch =
       !searchTerm ||
       deptName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -143,43 +173,39 @@ export default function AssessmentResults() {
     return m;
   }, [users]);
 
-  // Grupper profiler per avdeling med antall og navneliste
-  const deptGroups = React.useMemo(() => {
-    const groups = new Map();
-    for (const s of filteredSessions) {
-      const dept = s.department_name || s.department || "Ikke oppgitt";
-      if (!groups.has(dept)) groups.set(dept, { count: 0, respondents: new Map() });
-      const g = groups.get(dept);
-      g.count += 1;
-      const key = s.respondent_user_id || s.anonymous_id;
-      if (!g.respondents.has(key)) {
-        const u = userMap[s.respondent_user_id];
-        const display = s.respondent_display_name || u?.full_name || u?.email || s.created_by || "Ukjent ansatt";
-        g.respondents.set(key, { userId: s.respondent_user_id || null, display });
-      }
-    }
-    return Array.from(groups.entries()).map(([department, data]) => ({
-      department,
-      count: data.count,
-      respondents: Array.from(data.respondents.values()),
-    }));
-  }, [filteredSessions, userMap]);
-
   // Flate liste over respondenter (én rad per person, seneste sesjon)
   const respondents = React.useMemo(() => {
     const byUser = new Map();
-    const nameFromEmail = (email) => (email ? String(email).split('@')[0] : 'Anonym bruker');
+    const nameFromEmail = (email) =>
+      email ? String(email).split("@")[0] : "Anonym bruker";
+
     for (const s of filteredSessions) {
       const key = s.respondent_user_id || s.anonymous_id || s.created_by;
       const u = userMap[s.respondent_user_id];
-      const display = s.respondent_display_name || u?.full_name || u?.email || s.created_by || nameFromEmail(s.created_by);
+      const display =
+        s.respondent_display_name ||
+        u?.full_name ||
+        u?.email ||
+        s.created_by ||
+        nameFromEmail(s.created_by);
+
       const dept = s.department_name || s.department || "Ikke oppgitt";
-      const ts = new Date(s.created_at || s.completed_at || s.created_date || 0).getTime();
+      const ts = new Date(
+        s.created_at || s.completed_at || s.created_date || 0
+      ).getTime();
+
       const existing = byUser.get(key);
       if (!existing || ts > existing.ts) {
-        byUser.set(key, { userId: s.respondent_user_id || null, display, department: dept, ts, session: s });
+        byUser.set(key, {
+          userId: s.respondent_user_id || null,
+          display,
+          department: dept,
+          ts,
+          session: s,
+        });
       }
     }
+
     return Array.from(byUser.values()).sort((a, b) => b.ts - a.ts);
   }, [filteredSessions, userMap]);
 
@@ -187,49 +213,77 @@ export default function AssessmentResults() {
     setSelectedProfileUserId(userId || null);
     setSelectedProfileDept(deptName);
     setSelectedProfileName(displayName || "");
+
     if (userId) {
-      const sessions = accessFilteredSessions
-        .filter((s) => (s.department_name || s.department) === deptName && s.respondent_user_id === userId)
-        .sort((a, b) => new Date(b.created_at || b.completed_at) - new Date(a.created_at || a.completed_at));
-      setProfileSession(sessions[0] || null);
+      const userSessions = accessFilteredSessions
+        .filter(
+          (s) =>
+            (s.department_name || s.department) === deptName &&
+            s.respondent_user_id === userId
+        )
+        .sort(
+          (a, b) =>
+            new Date(b.created_at || b.completed_at) -
+            new Date(a.created_at || a.completed_at)
+        );
+      setProfileSession(userSessions[0] || null);
     } else {
       setProfileSession(fallbackSession || null);
     }
-    setAiSuggestion("");
+
     setProfileOpen(true);
   };
 
-  const generateAISuggestion = async () => {
+  /** MANUELL generering: AI skal IKKE auto-kjøre når profil åpnes */
+  const generateAISuggestion = async ({ force = false } = {}) => {
     if (!profileSession) return;
+
+    // Ikke generer på nytt hvis allerede lagret (med mindre force=true)
+    if (!force && profileSession.ai_summary) return;
+
     setAiLoading(true);
-    const answeredData = (profileSession.answered_questions || []).map((qa) => {
-      const q = questions.find((qu) => qu.question_id === qa.question_id);
-      return { question: q?.text || qa.question_id, answer: qa.answer };
-    });
-    const res = await base44.integrations.Core.InvokeLLM({
-      prompt:
-        `Du er en norsk HMS-rådgiver. Skriv tre korte, konkrete tiltak i et naturlig og menneskelig språk.` +
-        ` Unngå overskrift, unngå markdown, ingen stjerner, ingen tall eller punkter.` +
-        ` Returner nøyaktig tre linjer, én per tiltak.` +
-        `\nRisikonivå: ${profileSession.risk_level}\n` +
-        `Risikosignaler: ${(profileSession.risk_signals || []).join(", ")}\n` +
-        `Svar: ${JSON.stringify(answeredData).slice(0, 4000)}`,
-    });
-    const toStr = typeof res === "string" ? res : JSON.stringify(res);
-    const cleaned = formatSuggestion(toStr);
-    // Lagre svaret på sesjonen, slik at vi ikke genererer på nytt ved ny åpning
-    await base44.entities.AssessmentSession.update(profileSession.id, { ai_summary: cleaned });
-    setAiSuggestion(cleaned);
-    setProfileSession({ ...profileSession, ai_summary: cleaned });
-    setAiLoading(false);
+    try {
+      const answeredData = (profileSession.answered_questions || []).map((qa) => {
+        const q = questions.find((qu) => qu.question_id === qa.question_id);
+        return { question: q?.text || qa.question_id, answer: qa.answer };
+      });
+
+      const res = await base44.integrations.Core.InvokeLLM({
+        prompt:
+          `Du er en norsk HMS-rådgiver. Skriv tre korte, konkrete tiltak i et naturlig og menneskelig språk.` +
+          ` Unngå overskrift, unngå markdown, ingen stjerner, ingen tall eller punkter.` +
+          ` Returner nøyaktig tre linjer, én per tiltak.` +
+          `\nRisikonivå: ${profileSession.risk_level}\n` +
+          `Risikosignaler: ${(profileSession.risk_signals || []).join(", ")}\n` +
+          `Svar: ${JSON.stringify(answeredData).slice(0, 4000)}`,
+      });
+
+      const toStr = typeof res === "string" ? res : JSON.stringify(res);
+      const cleaned = formatSuggestion(toStr);
+
+      // Lagre på sesjonen => da blir det IKKE generert på nytt neste gang
+      await base44.entities.AssessmentSession.update(profileSession.id, {
+        ai_summary: cleaned,
+      });
+
+      setAiSuggestion(cleaned);
+      setProfileSession({ ...profileSession, ai_summary: cleaned });
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   const saveAISuggestion = async () => {
     if (!profileSession || !canEdit) return;
     setAiLoading(true);
-    await base44.entities.AssessmentSession.update(profileSession.id, { ai_summary: aiSuggestion });
-    setProfileSession({ ...profileSession, ai_summary: aiSuggestion });
-    setAiLoading(false);
+    try {
+      await base44.entities.AssessmentSession.update(profileSession.id, {
+        ai_summary: aiSuggestion,
+      });
+      setProfileSession({ ...profileSession, ai_summary: aiSuggestion });
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   const toggleExpanded = (sessionId) => {
@@ -322,10 +376,7 @@ export default function AssessmentResults() {
               />
             </div>
 
-            <Select
-              value={selectedDepartment}
-              onValueChange={setSelectedDepartment}
-            >
+            <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
               <SelectTrigger>
                 <SelectValue placeholder="Alle avdelinger" />
               </SelectTrigger>
@@ -339,10 +390,7 @@ export default function AssessmentResults() {
               </SelectContent>
             </Select>
 
-            <Select
-              value={selectedRiskLevel}
-              onValueChange={setSelectedRiskLevel}
-            >
+            <Select value={selectedRiskLevel} onValueChange={setSelectedRiskLevel}>
               <SelectTrigger>
                 <SelectValue placeholder="Alle risikonivåer" />
               </SelectTrigger>
@@ -360,7 +408,9 @@ export default function AssessmentResults() {
       <Card>
         <CardHeader>
           <CardTitle>Ansatte som har svart</CardTitle>
-          <CardDescription>Klikk på en ansatt for å se svar og AI-forslag</CardDescription>
+          <CardDescription>
+            Klikk på en ansatt for å se svar og AI-forslag
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {respondents.length === 0 ? (
@@ -372,12 +422,12 @@ export default function AssessmentResults() {
                   key={idx}
                   type="button"
                   onClick={() => openProfile(r.userId, r.department, r.session, r.display)}
-                  className={"w-full flex items-center justify-between p-3 rounded-lg border transition bg-white hover:bg-slate-50 border-slate-200"}
-                  title={'Åpne profil'}
+                  className="w-full flex items-center justify-between p-3 rounded-lg border transition bg-white hover:bg-slate-50 border-slate-200"
+                  title="Åpne profil"
                 >
                   <div className="flex items-center gap-3">
                     <div className="h-8 w-8 rounded-full bg-slate-100 grid place-items-center text-slate-600 text-xs">
-                      {r.display?.[0] || 'A'}
+                      {r.display?.[0] || "A"}
                     </div>
                     <div className="text-left">
                       <p className="text-sm font-medium text-slate-900">{r.display}</p>
@@ -392,13 +442,14 @@ export default function AssessmentResults() {
         </CardContent>
       </Card>
 
-
-
       <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {(selectedProfileName || userMap[selectedProfileUserId]?.full_name || "Ansatt")} — {selectedProfileDept || ""}
+              {(selectedProfileName ||
+                userMap[selectedProfileUserId]?.full_name ||
+                "Ansatt")}{" "}
+              — {selectedProfileDept || ""}
             </DialogTitle>
           </DialogHeader>
 
@@ -409,7 +460,11 @@ export default function AssessmentResults() {
                   {riskLevelLabels[profileSession.risk_level]} risiko
                 </Badge>
                 <span className="text-xs text-slate-500">
-                  {format(new Date(profileSession.created_at || profileSession.completed_at), 'dd. MMM yyyy, HH:mm', { locale: nb })}
+                  {format(
+                    new Date(profileSession.created_at || profileSession.completed_at),
+                    "dd. MMM yyyy, HH:mm",
+                    { locale: nb }
+                  )}
                 </span>
               </div>
 
@@ -417,14 +472,22 @@ export default function AssessmentResults() {
                 {profileSession.answered_questions?.map((qa, idx) => {
                   const q = questions.find((qu) => qu.question_id === qa.question_id);
                   return (
-                    <div key={idx} className="bg-white rounded-lg p-3 border border-slate-200">
-                      <p className="text-sm font-medium text-slate-900">{q?.text || qa.question_id}</p>
-                      <p className="text-sm text-slate-700 mt-1">{Array.isArray(qa.answer) ? qa.answer.join(", ") : qa.answer}</p>
+                    <div
+                      key={idx}
+                      className="bg-white rounded-lg p-3 border border-slate-200"
+                    >
+                      <p className="text-sm font-medium text-slate-900">
+                        {q?.text || qa.question_id}
+                      </p>
+                      <p className="text-sm text-slate-700 mt-1">
+                        {Array.isArray(qa.answer) ? qa.answer.join(", ") : qa.answer}
+                      </p>
                     </div>
                   );
                 })}
               </div>
 
+              {/* AI */}
               <div className="pt-2 border-t border-slate-200">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
@@ -432,18 +495,71 @@ export default function AssessmentResults() {
                       <Sparkles className="h-3.5 w-3.5" />
                     </div>
                     <p className="text-sm font-semibold text-slate-900">AI-forslag</p>
+
+                    {profileSession?.ai_summary ? (
+                      <Badge className="bg-emerald-100 text-emerald-700">Lagret</Badge>
+                    ) : (
+                      <Badge className="bg-slate-100 text-slate-700">Ikke generert</Badge>
+                    )}
                   </div>
-                  {canEdit && (
-                    <Button size="sm" onClick={saveAISuggestion} disabled={aiLoading} className="bg-slate-900 hover:bg-slate-800">
-                      {aiLoading ? "Lagrer…" : "Lagre"}
+
+                  <div className="flex items-center gap-2">
+                    {/* Generer kun manuelt (ikke auto) */}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => generateAISuggestion({ force: false })}
+                      disabled={aiLoading || !profileSession || !!profileSession?.ai_summary}
+                      className="border-slate-200"
+                      title={
+                        profileSession?.ai_summary
+                          ? "Allerede lagret for denne kartleggingen"
+                          : "Generer forslag"
+                      }
+                    >
+                      {aiLoading ? "Genererer…" : "Generer"}
                     </Button>
-                  )}
+
+                    {/* Valgfri: Regenerer (kun hvis man vil overskrive, og kun for de som kan edit) */}
+                    {canEdit && profileSession?.ai_summary && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={aiLoading}
+                        onClick={() => {
+                          const ok = window.confirm(
+                            "Vil du generere på nytt og overskrive lagret AI-forslag?"
+                          );
+                          if (ok) generateAISuggestion({ force: true });
+                        }}
+                        className="text-slate-600 hover:text-slate-900"
+                        title="Generer på nytt (overskriver)"
+                      >
+                        Regenerer
+                      </Button>
+                    )}
+
+                    {/* Lagre (for HR/leder/admin) */}
+                    {canEdit && (
+                      <Button
+                        size="sm"
+                        onClick={saveAISuggestion}
+                        disabled={aiLoading || !profileSession}
+                        className="bg-slate-900 hover:bg-slate-800"
+                      >
+                        {aiLoading ? "Lagrer…" : "Lagre"}
+                      </Button>
+                    )}
+                  </div>
                 </div>
-                {canEdit ? (
+
+                {aiLoading ? (
+                  <AISkeleton />
+                ) : canEdit ? (
                   <Textarea
                     value={aiSuggestion}
                     onChange={(e) => setAiSuggestion(e.target.value)}
-                    placeholder="Skriv eller lim inn forslag..."
+                    placeholder="Trykk Generer for å få forslag, eller skriv inn egne tiltak..."
                     className="min-h-[140px] bg-white"
                   />
                 ) : (
@@ -458,7 +574,6 @@ export default function AssessmentResults() {
           )}
         </DialogContent>
       </Dialog>
-
     </div>
   );
 }
