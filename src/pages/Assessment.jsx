@@ -230,25 +230,34 @@ Besvar kort med JSON.`;
   const saveSession = async (assessment) => {
     try {
       const week = getISOWeekString(new Date());
+      const deptList = await base44.entities.Department.list();
+      const dept = deptList.find((d) => d.name === selectedDepartment);
+
       const answeredQuestions = Object.keys(answers)
         .filter((qid) => answers[qid] != null)
-        .map((qid) => ({
-          question_id: qid,
-          answer: answers[qid],
-          timestamp: new Date().toISOString(),
-        }));
+        .map((qid) => {
+          const answer = answers[qid];
+          return {
+            question_id: qid,
+            answer: Array.isArray(answer) ? answer.join(", ") : String(answer),
+            timestamp: new Date().toISOString(),
+          };
+        });
 
       const session = await base44.entities.AssessmentSession.create({
+        organization_id: currentUser?.organization_id || "default",
+        department_id: dept?.id || "unknown",
+        department_name: selectedDepartment || "Ikke oppgitt",
         anonymous_id: `session_${Date.now()}`,
-        department: selectedDepartment || "Ikke oppgitt",
         path: sessionPath,
         answered_questions: answeredQuestions,
         risk_signals: assessment?.risk_signals || [],
         risk_level: assessment?.risk_level || "unknown",
         confidence: assessment?.confidence || 0,
-        completed: true,
+        status: "completed",
         session_week: week,
-        uploaded_documents: uploadedFiles.map((f) => f.url),
+        created_at: new Date().toISOString(),
+        completed_at: new Date().toISOString(),
       });
 
       return session.id;
