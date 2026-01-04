@@ -61,7 +61,7 @@ export default function AssessmentResults() {
         .replace(/^\s+/, "")
         .replace(/^\d+[\.)]\s*/, "")
     );
-    return items.slice(0, 3).map((l, i) => `${i + 1}) ${l}`).join("\n");
+    return items.slice(0, 3).join("\n\n");
   }, []);
 
   // Auto-generer AI-forslag når profil åpnes
