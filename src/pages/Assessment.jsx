@@ -238,17 +238,24 @@ Besvar kort med JSON.`;
           timestamp: new Date().toISOString(),
         }));
 
+      const deptList = await base44.entities.Department.list();
+      const dept = deptList.find((d) => d.name === selectedDepartment);
+
       const session = await base44.entities.AssessmentSession.create({
+        organization_id: currentUser?.organization_id || "default",
+        department_id: dept?.id || "unknown",
+        department_name: selectedDepartment || "Ikke oppgitt",
         anonymous_id: `session_${Date.now()}`,
-        department: selectedDepartment || "Ikke oppgitt",
         path: sessionPath,
         answered_questions: answeredQuestions,
         risk_signals: assessment?.risk_signals || [],
         risk_level: assessment?.risk_level || "unknown",
         confidence: assessment?.confidence || 0,
-        completed: true,
+        status: "completed",
         session_week: week,
         uploaded_documents: uploadedFiles.map((f) => f.url),
+        created_at: new Date().toISOString(),
+        completed_at: new Date().toISOString(),
       });
 
       return session.id;
@@ -256,6 +263,13 @@ Besvar kort med JSON.`;
       console.error("Feil ved lagring av sesjon:", error);
       throw error;
     }
+  };
+
+  /* ---------------------------
+     Notifications (stub)
+  --------------------------- */
+  const createInAppNotification = async (assessment, sessionId) => {
+    console.log("📝 Kartlegging fullført:", { assessment, sessionId });
   };
 
   /* ---------------------------
