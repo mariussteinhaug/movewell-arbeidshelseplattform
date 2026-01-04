@@ -13,7 +13,7 @@ import DepartmentRiskChart from "../components/dashboard/DepartmentRiskChart";
 import TrendChart from "../components/dashboard/TrendChart";
 import AlertList from "../components/dashboard/AlertList";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/ "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 /* ---------------------------
    Roles (MoveWell)
