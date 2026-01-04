@@ -114,76 +114,57 @@ export default function Assessment() {
     try {
       if (!currentUser) return;
 
-      const users = await base44.entities.User.list();
-      const hrUsers = users.filter((u) =>
-        ["hr", "admin"].includes(String(u.role || "").toLowerCase())
-      );
-
+      // Finn avdeling (for å sende som broadcast til ledelse/HR)
       const deptList = await base44.entities.Department.list();
       const dept = deptList.find((d) => d.name === selectedDepartment);
-      const managerEmail = dept?.manager_email;
-      const managerName = dept?.manager_name || "Avdelingsleder";
 
-      const messageContent = `
-En ansatt har fullført en helsekartlegging:
-
-👤 Navn: ${currentUser.full_name}
-📧 E-post: ${currentUser.email}
-🏢 Avdeling: ${selectedDepartment || "Ikke oppgitt"}
-📊 Risikonivå: ${assessment?.risk_level || "ukjent"}
-📍 Risikosignaler: ${(assessment?.risk_signals || []).join(", ") || "Ingen spesifikke"}
-🕓 Fullført: ${new Date().toLocaleString("nb-NO")}
-
-Sjekk dashboardet for detaljerte svar og eventuelle dokumenter.
-`;
-
-      for (const hr of hrUsers) {
-        await base44.entities.Message.create({
-          recipient_email: hr.email,
-          recipient_name: hr.full_name,
-          sender_email: "system@movewell.no",
-          sender_name: "MoveWell System",
-          subject: `Ny helsekartlegging: ${currentUser.full_name}`,
-          content: messageContent,
-          category: "oppfølging",
-          priority:
-            assessment?.risk_level === "high"
-              ? "høy"
-              : assessment?.risk_level === "moderate"
-              ? "normal"
-              : "lav",
-          status: "ulest",
-          related_department: selectedDepartment,
-          related_assessment_id: sessionId,
-          sent_at: new Date().toISOString(),
+      // Generer korte AI-forslag til tiltak
+      let recommendationsText = "";
+      try {
+        const answeredIds = Object.keys(answers).filter((qid) => answers[qid] != null);
+        const answeredData = answeredIds.map((qid) => {
+          const q = allQuestions.find((qq) => qq.question_id === qid);
+          return { question: q?.text || qid, answer: answers[qid] };
         });
+        const aiRes = await base44.integrations.Core.InvokeLLM({
+          prompt: `Du er en norsk HMS-rådgiver. Basert på input under, lag 3 konkrete forslag til tiltak (korte punkt) for avdeling "${selectedDepartment || "ukjent"}".\n\nRisikonivå: ${assessment?.risk_level}\nRisikosignaler: ${(assessment?.risk_signals || []).join(", ")}\nSvar: ${JSON.stringify(answeredData).slice(0, 4000)}\n\nSvar kun som punktopplistet tekst.`,
+        });
+        recommendationsText = typeof aiRes === "string" ? aiRes : JSON.stringify(aiRes);
+      } catch (_) {
+        recommendationsText = (assessment?.risk_signals || []).length
+          ? `Foreslåtte fokusområder: ${assessment.risk_signals.join(", ")}`
+          : "Foreslåtte tiltak vil bli vurdert manuelt.";
       }
 
-      if (managerEmail && !hrUsers.find((u) => u.email === managerEmail)) {
-        await base44.entities.Message.create({
-          recipient_email: managerEmail,
-          recipient_name: managerName,
-          sender_email: "system@movewell.no",
-          sender_name: "MoveWell System",
-          subject: `Ny helsekartlegging i ${selectedDepartment}`,
-          content: messageContent,
-          category: "oppfølging",
-          priority:
-            assessment?.risk_level === "high"
-              ? "høy"
-              : assessment?.risk_level === "moderate"
-              ? "normal"
-              : "lav",
-          status: "ulest",
-          related_department: selectedDepartment,
-          related_assessment_id: sessionId,
-          sent_at: new Date().toISOString(),
-        });
-      }
+      const priority =
+        assessment?.risk_level === "high"
+          ? "hoy"
+          : assessment?.risk_level === "moderate"
+          ? "normal"
+          : "lav";
 
-      console.log("✅ Varsel sendt til HR og leder:", {
-        hrCount: hrUsers.length,
-        managerEmail,
+      const messageContent = `AI-forslag til tiltak for ${selectedDepartment || dept?.name || "avdeling"}:\n\n${recommendationsText}\n\nOpprettet: ${new Date().toLocaleString("nb-NO")}`;
+
+      // Opprett in-app melding synlig for leder og HR i avdelingen (broadcast)
+      await base44.entities.Message.create({
+        organization_id: currentUser?.organization_id || "default",
+        thread_id: `assessment_${sessionId}`,
+        type: "broadcast",
+        category: "tilrettelegging",
+        priority,
+        subject: `AI-forslag til tiltak – ${selectedDepartment || dept?.name || ""}`,
+        content: messageContent,
+        sender_user_id: currentUser.id,
+        sender_display_name: currentUser.full_name,
+        recipient_department_id: dept?.id || undefined,
+        visibility: "manager_and_hr",
+        related_assessment_session_id: sessionId,
+        sent_at: new Date().toISOString(),
+      });
+
+      console.log("✅ Varsel opprettet som in-app melding til leder/HR", {
+        department: dept?.name,
+        sessionId,
       });
     } catch (error) {
       console.error("Feil ved opprettelse av varsling:", error);
