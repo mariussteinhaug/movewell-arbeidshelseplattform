@@ -158,9 +158,37 @@ export default function MessageCenter() {
 
   const unansweredMessages = sentMessages.filter(m => m.status !== 'besvart');
 
-  return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
+   return (
+     <div className="space-y-8">
+       <div className="flex items-center justify-between">
+         {/* Admin/leder ser også avdelingsvarsler (AI-forslag) */}
+         {departmentMessages.length > 0 && (
+           <Card className="w-full mb-4">
+             <CardHeader>
+               <CardTitle className="flex items-center gap-2">
+                 <Info className="h-5 w-5 text-slate-400" />
+                 Varsler til din avdeling
+               </CardTitle>
+               <CardDescription>System- og AI-meldinger som gjelder dine avdelinger</CardDescription>
+             </CardHeader>
+             <CardContent className="space-y-3">
+               {departmentMessages.map((msg) => (
+                 <div key={msg.id} className="p-4 rounded-lg border border-slate-200 bg-slate-50">
+                   <div className="flex items-start justify-between mb-2">
+                     <div>
+                       <p className="font-medium text-slate-900">{msg.subject || 'Varsel'}</p>
+                       <p className="text-xs text-slate-500">
+                         {format(new Date(msg.sent_at), 'dd. MMM yyyy, HH:mm', { locale: nb })}
+                       </p>
+                     </div>
+                     <Badge variant="outline">{msg.category}</Badge>
+                   </div>
+                   <p className="text-sm text-slate-700 whitespace-pre-wrap">{msg.content}</p>
+                 </div>
+               ))}
+             </CardContent>
+           </Card>
+         )}
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Meldingssenter</h1>
           <p className="text-slate-500 mt-1">Send målrettede meldinger til ansatte</p>
