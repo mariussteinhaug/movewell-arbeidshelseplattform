@@ -47,6 +47,13 @@ export default function AssessmentResults() {
   const [aiSuggestion, setAiSuggestion] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
 
+  // Når vi åpner en profil med lagret AI-svar, fyll det inn
+  React.useEffect(() => {
+    if (profileSession?.ai_summary) {
+      setAiSuggestion(profileSession.ai_summary);
+    }
+  }, [profileSession?.id]);
+
   // Rens og formater AI-tekst: fjern stjerner/markdown og nummerér 1), 2), 3)
   const formatSuggestion = React.useCallback((raw) => {
     if (!raw) return "";
@@ -65,9 +72,9 @@ export default function AssessmentResults() {
     return items.slice(0, 3).join("\n\n");
   }, []);
 
-  // Auto-generer AI-forslag når profil åpnes
+  // Auto-generer AI-forslag når profil åpnes (kun hvis ikke lagret fra før)
   React.useEffect(() => {
-    if (profileOpen && profileSession && !aiSuggestion && !aiLoading) {
+    if (profileOpen && profileSession && !aiLoading && !aiSuggestion && !profileSession.ai_summary) {
       generateAISuggestion();
     }
   }, [profileOpen, profileSession]);
@@ -208,7 +215,10 @@ export default function AssessmentResults() {
     });
     const toStr = typeof res === "string" ? res : JSON.stringify(res);
     const cleaned = formatSuggestion(toStr);
+    // Lagre svaret på sesjonen, slik at vi ikke genererer på nytt ved ny åpning
+    await base44.entities.AssessmentSession.update(profileSession.id, { ai_summary: cleaned });
     setAiSuggestion(cleaned);
+    setProfileSession({ ...profileSession, ai_summary: cleaned });
     setAiLoading(false);
   };
 
