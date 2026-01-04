@@ -5,7 +5,6 @@ import Dashboard from './pages/Dashboard';
 import Departments from './pages/Departments';
 import EmployeeProfile from './pages/EmployeeProfile';
 import Landing from './pages/Landing';
-import MessageCenter from './pages/MessageCenter';
 import MyMessages from './pages/MyMessages';
 import Profile from './pages/Profile';
 import Recommendations from './pages/Recommendations';
@@ -23,7 +22,6 @@ export const PAGES = {
     "Departments": Departments,
     "EmployeeProfile": EmployeeProfile,
     "Landing": Landing,
-    "MessageCenter": MessageCenter,
     "MyMessages": MyMessages,
     "Profile": Profile,
     "Recommendations": Recommendations,
