@@ -29,6 +29,7 @@ import {
   ChevronDown,
   ChevronUp,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
@@ -532,7 +533,12 @@ export default function AssessmentResults() {
 
               <div className="pt-2 border-t border-slate-200">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-medium text-slate-900">AI-forslag</p>
+                  <div className="flex items-center gap-2">
+                    <div className="h-6 w-6 rounded-xl bg-slate-900 text-white grid place-items-center shadow-sm">
+                      <Sparkles className="h-3.5 w-3.5" />
+                    </div>
+                    <p className="text-sm font-semibold text-slate-900">AI-forslag</p>
+                  </div>
                   <Button size="sm" onClick={generateAISuggestion} disabled={aiLoading} className="bg-emerald-600 hover:bg-emerald-700">
                     {aiLoading ? "Genererer…" : "Foreslå tiltak (AI)"}
                   </Button>
