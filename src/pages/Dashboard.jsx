@@ -219,7 +219,7 @@ export default function Dashboard() {
   });
 
   const role = normalizeRole(currentUser?.role);
-  const canSeeDashboard = role === ROLE.HR || role === ROLE.MANAGER;
+  const canSeeDashboard = role === ROLE.HR || role === ROLE.MANAGER || role === ROLE.ADMIN;
   const scope = useMemo(() => getManagedDepartmentKeys(currentUser), [currentUser?.id]);
 
   const { data: assessmentsRaw = [], isLoading: loadingAssessments } = useQuery({
