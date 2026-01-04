@@ -40,6 +40,7 @@ export default function AssessmentResults() {
   const [expandedSessions, setExpandedSessions] = useState(new Set());
   const [selectedProfileUserId, setSelectedProfileUserId] = useState(null);
   const [selectedProfileDept, setSelectedProfileDept] = useState(null);
+  const [selectedProfileName, setSelectedProfileName] = useState("");
   const [profileSession, setProfileSession] = useState(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState("");
@@ -139,10 +140,11 @@ export default function AssessmentResults() {
   // Flate liste over respondenter (én rad per person, seneste sesjon)
   const respondents = React.useMemo(() => {
     const byUser = new Map();
+    const nameFromEmail = (email) => (email ? String(email).split('@')[0] : 'Anonym bruker');
     for (const s of filteredSessions) {
-      const key = s.respondent_user_id || s.anonymous_id;
+      const key = s.respondent_user_id || s.anonymous_id || s.created_by;
       const u = userMap[s.respondent_user_id];
-      const display = u?.full_name || s.respondent_display_name || u?.email || "Anonym bruker";
+      const display = s.respondent_display_name || u?.full_name || nameFromEmail(s.created_by);
       const dept = s.department_name || s.department || "Ikke oppgitt";
       const ts = new Date(s.created_at || s.completed_at || s.created_date || 0).getTime();
       const existing = byUser.get(key);
@@ -153,13 +155,18 @@ export default function AssessmentResults() {
     return Array.from(byUser.values()).sort((a, b) => b.ts - a.ts);
   }, [filteredSessions, userMap]);
 
-  const openProfile = (userId, deptName) => {
-    setSelectedProfileUserId(userId);
+  const openProfile = (userId, deptName, fallbackSession, displayName) => {
+    setSelectedProfileUserId(userId || null);
     setSelectedProfileDept(deptName);
-    const sessions = accessFilteredSessions
-      .filter((s) => (s.department_name || s.department) === deptName && s.respondent_user_id === userId)
-      .sort((a, b) => new Date(b.created_at || b.completed_at) - new Date(a.created_at || a.completed_at));
-    setProfileSession(sessions[0] || null);
+    setSelectedProfileName(displayName || "");
+    if (userId) {
+      const sessions = accessFilteredSessions
+        .filter((s) => (s.department_name || s.department) === deptName && s.respondent_user_id === userId)
+        .sort((a, b) => new Date(b.created_at || b.completed_at) - new Date(a.created_at || a.completed_at));
+      setProfileSession(sessions[0] || null);
+    } else {
+      setProfileSession(fallbackSession || null);
+    }
     setAiSuggestion("");
     setProfileOpen(true);
   };
@@ -322,10 +329,9 @@ export default function AssessmentResults() {
                 <button
                   key={idx}
                   type="button"
-                  onClick={() => r.userId && openProfile(r.userId, r.department)}
-                  className={`w-full flex items-center justify-between p-3 rounded-lg border transition ${r.userId ? 'bg-white hover:bg-slate-50 border-slate-200' : 'bg-slate-50 border-slate-200 opacity-70 cursor-not-allowed'}`}
-                  disabled={!r.userId}
-                  title={r.userId ? 'Åpne profil' : 'Anonym bruker – kan ikke åpnes'}
+                  onClick={() => openProfile(r.userId, r.department, r.session, r.display)}
+                  className={"w-full flex items-center justify-between p-3 rounded-lg border transition bg-white hover:bg-slate-50 border-slate-200"}
+                  title={'Åpne profil'}
                 >
                   <div className="flex items-center gap-3">
                     <div className="h-8 w-8 rounded-full bg-slate-100 grid place-items-center text-slate-600 text-xs">
