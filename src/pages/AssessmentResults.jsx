@@ -45,6 +45,13 @@ export default function AssessmentResults() {
   const [aiSuggestion, setAiSuggestion] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
 
+  // Auto-generer AI-forslag når profil åpnes
+  React.useEffect(() => {
+    if (profileOpen && profileSession && !aiSuggestion && !aiLoading) {
+      generateAISuggestion();
+    }
+  }, [profileOpen, profileSession]);
+
   // 🧠 Get current user
   const { data: currentUser } = useQuery({
     queryKey: ["current-user"],
