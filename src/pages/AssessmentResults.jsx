@@ -46,6 +46,24 @@ export default function AssessmentResults() {
   const [aiSuggestion, setAiSuggestion] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
 
+  // Rens og formater AI-tekst: fjern stjerner/markdown og nummerér 1), 2), 3)
+  const formatSuggestion = React.useCallback((raw) => {
+    if (!raw) return "";
+    const txt = String(raw).replace(/\*\*/g, "");
+    const lines = txt
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean)
+      .filter((l) => !/^her er/i.test(l));
+    const items = lines.map((l) =>
+      l
+        .replace(/^[-•\u2022]+/i, "")
+        .replace(/^\s+/, "")
+        .replace(/^([0-9]+)[\.)]\s*/, "$1) ")
+    );
+    return items.slice(0, 3).map((l, i) => `${i + 1}) ${l}`).join("\n");
+  }, []);
+
   // Auto-generer AI-forslag når profil åpnes
   React.useEffect(() => {
     if (profileOpen && profileSession && !aiSuggestion && !aiLoading) {
@@ -180,13 +198,16 @@ export default function AssessmentResults() {
     });
     const res = await base44.integrations.Core.InvokeLLM({
       prompt:
-        `Du er en norsk HMS-rådgiver. Basert på svarene under, gi 3 konkrete forslag til tiltak i punktliste.\n` +
-        `Risikonivå: ${profileSession.risk_level}\n` +
+        `Du er en norsk HMS-rådgiver. Skriv tre korte, konkrete tiltak i et naturlig og menneskelig språk.` +
+        ` Unngå overskrift, unngå markdown, ingen stjerner eller fet tekst.` +
+        ` Svar som tre linjer nummerert 1), 2), 3).` +
+        `\nRisikonivå: ${profileSession.risk_level}\n` +
         `Risikosignaler: ${(profileSession.risk_signals || []).join(", ")}\n` +
-        `Svar: ${JSON.stringify(answeredData).slice(0, 4000)}\n` +
-        `Svar på norsk som punktliste.`,
+        `Svar: ${JSON.stringify(answeredData).slice(0, 4000)}`,
     });
-    setAiSuggestion(typeof res === "string" ? res : JSON.stringify(res));
+    const toStr = typeof res === "string" ? res : JSON.stringify(res);
+    const cleaned = formatSuggestion(toStr);
+    setAiSuggestion(cleaned);
     setAiLoading(false);
   };
 
