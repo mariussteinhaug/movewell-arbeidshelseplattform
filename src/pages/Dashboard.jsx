@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import {
@@ -8,6 +8,7 @@ import {
   Briefcase,
   RefreshCw,
   BarChart3,
+  ChevronDown,
 } from "lucide-react";
 
 import RiskCard from "../components/dashboard/RiskCard";
@@ -58,22 +59,201 @@ function avg(arr) {
   return arr.reduce((a, b) => a + b, 0) / arr.length;
 }
 
+function to10From5(v) {
+  // Convert 1-5 scale to 0-10 for display: 1->2, 3->6, 5->10
+  const n = Number(v);
+  if (!Number.isFinite(n)) return 0;
+  return clamp(n * 2, 0, 10);
+}
+
+function weekKeyFromDate(d) {
+  // ISO week (rough but stable for dashboard filtering)
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil(((date - yearStart) / 86400000 + 1) / 7);
+  return `${date.getUTCFullYear()}-${String(weekNo).padStart(2, "0")}`;
+}
+
+/* ---------------------------
+   Time ranges
+--------------------------- */
+const RANGE = {
+  TODAY: "today",
+  D7: "7d",
+  D14: "14d",
+  D30: "30d",
+  M6: "6m",
+  Y1: "1y",
+  Y3: "3y",
+  ALL: "all",
+};
+
+const RANGE_LABEL = {
+  [RANGE.TODAY]: "I dag",
+  [RANGE.D7]: "Siste 7 dager",
+  [RANGE.D14]: "Siste 14 dager",
+  [RANGE.D30]: "Siste 30 dager",
+  [RANGE.M6]: "Siste 6 mnd",
+  [RANGE.Y1]: "Siste 1 år",
+  [RANGE.Y3]: "Siste 3 år",
+  [RANGE.ALL]: "All tid",
+};
+
+function getRangeStartDate(rangeKey) {
+  const now = new Date();
+  const d = new Date(now);
+  if (rangeKey === RANGE.ALL) return null;
+
+  if (rangeKey === RANGE.TODAY) {
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+  if (rangeKey === RANGE.D7) d.setDate(d.getDate() - 7);
+  if (rangeKey === RANGE.D14) d.setDate(d.getDate() - 14);
+  if (rangeKey === RANGE.D30) d.setDate(d.getDate() - 30);
+  if (rangeKey === RANGE.M6) d.setMonth(d.getMonth() - 6);
+  if (rangeKey === RANGE.Y1) d.setFullYear(d.getFullYear() - 1);
+  if (rangeKey === RANGE.Y3) d.setFullYear(d.getFullYear() - 3);
+
+  return d;
+}
+
+function inRangeByCreatedDate(entity, startDate) {
+  if (!startDate) return true;
+  const created =
+    entity?.created_date ||
+    entity?._created_date ||
+    entity?.createdAt ||
+    entity?.created_at ||
+    null;
+
+  if (!created) return true; // best effort: don’t exclude if unknown
+  const dt = new Date(created);
+  if (Number.isNaN(dt.getTime())) return true;
+  return dt >= startDate;
+}
+
+function inRangeByWeek(entity, startDate) {
+  if (!startDate) return true;
+  const wk = entity?.assessment_week || entity?.session_week;
+  if (!wk) return true;
+
+  const startWk = weekKeyFromDate(startDate);
+  // Compare lexicographically works with YYYY-WW
+  return String(wk) >= String(startWk);
+}
+
+/* ---------------------------
+   Apple-ish colors (exclusive)
+   We use slate neutrals + one gradient for "status".
+   For risk: GREEN (safe) -> AMBER -> RED (danger)
+--------------------------- */
+function riskBand(score10) {
+  // score10: 0..10 where HIGHER is BETTER
+  const s = clamp(Number(score10 || 0), 0, 10);
+  if (s >= 7.5) return "good";
+  if (s >= 5) return "mid";
+  return "bad";
+}
+
+function bandMeta(band) {
+  // Apple-like: subtle backgrounds, strong text
+  if (band === "good") {
+    return {
+      label: "Lav risiko",
+      dot: "bg-emerald-500",
+      text: "text-emerald-700",
+      badge: "bg-emerald-50 text-emerald-700 border-emerald-100",
+      track: "#E2E8F0",
+      stroke: "#10B981",
+      bar: "bg-emerald-500",
+    };
+  }
+  if (band === "mid") {
+    return {
+      label: "Moderat",
+      dot: "bg-amber-500",
+      text: "text-amber-700",
+      badge: "bg-amber-50 text-amber-700 border-amber-100",
+      track: "#E2E8F0",
+      stroke: "#F59E0B",
+      bar: "bg-amber-500",
+    };
+  }
+  return {
+    label: "Høy risiko",
+    dot: "bg-red-500",
+    text: "text-red-700",
+    badge: "bg-red-50 text-red-700 border-red-100",
+    track: "#E2E8F0",
+    stroke: "#EF4444",
+    bar: "bg-red-500",
+  };
+}
+
+/* ---------------------------
+   UI: Range picker (segmented)
+--------------------------- */
+function RangePicker({ value, onChange }) {
+  const options = [
+    RANGE.TODAY,
+    RANGE.D7,
+    RANGE.D14,
+    RANGE.D30,
+    RANGE.M6,
+    RANGE.Y1,
+    RANGE.Y3,
+    RANGE.ALL,
+  ];
+
+  return (
+    <div className="w-full overflow-x-auto">
+      <div className="inline-flex items-center gap-1 rounded-2xl bg-slate-100 p-1">
+        {options.map((k) => {
+          const active = value === k;
+          return (
+            <button
+              key={k}
+              type="button"
+              onClick={() => onChange(k)}
+              className={cn(
+                "whitespace-nowrap px-3 py-2 rounded-xl text-sm font-medium transition",
+                active
+                  ? "bg-white text-slate-900 shadow-sm border border-slate-200"
+                  : "text-slate-600 hover:text-slate-900"
+              )}
+            >
+              {RANGE_LABEL[k]}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /* ---------------------------
    Cool units
 --------------------------- */
 
-/** 1) SVG Gauge (speedometer) – stable */
+/** 1) SVG Gauge (0-10, green->red) */
 function GaugeCard({
   title = "Helseindeks",
-  value = 3.4,
+  value10 = 6.8,
   min = 0,
-  max = 5,
+  max = 10,
   delta = 0,
   subtitle = "Basert på fysisk, mental og arbeidsforhold",
   footnote = "Aggregert",
 }) {
-  const v = typeof value === "number" ? value : Number(value || 0);
-  const pct = (clamp(v, min, max) - min) / (max - min);
+  const v = Number.isFinite(Number(value10)) ? Number(value10) : 0;
+  const clamped = clamp(v, min, max);
+  const pct = (clamped - min) / (max - min);
+
+  const band = riskBand(clamped);
+  const meta = bandMeta(band);
 
   // SVG arc geometry (240°)
   const size = 320;
@@ -93,10 +273,8 @@ function GaugeCard({
   const start = polar(startAngle);
   const end = polar(endAngle);
 
-  // full track path
   const trackPath = `M ${start.x} ${start.y} A ${r} ${r} 0 1 1 ${end.x} ${end.y}`;
 
-  // approximate arc length for dash
   const arcLength = Math.PI * r * (240 / 180);
   const dash = arcLength * pct;
   const gap = arcLength - dash;
@@ -108,9 +286,6 @@ function GaugeCard({
       ? `${delta > 0 ? "↑" : delta < 0 ? "↓" : "→"} ${Math.abs(delta).toFixed(1)}`
       : null;
 
-  // simple risk label
-  const riskLabel = v >= 4 ? "Lav risiko" : v >= 3 ? "Moderat" : "Høy risiko";
-
   return (
     <div className="bg-white rounded-3xl border border-slate-200 p-6">
       <div className="flex items-start justify-between gap-4">
@@ -119,26 +294,19 @@ function GaugeCard({
 
           <div className="mt-2 flex items-baseline gap-3">
             <span className="text-4xl font-semibold text-slate-900">
-              {Number.isFinite(v) ? v.toFixed(1) : "—"}
+              {clamped.toFixed(1)}
             </span>
 
             {deltaText && (
-              <span
-                className={cn(
-                  "text-sm font-semibold",
-                  delta > 0 ? "text-emerald-700" : delta < 0 ? "text-red-600" : "text-slate-500"
-                )}
-              >
-                {deltaText}
-              </span>
+              <span className="text-sm font-semibold text-slate-500">{deltaText}</span>
             )}
           </div>
 
           <p className="text-sm text-slate-500 mt-1">{subtitle}</p>
 
-          <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            <span className="text-xs font-medium text-slate-700">{riskLabel}</span>
+          <div className={cn("mt-3 inline-flex items-center gap-2 rounded-full px-3 py-1 border", meta.badge)}>
+            <span className={cn("h-2 w-2 rounded-full", meta.dot)} />
+            <span className="text-xs font-medium">{meta.label}</span>
           </div>
         </div>
 
@@ -149,24 +317,22 @@ function GaugeCard({
 
       <div className="mt-6 flex items-center justify-center">
         <svg viewBox={`0 0 ${size} ${size}`} className="w-full max-w-[560px] h-[210px]">
-          {/* Track */}
           <path
             d={trackPath}
             fill="none"
-            stroke="#E2E8F0"
+            stroke={meta.track}
             strokeWidth={stroke}
             strokeLinecap="round"
           />
-          {/* Progress */}
           <path
             d={trackPath}
             fill="none"
-            stroke="#10B981"
+            stroke={meta.stroke}
             strokeWidth={stroke}
             strokeLinecap="round"
             strokeDasharray={`${dash} ${gap}`}
           />
-          {/* Needle */}
+
           <g transform={`rotate(${needleAngle} ${cx} ${cy})`}>
             <line
               x1={cx}
@@ -179,14 +345,13 @@ function GaugeCard({
               opacity="0.85"
             />
           </g>
-          {/* Center */}
+
           <circle cx={cx} cy={cy} r="10" fill="#0F172A" />
 
-          {/* Min/Max labels */}
           <text x="36" y="265" className="fill-slate-500" style={{ fontSize: 12 }}>
             {min}
           </text>
-          <text x="272" y="265" className="fill-slate-500" style={{ fontSize: 12 }}>
+          <text x="266" y="265" className="fill-slate-500" style={{ fontSize: 12 }}>
             {max}
           </text>
         </svg>
@@ -201,11 +366,19 @@ function GaugeCard({
 }
 
 /** 2) Progress ring (response rate) */
-function ProgressRingCard({ title = "Svarprosent", value = 0, subtitle = "Siste 30 dager", footnote = "Live" }) {
+function ProgressRingCard({
+  title = "Svarprosent",
+  value = 0,
+  subtitle = "Siste 30 dager",
+  footnote = "Live",
+}) {
   const pct = clamp(Number(value || 0), 0, 100);
   const r = 34;
   const c = 2 * Math.PI * r;
   const dash = (pct / 100) * c;
+
+  const stroke =
+    pct >= 70 ? "#10B981" : pct >= 40 ? "#F59E0B" : "#EF4444";
 
   return (
     <div className="bg-white rounded-3xl border border-slate-200 p-6">
@@ -228,7 +401,7 @@ function ProgressRingCard({ title = "Svarprosent", value = 0, subtitle = "Siste 
             cy="60"
             r={r}
             strokeWidth="10"
-            stroke="#10B981"
+            stroke={stroke}
             fill="none"
             strokeLinecap="round"
             strokeDasharray={`${dash} ${c}`}
@@ -260,36 +433,42 @@ function ProgressRingCard({ title = "Svarprosent", value = 0, subtitle = "Siste 
   );
 }
 
-/** 3) Segment bars (like Simployer engagement breakdown) */
-function SegmentBars({ title = "Kategori-score", items = [] }) {
+/** 3) Segment bars 0-10 (green->red) */
+function SegmentBars({ title = "Kategori-poengsum", items = [] }) {
   return (
     <div className="bg-white rounded-3xl border border-slate-200 p-6">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm font-medium text-slate-600">{title}</p>
-          <p className="text-sm text-slate-500 mt-1">Skalert 1–5</p>
+          <p className="text-sm text-slate-500 mt-1">Skalert 0–10</p>
         </div>
         <BarChart3 className="h-5 w-5 text-slate-400" />
       </div>
 
       <div className="mt-5 space-y-4">
         {items.map((it) => {
-          const v = clamp(Number(it.value || 0), 0, 5);
-          const pct = (v / 5) * 100;
+          const v10 = clamp(Number(it.value10 || 0), 0, 10);
+          const pct = (v10 / 10) * 100;
+          const band = riskBand(v10);
+          const meta = bandMeta(band);
+
           return (
             <div key={it.key} className="space-y-1">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-slate-700 font-medium">{it.label}</span>
-                <span className="text-slate-500">{v.toFixed(1)}</span>
+                <span className="text-slate-500">{v10.toFixed(1)}</span>
               </div>
-              <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+
+              <div className="h-2.5 rounded-full bg-slate-100 overflow-hidden">
                 <div
-                  className={cn(
-                    "h-full rounded-full",
-                    v >= 4 ? "bg-emerald-500" : v >= 3 ? "bg-amber-500" : "bg-red-500"
-                  )}
+                  className={cn("h-full rounded-full", meta.bar)}
                   style={{ width: `${pct}%` }}
                 />
+              </div>
+
+              <div className="flex justify-between text-[11px] text-slate-400">
+                <span>0</span>
+                <span>10</span>
               </div>
             </div>
           );
@@ -303,6 +482,8 @@ function SegmentBars({ title = "Kategori-score", items = [] }) {
    Dashboard page
 --------------------------- */
 export default function Dashboard() {
+  const [range, setRange] = useState(RANGE.D30);
+
   const { data: currentUser } = useQuery({
     queryKey: ["current-user"],
     queryFn: () => base44.auth.me(),
@@ -339,18 +520,30 @@ export default function Dashboard() {
     );
   }
 
+  const rangeStart = useMemo(() => getRangeStartDate(range), [range]);
+
+  // Role filter + time filter
   const filteredAssessments = useMemo(() => {
     if (!currentUser) return [];
-    if (role === ROLE.HR) return assessments;
 
-    return assessments.filter((a) => {
-      const deptId = a.department_id;
-      const deptName = a.department;
-      const okById = deptId && scope.ids.includes(deptId);
-      const okByName = !deptId && deptName && scope.names.includes(deptName);
-      return okById || okByName;
+    const roleScoped =
+      role === ROLE.HR
+        ? assessments
+        : assessments.filter((a) => {
+            const deptId = a.department_id;
+            const deptName = a.department;
+            const okById = deptId && scope.ids.includes(deptId);
+            const okByName = !deptId && deptName && scope.names.includes(deptName);
+            return okById || okByName;
+          });
+
+    const timeScoped = roleScoped.filter((a) => {
+      // prefer created_date if present, else week-based
+      return inRangeByCreatedDate(a, rangeStart) && inRangeByWeek(a, rangeStart);
     });
-  }, [assessments, currentUser, role, scope.ids, scope.names]);
+
+    return timeScoped;
+  }, [assessments, currentUser, role, scope.ids, scope.names, rangeStart]);
 
   const filteredDepartments = useMemo(() => {
     if (!currentUser) return [];
@@ -367,38 +560,47 @@ export default function Dashboard() {
 
   const filteredRecommendations = useMemo(() => {
     if (!currentUser) return [];
-    if (role === ROLE.HR) return recommendations;
+    const roleScoped =
+      role === ROLE.HR
+        ? recommendations
+        : recommendations.filter((r) => {
+            const deptId = r.department_id;
+            const deptName = r.department;
+            const okById = deptId && scope.ids.includes(deptId);
+            const okByName = !deptId && deptName && scope.names.includes(deptName);
+            return okById || okByName;
+          });
 
-    return recommendations.filter((r) => {
-      const deptId = r.department_id;
-      const deptName = r.department;
-      const okById = deptId && scope.ids.includes(deptId);
-      const okByName = !deptId && deptName && scope.names.includes(deptName);
-      return okById || okByName;
-    });
-  }, [recommendations, currentUser, role, scope.ids, scope.names]);
+    // also time-filter recommendations by created_date if present
+    return roleScoped.filter((r) => inRangeByCreatedDate(r, rangeStart));
+  }, [recommendations, currentUser, role, scope.ids, scope.names, rangeStart]);
 
   const stats = useMemo(() => {
     if (!filteredAssessments.length) return null;
 
-    const physical = avg(filteredAssessments.map((a) => Number(a.physical_load) || 0));
-    const mental = avg(filteredAssessments.map((a) => Number(a.mental_wellbeing) || 0));
-    const work = avg(filteredAssessments.map((a) => Number(a.work_environment) || 0));
+    const physical5 = avg(filteredAssessments.map((a) => Number(a.physical_load) || 0));
+    const mental5 = avg(filteredAssessments.map((a) => Number(a.mental_wellbeing) || 0));
+    const work5 = avg(filteredAssessments.map((a) => Number(a.work_environment) || 0));
+
+    // Convert to 0-10 for display
+    const physical10 = to10From5(physical5);
+    const mental10 = to10From5(mental5);
+    const work10 = to10From5(work5);
 
     return {
-      physical,
-      mental,
-      work,
+      physical10,
+      mental10,
+      work10,
       responses: filteredAssessments.length,
     };
   }, [filteredAssessments]);
 
-  const healthIndex = useMemo(() => {
+  const healthIndex10 = useMemo(() => {
     if (!stats) return null;
-    return (stats.physical + stats.mental + stats.work) / 3;
+    return (stats.physical10 + stats.mental10 + stats.work10) / 3;
   }, [stats]);
 
-  // Response rate (best effort): use employee_count if present
+  // Response rate (best effort): if employee_count is available
   const responseRate = useMemo(() => {
     if (!stats) return 0;
 
@@ -415,6 +617,7 @@ export default function Dashboard() {
     return clamp((stats.responses / 50) * 100, 0, 100);
   }, [stats, filteredDepartments]);
 
+  // department scores: keep 0-10 but charts might expect 0-5 => convert back when passing
   const departmentScores = useMemo(() => {
     if (!filteredAssessments.length) return [];
     const byDept = new Map();
@@ -422,50 +625,65 @@ export default function Dashboard() {
     filteredAssessments.forEach((a) => {
       const key = a.department_id || a.department || "Ukjent";
       const name = a.department || "Ukjent";
-      if (!byDept.has(key)) byDept.set(key, { name, scores: [], count: 0 });
+      if (!byDept.has(key)) byDept.set(key, { name, scores10: [], count: 0 });
 
-      const row = byDept.get(key);
-      const score = ((Number(a.physical_load) || 0) + (Number(a.mental_wellbeing) || 0) + (Number(a.work_environment) || 0)) / 3;
-      row.scores.push(score);
-      row.count += 1;
+      const score5 =
+        ((Number(a.physical_load) || 0) +
+          (Number(a.mental_wellbeing) || 0) +
+          (Number(a.work_environment) || 0)) / 3;
+
+      byDept.get(key).scores10.push(to10From5(score5));
+      byDept.get(key).count += 1;
     });
 
     return Array.from(byDept.values())
       .map((d) => ({
         name: d.name,
-        score: avg(d.scores),
+        score10: avg(d.scores10),
+        // keep 0-5 copy for existing chart components (if they assume 0-5)
+        score: avg(d.scores10) / 2,
         respondent_count: d.count,
       }))
-      .sort((a, b) => a.score - b.score);
+      .sort((a, b) => a.score10 - b.score10);
   }, [filteredAssessments]);
 
+  // trend: convert to 0-5 for chart component, but compute from 0-10 display
   const trendData = useMemo(() => {
     if (!filteredAssessments.length) return [];
     const byWeek = new Map();
 
     filteredAssessments.forEach((a) => {
       const weekRaw = a.assessment_week || "ukjent";
-      if (!byWeek.has(weekRaw)) byWeek.set(weekRaw, { fysisk: [], mental: [], arbeid: [] });
+      if (!byWeek.has(weekRaw)) byWeek.set(weekRaw, { fysisk10: [], mental10: [], arbeid10: [] });
 
       const w = byWeek.get(weekRaw);
-      w.fysisk.push(Number(a.physical_load) || 3);
-      w.mental.push(Number(a.mental_wellbeing) || 3);
-      w.arbeid.push(Number(a.work_environment) || 3);
+      w.fysisk10.push(to10From5(Number(a.physical_load) || 3));
+      w.mental10.push(to10From5(Number(a.mental_wellbeing) || 3));
+      w.arbeid10.push(to10From5(Number(a.work_environment) || 3));
     });
 
-    const rows = Array.from(byWeek.entries()).map(([week, d]) => ({
-      week: week.split("-")[1] || week,
-      fysisk: avg(d.fysisk),
-      mental: avg(d.mental),
-      arbeid: avg(d.arbeid),
-    }));
+    const rows = Array.from(byWeek.entries()).map(([week, d]) => {
+      const fysisk10 = avg(d.fysisk10);
+      const mental10 = avg(d.mental10);
+      const arbeid10 = avg(d.arbeid10);
+
+      // Existing TrendChart expects 1-5 (domain [1,5]) so we convert back
+      return {
+        week: week.split("-")[1] || week,
+        fysisk: fysisk10 / 2,
+        mental: mental10 / 2,
+        arbeid: arbeid10 / 2,
+      };
+    });
 
     return rows.slice(-8);
   }, [filteredAssessments]);
 
-  const getRiskLevel = (score) => {
-    if (score >= 4) return "low";
-    if (score >= 3) return "medium";
+  // risklevel for RiskCard (your existing component expects low/medium/high where higher is better)
+  const getRiskLevel10 = (score10) => {
+    const s = clamp(Number(score10 || 0), 0, 10);
+    if (s >= 7.5) return "low";
+    if (s >= 5) return "medium";
     return "high";
   };
 
@@ -473,19 +691,29 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-4xl sm:text-5xl font-bold text-slate-900 mb-3 leading-tight">
-          Dashboard
-        </h1>
-        <p className="text-slate-600 text-lg">
-          {role === ROLE.MANAGER
-            ? "Aggregert oversikt for din avdeling"
-            : "Aggregert oversikt på tvers av avdelinger"}
-        </p>
+      {/* Header + Range */}
+      <div className="flex flex-col gap-4">
+        <div>
+          <h1 className="text-4xl sm:text-5xl font-bold text-slate-900 mb-2 leading-tight">
+            Dashboard
+          </h1>
+          <p className="text-slate-600 text-lg">
+            {role === ROLE.MANAGER
+              ? "Aggregert oversikt for din avdeling"
+              : "Aggregert oversikt på tvers av avdelinger"}
+          </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="text-sm font-medium text-slate-600 flex items-center gap-2">
+            Periode
+            <ChevronDown className="h-4 w-4 text-slate-400" />
+          </div>
+          <RangePicker value={range} onChange={setRange} />
+        </div>
       </div>
 
-      {/* TOP: Simployer-ish grid */}
+      {/* TOP: Apple-ish / Simployer-ish grid */}
       {isLoading ? (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-4 bg-white rounded-3xl border border-slate-200 p-6">
@@ -509,15 +737,20 @@ export default function Dashboard() {
       ) : stats ? (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-4">
-            <ProgressRingCard title="Svarprosent" value={responseRate} subtitle="Siste 30 dager" footnote="Live" />
+            <ProgressRingCard
+              title="Svarprosent"
+              value={responseRate}
+              subtitle={RANGE_LABEL[range]}
+              footnote="Live"
+            />
           </div>
 
           <div className="lg:col-span-8">
             <GaugeCard
               title="Helseindeks"
-              value={healthIndex ?? 0}
+              value10={healthIndex10 ?? 0}
               min={0}
-              max={5}
+              max={10}
               delta={0}
               subtitle="Basert på fysisk, mental og arbeidsforhold"
               footnote="Aggregert"
@@ -526,11 +759,11 @@ export default function Dashboard() {
 
           <div className="lg:col-span-12">
             <SegmentBars
-              title="Kategori-score"
+              title="Kategori-poengsum"
               items={[
-                { key: "physical", label: "Fysisk belastning", value: stats.physical },
-                { key: "mental", label: "Mental helse", value: stats.mental },
-                { key: "work", label: "Arbeidsforhold", value: stats.work },
+                { key: "physical", label: "Fysisk belastning", value10: stats.physical10 },
+                { key: "mental", label: "Mental helse", value10: stats.mental10 },
+                { key: "work", label: "Arbeidsforhold", value10: stats.work10 },
               ]}
             />
           </div>
@@ -545,30 +778,30 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Key numbers row */}
+      {/* Key numbers row (0-10 display) */}
       {stats && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <RiskCard
             title="Fysisk belastning"
-            value={stats.physical.toFixed(1)}
-            subtitle="Gjennomsnittlig score"
-            riskLevel={getRiskLevel(stats.physical)}
+            value={stats.physical10.toFixed(1)}
+            subtitle="Gjennomsnittlig score (0–10)"
+            riskLevel={getRiskLevel10(stats.physical10)}
             icon={Activity}
             goodWhenUp={true}
           />
           <RiskCard
             title="Mental helse"
-            value={stats.mental.toFixed(1)}
-            subtitle="Gjennomsnittlig score"
-            riskLevel={getRiskLevel(stats.mental)}
+            value={stats.mental10.toFixed(1)}
+            subtitle="Gjennomsnittlig score (0–10)"
+            riskLevel={getRiskLevel10(stats.mental10)}
             icon={Brain}
             goodWhenUp={true}
           />
           <RiskCard
             title="Arbeidsforhold"
-            value={stats.work.toFixed(1)}
-            subtitle="Gjennomsnittlig score"
-            riskLevel={getRiskLevel(stats.work)}
+            value={stats.work10.toFixed(1)}
+            subtitle="Gjennomsnittlig score (0–10)"
+            riskLevel={getRiskLevel10(stats.work10)}
             icon={Briefcase}
             goodWhenUp={true}
           />
@@ -582,10 +815,10 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Charts */}
+      {/* Charts (we pass score back as 0-5 to match your existing components) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {departmentScores.length > 0 ? (
-          <DepartmentRiskChart data={departmentScores} />
+          <DepartmentRiskChart data={departmentScores.map(d => ({ ...d, score: d.score }))} />
         ) : (
           <div className="bg-white rounded-3xl border border-slate-200 p-6 flex items-center justify-center h-80">
             <p className="text-slate-500">Ingen avdelingsdata tilgjengelig</p>
