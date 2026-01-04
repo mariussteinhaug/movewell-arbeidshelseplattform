@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -37,6 +38,12 @@ export default function AssessmentResults() {
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [selectedRiskLevel, setSelectedRiskLevel] = useState("all");
   const [expandedSessions, setExpandedSessions] = useState(new Set());
+  const [selectedProfileUserId, setSelectedProfileUserId] = useState(null);
+  const [selectedProfileDept, setSelectedProfileDept] = useState(null);
+  const [profileSession, setProfileSession] = useState(null);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [aiSuggestion, setAiSuggestion] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
 
   // 🧠 Get current user
   const { data: currentUser } = useQuery({
@@ -58,6 +65,13 @@ export default function AssessmentResults() {
   const { data: questions = [] } = useQuery({
     queryKey: ["questions"],
     queryFn: () => base44.entities.QuestionBank.list("order"),
+  });
+
+  // Brukere (kun admin kan liste brukere i Base44)
+  const { data: users = [] } = useQuery({
+    queryKey: ["users"],
+    queryFn: () => base44.entities.User.list(),
+    enabled: currentUser?.role === "admin",
   });
 
   // 🧮 Access rules
@@ -83,6 +97,67 @@ export default function AssessmentResults() {
       session.anonymous_id?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesDept && matchesRisk && matchesSearch && session.status === "completed";
   });
+
+  // Map for å finne brukernavn fra respondent_user_id
+  const userMap = React.useMemo(() => {
+    const m = {};
+    (users || []).forEach((u) => {
+      m[u.id] = u;
+    });
+    return m;
+  }, [users]);
+
+  // Grupper profiler per avdeling med antall og navneliste
+  const deptGroups = React.useMemo(() => {
+    const groups = new Map();
+    for (const s of filteredSessions) {
+      const dept = s.department_name || s.department || "Ikke oppgitt";
+      if (!groups.has(dept)) groups.set(dept, { count: 0, respondents: new Map() });
+      const g = groups.get(dept);
+      g.count += 1;
+      const key = s.respondent_user_id || s.anonymous_id;
+      if (!g.respondents.has(key)) {
+        const u = userMap[s.respondent_user_id];
+        const display = u?.full_name || u?.email || "Ukjent ansatt";
+        g.respondents.set(key, { userId: s.respondent_user_id || null, display });
+      }
+    }
+    return Array.from(groups.entries()).map(([department, data]) => ({
+      department,
+      count: data.count,
+      respondents: Array.from(data.respondents.values()),
+    }));
+  }, [filteredSessions, userMap]);
+
+  const openProfile = (userId, deptName) => {
+    setSelectedProfileUserId(userId);
+    setSelectedProfileDept(deptName);
+    const sessions = accessFilteredSessions
+      .filter((s) => (s.department_name || s.department) === deptName && s.respondent_user_id === userId)
+      .sort((a, b) => new Date(b.created_at || b.completed_at) - new Date(a.created_at || a.completed_at));
+    setProfileSession(sessions[0] || null);
+    setAiSuggestion("");
+    setProfileOpen(true);
+  };
+
+  const generateAISuggestion = async () => {
+    if (!profileSession) return;
+    setAiLoading(true);
+    const answeredData = (profileSession.answered_questions || []).map((qa) => {
+      const q = questions.find((qu) => qu.question_id === qa.question_id);
+      return { question: q?.text || qa.question_id, answer: qa.answer };
+    });
+    const res = await base44.integrations.Core.InvokeLLM({
+      prompt:
+        `Du er en norsk HMS-rådgiver. Basert på svarene under, gi 3 konkrete forslag til tiltak i punktliste.\n` +
+        `Risikonivå: ${profileSession.risk_level}\n` +
+        `Risikosignaler: ${(profileSession.risk_signals || []).join(", ")}\n` +
+        `Svar: ${JSON.stringify(answeredData).slice(0, 4000)}\n` +
+        `Svar på norsk som punktliste.`,
+    });
+    setAiSuggestion(typeof res === "string" ? res : JSON.stringify(res));
+    setAiLoading(false);
+  };
 
   const toggleExpanded = (sessionId) => {
     const newExpanded = new Set(expandedSessions);
@@ -206,6 +281,51 @@ export default function AssessmentResults() {
               </SelectContent>
             </Select>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Profiler per avdeling</CardTitle>
+          <CardDescription>Se hvem som har svart per avdeling og åpne profil</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {deptGroups.length === 0 ? (
+            <p className="text-sm text-slate-500">Ingen profiler i utvalget.</p>
+          ) : (
+            <div className="space-y-3">
+              {deptGroups.map((g) => (
+                <div key={g.department} className="p-3 rounded-lg border border-slate-200 bg-white">
+                  <div className="flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedDepartment(g.department)}
+                      className="text-sm font-medium text-slate-900 hover:underline"
+                    >
+                      {g.department}
+                    </button>
+                    <Badge variant="secondary">{g.count}</Badge>
+                  </div>
+                  {selectedDepartment === g.department && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {g.respondents.map((r, idx) => (
+                        <button
+                          key={(r.userId || idx) + g.department}
+                          type="button"
+                          onClick={() => r.userId && openProfile(r.userId, g.department)}
+                          className="text-xs px-2 py-1 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 disabled:opacity-60"
+                          disabled={!r.userId}
+                          title={r.userId ? "Åpne profil" : "Anonym bruker – kan ikke åpnes"}
+                        >
+                          {r.display}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -336,6 +456,56 @@ export default function AssessmentResults() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {(userMap[selectedProfileUserId]?.full_name || "Ansatt")} — {selectedProfileDept || ""}
+            </DialogTitle>
+          </DialogHeader>
+
+          {profileSession ? (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Badge className={riskLevelColors[profileSession.risk_level]}>
+                  {riskLevelLabels[profileSession.risk_level]} risiko
+                </Badge>
+                <span className="text-xs text-slate-500">
+                  {format(new Date(profileSession.created_at || profileSession.completed_at), 'dd. MMM yyyy, HH:mm', { locale: nb })}
+                </span>
+              </div>
+
+              <div className="space-y-2 max-h-64 overflow-auto pr-1">
+                {profileSession.answered_questions?.map((qa, idx) => {
+                  const q = questions.find((qu) => qu.question_id === qa.question_id);
+                  return (
+                    <div key={idx} className="bg-white rounded-lg p-3 border border-slate-200">
+                      <p className="text-sm font-medium text-slate-900">{q?.text || qa.question_id}</p>
+                      <p className="text-sm text-slate-700 mt-1">{Array.isArray(qa.answer) ? qa.answer.join(", ") : qa.answer}</p>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="pt-2 border-t border-slate-200">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-medium text-slate-900">AI-forslag</p>
+                  <Button size="sm" onClick={generateAISuggestion} disabled={aiLoading} className="bg-emerald-600 hover:bg-emerald-700">
+                    {aiLoading ? "Genererer…" : "Foreslå tiltak (AI)"}
+                  </Button>
+                </div>
+                <div className="text-sm text-slate-700 whitespace-pre-wrap bg-slate-50 p-3 rounded-lg min-h-[60px]">
+                  {aiSuggestion || "Ingen forslag generert ennå."}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-slate-600">Ingen data for valgt profil.</p>
+          )}
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }
