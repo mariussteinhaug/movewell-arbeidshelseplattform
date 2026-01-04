@@ -140,8 +140,9 @@ export default function Assessment() {
      Create notification
   --------------------------- */
   const createInAppNotification = async (assessment, sessionId) => {
+    if (!currentUser) return;
     // Placeholder for notification logic
-    console.log("Notification created:", { assessment, sessionId });
+    console.log("Notification created:", { assessment, sessionId, user: currentUser.email });
   };
 
   /* ---------------------------
