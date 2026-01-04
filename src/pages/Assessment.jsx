@@ -342,21 +342,13 @@ Besvar kort med JSON.`;
               <CardTitle>Oppsummering</CardTitle>
               <CardDescription>AI- eller systemgenerert vurdering</CardDescription>
             </CardHeader>
+
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-slate-600">Risikonivå</div>
-                <span className={cn("px-3 py-1 rounded-full text-sm font-semibold", risk.chip)}>
-                  {risk.label}
-                </span>
-              </div>
-              {riskAssessment?.reason && (
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                  <div className="flex items-start gap-2">
-                    <Info className="h-4 w-4 text-slate-500 mt-0.5" />
-                    <p className="text-sm text-slate-700">{riskAssessment.reason}</p>
-                  </div>
-                </div>
-              )}
+              <p className="text-sm text-slate-600">
+  Takk for at du fullførte helsekartleggingen. 
+</p>
+
+
               <Button onClick={handleRestart} variant="outline" className="w-full rounded-xl">
                 Start ny kartlegging
               </Button>
