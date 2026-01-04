@@ -537,7 +537,7 @@ export default function AssessmentResults() {
                     {aiLoading ? "Genererer…" : "Foreslå tiltak (AI)"}
                   </Button>
                 </div>
-                <div className="text-sm text-slate-700 whitespace-pre-wrap bg-slate-50 p-3 rounded-lg min-h-[60px]">
+                <div className="text-[15px] text-slate-800 whitespace-pre-wrap bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm leading-relaxed min-h-[72px]">
                   {aiSuggestion || "Ingen forslag generert ennå."}
                 </div>
               </div>
