@@ -1,12 +1,19 @@
 import React, { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { RefreshCw, BarChart3, Check, ChevronDown } from "lucide-react";
+import {
+  RefreshCw,
+  BarChart3,
+  Activity,
+  Users,
+  Sparkles,
+  ArrowUpRight,
+} from "lucide-react";
 import DepartmentRiskChart from "../components/dashboard/DepartmentRiskChart";
 import TrendChart from "../components/dashboard/TrendChart";
 import AlertList from "../components/dashboard/AlertList";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
+import { cn } from "@/ "@/lib/utils";
 
 /* ---------------------------
    Roles (MoveWell)
@@ -67,7 +74,6 @@ function startOfDay(d) {
   x.setHours(0, 0, 0, 0);
   return x;
 }
-
 function addDays(d, n) {
   const x = new Date(d);
   x.setDate(x.getDate() + n);
@@ -125,9 +131,9 @@ function to10From5(v) {
 }
 function riskBand10(score10) {
   const s = clamp(Number(score10 || 0), 0, 10);
-  if (s >= 7.5) return "good"; // grønn
-  if (s >= 5) return "warn"; // amber
-  return "bad"; // rød
+  if (s >= 7.5) return "good";
+  if (s >= 5) return "warn";
+  return "bad";
 }
 function bandLabel(score10) {
   const b = riskBand10(score10);
@@ -141,7 +147,7 @@ function bandLabel(score10) {
 --------------------------- */
 function Segmented({ value, onChange, options }) {
   return (
-    <div className="inline-flex items-center rounded-2xl bg-slate-100 p-1 border border-slate-200">
+    <div className="inline-flex items-center rounded-2xl bg-white/70 backdrop-blur px-1 py-1 border border-slate-200 shadow-sm">
       {options.map((opt) => {
         const active = opt.value === value;
         return (
@@ -151,9 +157,10 @@ function Segmented({ value, onChange, options }) {
             onClick={() => onChange(opt.value)}
             className={cn(
               "px-3 py-1.5 text-sm font-medium rounded-xl transition-all",
+              "focus:outline-none focus:ring-2 focus:ring-slate-300",
               active
-                ? "bg-white text-slate-900 shadow-sm"
-                : "text-slate-600 hover:text-slate-900"
+                ? "bg-slate-900 text-white shadow-sm"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
             )}
           >
             {opt.label}
@@ -165,248 +172,79 @@ function Segmented({ value, onChange, options }) {
 }
 
 /* ---------------------------
-   Cool Units (0–10)
+   “App cards”
 --------------------------- */
-
-// 1) Gauge
-function GaugeCard({
-  title = "Helseindeks",
-  value10 = 0,
-  subtitle = "Basert på fysisk, mental og arbeidsforhold",
-  footnote = "Aggregert",
-  delta10 = 0,
-}) {
-  const v = clamp(Number(value10 || 0), 0, 10);
-  const pct = v / 10;
-
-  // SVG arc geometry (240°)
-  const size = 320;
-  const cx = size / 2;
-  const cy = size / 2;
-  const r = 120;
-  const stroke = 18;
-
-  const startAngle = (-120 * Math.PI) / 180;
-  const endAngle = (120 * Math.PI) / 180;
-
-  const polar = (angle) => ({ x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) });
-  const start = polar(startAngle);
-  const end = polar(endAngle);
-
-  const trackPath = `M ${start.x} ${start.y} A ${r} ${r} 0 1 1 ${end.x} ${end.y}`;
-
-  // arc length approx
-  const arcLength = Math.PI * r * (240 / 180);
-  const dash = arcLength * pct;
-  const gap = arcLength - dash;
-
-  const needleAngle = -120 + pct * 240;
-
-  const band = riskBand10(v);
-
-  const ringColor = band === "good" ? "#10B981" : band === "warn" ? "#F59E0B" : "#EF4444";
-
-  const deltaText =
-    typeof delta10 === "number"
-      ? `${delta10 > 0 ? "↑" : delta10 < 0 ? "↓" : "→"} ${Math.abs(delta10).toFixed(1)}`
-      : null;
-
+function Panel({ title, subtitle, icon: Icon, right, children, className }) {
   return (
-    <div className="bg-white rounded-3xl border border-slate-200 p-6">
-      <div className="flex items-start justify-between gap-4">
+    <div
+      className={cn(
+        "rounded-3xl border border-slate-200 bg-white/80 backdrop-blur",
+        "shadow-[0_10px_30px_rgba(15,23,42,0.06)]",
+        "overflow-hidden",
+        className
+      )}
+    >
+      <div className="px-6 pt-6 pb-4 flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-sm font-medium text-slate-600">{title}</p>
-
-          <div className="mt-2 flex items-baseline gap-3">
-            <span className="text-4xl font-semibold text-slate-900">{v.toFixed(1)}</span>
-            <span className="text-sm text-slate-500">/ 10</span>
-
-            {deltaText && (
-              <span
-                className={cn(
-                  "text-sm font-semibold",
-                  delta10 > 0 ? "text-emerald-700" : delta10 < 0 ? "text-red-600" : "text-slate-500"
-                )}
-              >
-                {deltaText}
+          <div className="flex items-center gap-2">
+            {Icon ? (
+              <span className="h-8 w-8 rounded-2xl bg-slate-900 text-white grid place-items-center shadow-sm">
+                <Icon className="h-4 w-4" />
               </span>
-            )}
+            ) : null}
+            <h3 className="text-base font-semibold text-slate-900 truncate">{title}</h3>
           </div>
-
-          <p className="text-sm text-slate-500 mt-1">{subtitle}</p>
-
-          <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1">
-            <span
-              className="h-2 w-2 rounded-full"
-              style={{ backgroundColor: ringColor }}
-            />
-            <span className="text-xs font-medium text-slate-700">{bandLabel(v)}</span>
-          </div>
+          {subtitle ? <p className="text-sm text-slate-500 mt-2">{subtitle}</p> : null}
         </div>
-
-        <span className="text-xs px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
-          {footnote}
-        </span>
+        {right ? <div className="shrink-0">{right}</div> : null}
       </div>
-
-      <div className="mt-6 flex items-center justify-center">
-        <svg viewBox={`0 0 ${size} ${size}`} className="w-full max-w-[560px] h-[210px]">
-          {/* Track */}
-          <path
-            d={trackPath}
-            fill="none"
-            stroke="#E2E8F0"
-            strokeWidth={stroke}
-            strokeLinecap="round"
-          />
-          {/* Progress */}
-          <path
-            d={trackPath}
-            fill="none"
-            stroke={ringColor}
-            strokeWidth={stroke}
-            strokeLinecap="round"
-            strokeDasharray={`${dash} ${gap}`}
-          />
-          {/* Needle */}
-          <g transform={`rotate(${needleAngle} ${cx} ${cy})`}>
-            <line
-              x1={cx}
-              y1={cy}
-              x2={cx}
-              y2={cy - 95}
-              stroke="#0F172A"
-              strokeWidth="4"
-              strokeLinecap="round"
-              opacity="0.85"
-            />
-          </g>
-          {/* Center */}
-          <circle cx={cx} cy={cy} r="10" fill="#0F172A" />
-
-          {/* Min/Max labels (0–10) */}
-          <text x="32" y="265" className="fill-slate-500" style={{ fontSize: 12 }}>
-            0
-          </text>
-          <text x="268" y="265" className="fill-slate-500" style={{ fontSize: 12 }}>
-            10
-          </text>
-        </svg>
-      </div>
-
-      <div className="flex justify-between text-xs text-slate-500">
-        <span>0</span>
-        <span>10</span>
-      </div>
+      <div className="px-6 pb-6">{children}</div>
     </div>
   );
 }
 
-// 2) Progress ring
-function ProgressRingCard({
-  title = "Svarprosent",
-  value = 0,
-  subtitle = "Siste 30 dager",
-  footnote = "Live",
-}) {
-  const pct = clamp(Number(value || 0), 0, 100);
-  const r = 34;
-  const c = 2 * Math.PI * r;
-  const dash = (pct / 100) * c;
-
-  // ring color: low response = red
-  const ringColor = pct >= 70 ? "#10B981" : pct >= 40 ? "#F59E0B" : "#EF4444";
-
+function StatCard({ label, value, hint, icon: Icon, chip }) {
   return (
-    <div className="bg-white rounded-3xl border border-slate-200 p-6">
-      <div className="flex items-start justify-between">
+    <div
+      className={cn(
+        "rounded-3xl border border-slate-200 bg-white/80 backdrop-blur",
+        "shadow-[0_10px_30px_rgba(15,23,42,0.06)]",
+        "p-6"
+      )}
+    >
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-medium text-slate-600">{title}</p>
-          <p className="text-sm text-slate-500 mt-1">{subtitle}</p>
+          <p className="text-sm font-medium text-slate-600">{label}</p>
+          <div className="mt-2 flex items-end gap-2">
+            <span className="text-3xl font-semibold text-slate-900">{value}</span>
+            {chip ? (
+              <span className="text-xs px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
+                {chip}
+              </span>
+            ) : null}
+          </div>
+          {hint ? <p className="text-sm text-slate-500 mt-2">{hint}</p> : null}
         </div>
-        <span className="text-xs px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">{footnote}</span>
-      </div>
-
-      <div className="mt-6 flex items-center justify-center">
-        <svg width="120" height="120" viewBox="0 0 120 120">
-          <circle cx="60" cy="60" r={r} strokeWidth="10" stroke="#E2E8F0" fill="none" />
-          <circle
-            cx="60"
-            cy="60"
-            r={r}
-            strokeWidth="10"
-            stroke={ringColor}
-            fill="none"
-            strokeLinecap="round"
-            strokeDasharray={`${dash} ${c}`}
-            transform="rotate(-90 60 60)"
-          />
-          <text
-            x="60"
-            y="58"
-            textAnchor="middle"
-            dominantBaseline="central"
-            className="fill-slate-900"
-            style={{ fontSize: 26, fontWeight: 800 }}
-          >
-            {Math.round(pct)}%
-          </text>
-          <text
-            x="60"
-            y="78"
-            textAnchor="middle"
-            dominantBaseline="central"
-            className="fill-slate-500"
-            style={{ fontSize: 12 }}
-          >
-            fullført
-          </text>
-        </svg>
-      </div>
-    </div>
-  );
-}
-
-// 3) Segment bars 0–10
-function SegmentBars({ title = "Kategori-score", items = [] }) {
-  return (
-    <div className="bg-white rounded-3xl border border-slate-200 p-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm font-medium text-slate-600">{title}</p>
-          <p className="text-sm text-slate-500 mt-1">Skalert 0–10</p>
-        </div>
-        <BarChart3 className="h-5 w-5 text-slate-400" />
-      </div>
-
-      <div className="mt-5 space-y-4">
-        {items.map((it) => {
-          const v = clamp(Number(it.value10 || 0), 0, 10);
-          const pct = (v / 10) * 100;
-
-          const band = riskBand10(v);
-          const fill = band === "good" ? "#10B981" : band === "warn" ? "#F59E0B" : "#EF4444";
-
-          return (
-            <div key={it.key} className="space-y-1">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-700 font-medium">{it.label}</span>
-                <span className="text-slate-500">{v.toFixed(1)}</span>
-              </div>
-              <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
-                <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: fill }} />
-              </div>
-            </div>
-          );
-        })}
+        {Icon ? (
+          <span className="h-10 w-10 rounded-2xl bg-slate-100 grid place-items-center">
+            <Icon className="h-5 w-5 text-slate-700" />
+          </span>
+        ) : null}
       </div>
     </div>
   );
 }
 
 /* ---------------------------
-   Dashboard page (FULL)
+   Existing “Cool Units” you had (kept)
+   - GaugeCard
+   - ProgressRingCard
+   - SegmentBars
+   (paste your existing implementations here unchanged)
 --------------------------- */
+// 👉 Lim: behold GaugeCard, ProgressRingCard og SegmentBars fra koden din.
+// (Jeg refererer til dem under.)
+
 export default function Dashboard() {
   const [range, setRange] = useState(RANGE.D30);
 
@@ -439,18 +277,18 @@ export default function Dashboard() {
 
   if (currentUser && !canSeeDashboard) {
     return (
-      <div className="text-center py-16">
-        <h2 className="text-xl font-semibold text-slate-900 mb-2">Ingen tilgang</h2>
-        <p className="text-slate-600">Denne siden er kun tilgjengelig for HR og ledere.</p>
+      <div className="min-h-[60vh] grid place-items-center">
+        <div className="text-center max-w-md">
+          <h2 className="text-2xl font-semibold text-slate-900">Ingen tilgang</h2>
+          <p className="text-slate-600 mt-2">Denne siden er kun tilgjengelig for HR og ledere.</p>
+        </div>
       </div>
     );
   }
 
-  // Filter by role + department scope
   const scopedAssessments = useMemo(() => {
     if (!currentUser) return [];
     if (role === ROLE.HR) return assessmentsRaw;
-
     return assessmentsRaw.filter((a) => {
       const deptId = a.department_id;
       const deptName = a.department;
@@ -463,7 +301,6 @@ export default function Dashboard() {
   const scopedDepartments = useMemo(() => {
     if (!currentUser) return [];
     if (role === ROLE.HR) return departments;
-
     return departments.filter((d) => {
       const deptId = d.id || d.department_id;
       const deptName = d.name;
@@ -476,7 +313,6 @@ export default function Dashboard() {
   const scopedRecommendations = useMemo(() => {
     if (!currentUser) return [];
     if (role === ROLE.HR) return recommendations;
-
     return recommendations.filter((r) => {
       const deptId = r.department_id;
       const deptName = r.department;
@@ -486,13 +322,9 @@ export default function Dashboard() {
     });
   }, [recommendations, currentUser, role, scope.ids, scope.names]);
 
-  // Time filter (best effort):
-  // - if created_date exists, use that
-  // - else if assessment_week exists, do NOT try to parse week here; fall back to created_date only.
   const timeFilteredAssessments = useMemo(() => {
     const start = getRangeStart(range);
     if (!start) return scopedAssessments;
-
     const startMs = start.getTime();
     return scopedAssessments.filter((a) => {
       const cd = a.created_date ? new Date(a.created_date) : null;
@@ -503,17 +335,10 @@ export default function Dashboard() {
 
   const stats10 = useMemo(() => {
     if (!timeFilteredAssessments.length) return null;
-
     const physical10 = avg(timeFilteredAssessments.map((a) => to10From5(a.physical_load)));
     const mental10 = avg(timeFilteredAssessments.map((a) => to10From5(a.mental_wellbeing)));
     const work10 = avg(timeFilteredAssessments.map((a) => to10From5(a.work_environment)));
-
-    return {
-      physical10,
-      mental10,
-      work10,
-      responses: timeFilteredAssessments.length,
-    };
+    return { physical10, mental10, work10, responses: timeFilteredAssessments.length };
   }, [timeFilteredAssessments]);
 
   const healthIndex10 = useMemo(() => {
@@ -521,21 +346,16 @@ export default function Dashboard() {
     return (stats10.physical10 + stats10.mental10 + stats10.work10) / 3;
   }, [stats10]);
 
-  // Response rate (uses employee_count if present)
   const responseRate = useMemo(() => {
     if (!stats10) return 0;
-
-    const totalEmployees = scopedDepartments.reduce((sum, d) => sum + (Number(d.employee_count) || 0), 0);
-
-    if (totalEmployees > 0) {
-      return clamp((stats10.responses / totalEmployees) * 100, 0, 100);
-    }
-
-    // fallback if no employee_count available
+    const totalEmployees = scopedDepartments.reduce(
+      (sum, d) => sum + (Number(d.employee_count) || 0),
+      0
+    );
+    if (totalEmployees > 0) return clamp((stats10.responses / totalEmployees) * 100, 0, 100);
     return clamp((stats10.responses / 50) * 100, 0, 100);
   }, [stats10, scopedDepartments]);
 
-  // Department chart data (0–10)
   const departmentScores = useMemo(() => {
     if (!timeFilteredAssessments.length) return [];
     const byDept = new Map();
@@ -546,7 +366,10 @@ export default function Dashboard() {
       if (!byDept.has(key)) byDept.set(key, { name, scores10: [], count: 0 });
 
       const score10 =
-        (to10From5(a.physical_load) + to10From5(a.mental_wellbeing) + to10From5(a.work_environment)) / 3;
+        (to10From5(a.physical_load) +
+          to10From5(a.mental_wellbeing) +
+          to10From5(a.work_environment)) /
+        3;
 
       const row = byDept.get(key);
       row.scores10.push(score10);
@@ -554,15 +377,10 @@ export default function Dashboard() {
     });
 
     return Array.from(byDept.values())
-      .map((d) => ({
-        name: d.name,
-        score10: avg(d.scores10),
-        respondent_count: d.count,
-      }))
+      .map((d) => ({ name: d.name, score10: avg(d.scores10), respondent_count: d.count }))
       .sort((a, b) => a.score10 - b.score10);
   }, [timeFilteredAssessments]);
 
-  // Trend data (0–10) grouped by assessment_week (keeps your existing pattern)
   const trendData = useMemo(() => {
     if (!timeFilteredAssessments.length) return [];
     const byWeek = new Map();
@@ -577,7 +395,7 @@ export default function Dashboard() {
       w.arbeid10.push(to10From5(a.work_environment) || 6);
     });
 
-    const rows = Array.from(byWeek.entries())
+    return Array.from(byWeek.entries())
       .map(([week, d]) => ({
         week: week.split("-")[1] || week,
         fysisk10: avg(d.fysisk10),
@@ -585,123 +403,188 @@ export default function Dashboard() {
         arbeid10: avg(d.arbeid10),
       }))
       .slice(-12);
-
-    return rows;
   }, [timeFilteredAssessments]);
 
   const isLoading = loadingAssessments || loadingDepartments;
 
+  // Small derived labels
+  const band = bandLabel(healthIndex10);
+  const bandChip =
+    riskBand10(healthIndex10) === "good"
+      ? "Stabil"
+      : riskBand10(healthIndex10) === "warn"
+      ? "Følg med"
+      : "Tiltak";
+
   return (
-    <div className="space-y-8">
-      {/* Header + time range */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-slate-900 mb-2 leading-tight">Dashboard</h1>
-          <p className="text-slate-600 text-lg">
-            {role === ROLE.MANAGER ? "Oversikt for din avdeling" : "Oversikt på tvers av avdelinger"}
-          </p>
+    <div className="min-h-screen">
+      {/* App background */}
+      <div className="fixed inset-0 -z-10 bg-gradient-to-b from-slate-50 via-white to-slate-50" />
+      <div className="fixed inset-0 -z-10 opacity-70 [background:radial-gradient(40%_30%_at_20%_10%,rgba(59,130,246,0.10),transparent),radial-gradient(35%_25%_at_80%_20%,rgba(16,185,129,0.10),transparent),radial-gradient(35%_30%_at_60%_80%,rgba(245,158,11,0.10),transparent)]" />
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        {/* Sticky topbar */}
+        <div className="sticky top-0 z-20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-3 bg-white/60 backdrop-blur border-b border-slate-200">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="h-9 w-9 rounded-2xl bg-slate-900 text-white grid place-items-center shadow-sm">
+                  <Sparkles className="h-5 w-5" />
+                </span>
+                <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900 truncate">
+                  Dashboard
+                </h1>
+              </div>
+              <p className="text-sm text-slate-600 mt-1">
+                {role === ROLE.MANAGER ? "Oversikt for din avdeling" : "Oversikt på tvers av avdelinger"} •{" "}
+                <span className="text-slate-500">{RANGE_LABEL[range]}</span>
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <Segmented
+                value={range}
+                onChange={setRange}
+                options={[
+                  { value: RANGE.TODAY, label: "I dag" },
+                  { value: RANGE.D7, label: "7d" },
+                  { value: RANGE.D14, label: "14d" },
+                  { value: RANGE.D30, label: "30d" },
+                  { value: RANGE.M6, label: "6m" },
+                  { value: RANGE.Y1, label: "1år" },
+                  { value: RANGE.Y3, label: "3år" },
+                  { value: RANGE.ALL, label: "All" },
+                ]}
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Segmented
-            value={range}
-            onChange={setRange}
-            options={[
-              { value: RANGE.TODAY, label: "I dag" },
-              { value: RANGE.D7, label: "7d" },
-              { value: RANGE.D14, label: "14d" },
-              { value: RANGE.D30, label: "30d" },
-              { value: RANGE.M6, label: "6m" },
-              { value: RANGE.Y1, label: "1år" },
-              { value: RANGE.Y3, label: "3år" },
-              { value: RANGE.ALL, label: "All" },
-            ]}
-          />
-        </div>
-      </div>
+        {/* Content */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-4 rounded-3xl border border-slate-200 bg-white/80 p-6">
+              <Skeleton className="h-4 w-24 mb-4" />
+              <Skeleton className="h-9 w-24 mb-2" />
+              <Skeleton className="h-3 w-40" />
+            </div>
+            <div className="lg:col-span-8 rounded-3xl border border-slate-200 bg-white/80 p-6">
+              <Skeleton className="h-4 w-40 mb-4" />
+              <Skeleton className="h-56 w-full rounded-2xl" />
+            </div>
+            <div className="lg:col-span-12 rounded-3xl border border-slate-200 bg-white/80 p-6">
+              <Skeleton className="h-4 w-48 mb-4" />
+              <Skeleton className="h-28 w-full rounded-2xl" />
+            </div>
+          </div>
+        ) : stats10 ? (
+          <>
+            {/* KPI row + Hero */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div className="lg:col-span-4 space-y-6">
+                <StatCard
+                  label="Svarprosent"
+                  value={`${Math.round(responseRate)}%`}
+                  hint="Andel ansatte som har svart i perioden"
+                  icon={Users}
+                  chip="Live"
+                />
+                <StatCard
+                  label="Svar"
+                  value={`${stats10.responses}`}
+                  hint="Antall innsendte kartlegginger"
+                  icon={Activity}
+                  chip={RANGE_LABEL[range]}
+                />
+                <StatCard
+                  label="Status"
+                  value={band}
+                  hint={`Basert på helseindeks (${healthIndex10.toFixed(1)}/10)`}
+                  icon={ArrowUpRight}
+                  chip={bandChip}
+                />
+              </div>
 
-      {/* TOP grid */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-4 bg-white rounded-3xl border border-slate-200 p-6">
-            <Skeleton className="h-4 w-24 mb-3" />
-            <Skeleton className="h-3 w-40 mb-6" />
-            <Skeleton className="h-32 w-32 rounded-full mx-auto" />
-          </div>
-          <div className="lg:col-span-8 bg-white rounded-3xl border border-slate-200 p-6">
-            <Skeleton className="h-4 w-40 mb-3" />
-            <Skeleton className="h-10 w-24 mb-2" />
-            <Skeleton className="h-3 w-64 mb-8" />
-            <Skeleton className="h-48 w-full" />
-          </div>
-          <div className="lg:col-span-12 bg-white rounded-3xl border border-slate-200 p-6">
-            <Skeleton className="h-4 w-40 mb-6" />
-            <Skeleton className="h-3 w-full mb-2" />
-            <Skeleton className="h-3 w-full mb-2" />
-            <Skeleton className="h-3 w-full" />
-          </div>
-        </div>
-      ) : stats10 ? (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-4">
-            <ProgressRingCard
-              title="Svarprosent"
-              value={responseRate}
-              subtitle={RANGE_LABEL[range]}
-              footnote="Live"
-            />
-          </div>
+              <div className="lg:col-span-8">
+                {/* Bruk GaugeCarden din her */}
+                <GaugeCard
+                  title="Helseindeks"
+                  value10={healthIndex10}
+                  delta10={0}
+                  subtitle="Høy score = bra (grønn). Lav score = risiko (rød)."
+                  footnote="Aggregert"
+                />
+              </div>
 
-          <div className="lg:col-span-8">
-            <GaugeCard
-              title="Helseindeks"
-              value10={healthIndex10}
-              delta10={0}
-              subtitle="Høy score = bra (grønn). Lav score = risiko (rød)."
-              footnote="Aggregert"
-            />
-          </div>
+              <div className="lg:col-span-12">
+                {/* Bruk SegmentBarsen din her */}
+                <SegmentBars
+                  title="Kategori-poengsum"
+                  items={[
+                    { key: "physical", label: "Fysisk belastning", value10: stats10.physical10 },
+                    { key: "mental", label: "Psykisk helse", value10: stats10.mental10 },
+                    { key: "work", label: "Arbeidsforhold", value10: stats10.work10 },
+                  ]}
+                />
+              </div>
+            </div>
 
-          <div className="lg:col-span-12">
-            <SegmentBars
-              title="Kategori-poengsum"
-              items={[
-                { key: "physical", label: "Fysisk belastning", value10: stats10.physical10 },
-                { key: "mental", label: "Psykisk helse", value10: stats10.mental10 },
-                { key: "work", label: "Arbeidsforhold", value10: stats10.work10 },
-              ]}
-            />
-          </div>
-        </div>
-      ) : (
-        <div className="bg-white rounded-3xl border border-slate-200 p-8 text-center">
-          <RefreshCw className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-          <p className="text-slate-600 font-medium">Ingen data for valgt periode</p>
-          <p className="text-sm text-slate-500 mt-1">Velg en annen periode eller start med kartlegginger.</p>
-        </div>
-      )}
+            {/* Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div className="lg:col-span-7">
+                <Panel
+                  title="Avdelingsrisiko"
+                  subtitle="Gjennomsnittlig score (0–10) per avdeling"
+                  icon={BarChart3}
+                >
+                  {departmentScores.length > 0 ? (
+                    <DepartmentRiskChart data={departmentScores} />
+                  ) : (
+                    <div className="h-80 grid place-items-center text-slate-500">
+                      Ingen avdelingsdata tilgjengelig
+                    </div>
+                  )}
+                </Panel>
+              </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {departmentScores.length > 0 ? (
-          <DepartmentRiskChart data={departmentScores} />
+              <div className="lg:col-span-5">
+                <Panel
+                  title="Utvikling over tid"
+                  subtitle="Gjennomsnittlig score per kategori"
+                  icon={Activity}
+                >
+                  {trendData.length > 0 ? (
+                    <TrendChart data={trendData} />
+                  ) : (
+                    <div className="h-80 grid place-items-center text-slate-500">Ingen trenddata tilgjengelig</div>
+                  )}
+                </Panel>
+              </div>
+
+              <div className="lg:col-span-12">
+                <Panel
+                  title="Tiltak & anbefalinger"
+                  subtitle="Nye forslag som krever oppfølging"
+                  icon={Sparkles}
+                  right={
+                    <span className="text-xs px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
+                      {scopedRecommendations?.length ?? 0} nye
+                    </span>
+                  }
+                >
+                  <AlertList alerts={scopedRecommendations} />
+                </Panel>
+              </div>
+            </div>
+          </>
         ) : (
-          <div className="bg-white rounded-3xl border border-slate-200 p-6 flex items-center justify-center h-80">
-            <p className="text-slate-500">Ingen avdelingsdata tilgjengelig</p>
+          <div className="rounded-3xl border border-slate-200 bg-white/80 backdrop-blur p-10 text-center shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
+            <RefreshCw className="h-10 w-10 text-slate-300 mx-auto mb-3" />
+            <p className="text-slate-700 font-semibold">Ingen data for valgt periode</p>
+            <p className="text-sm text-slate-500 mt-1">Velg en annen periode eller start med kartlegginger.</p>
           </div>
         )}
-
-        {trendData.length > 0 ? (
-          <TrendChart data={trendData} />
-        ) : (
-          <div className="bg-white rounded-3xl border border-slate-200 p-6 flex items-center justify-center h-80">
-            <p className="text-slate-500">Ingen trenddata tilgjengelig</p>
-          </div>
-        )}
       </div>
-
-      {/* Alerts */}
-      <AlertList alerts={scopedRecommendations} />
     </div>
   );
 }
