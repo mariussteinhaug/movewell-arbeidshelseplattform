@@ -312,6 +312,26 @@ export default function Dashboard() {
   const healthIndex10 =
     (stats10?.physical10 + stats10?.mental10 + stats10?.work10) / 3 || 0;
 
+  const departmentChartData = useMemo(() => {
+    if (!timeFilteredAssessments?.length) return [];
+    const map = new Map();
+    timeFilteredAssessments.forEach((a) => {
+      const name = a.department || a.department_name || "Ikke oppgitt";
+      const overall5 = avg([a.physical_load, a.mental_wellbeing, a.work_environment]);
+      if (!map.has(name)) {
+        map.set(name, { name, scores: [], respondent_count: 0 });
+      }
+      const entry = map.get(name);
+      entry.scores.push(Number(overall5) || 0);
+      entry.respondent_count += 1;
+    });
+    return Array.from(map.values()).map((e) => ({
+      name: e.name,
+      score: avg(e.scores) || 0,
+      respondent_count: e.respondent_count,
+    }));
+  }, [timeFilteredAssessments]);
+
   const responseRate = useMemo(() => {
     if (!stats10) return 0;
     const totalEmployees = scopedDepartments.reduce(
@@ -414,7 +434,7 @@ export default function Dashboard() {
               </div>
               {/* Charts */}
               <div className="lg:col-span-8">
-                <DepartmentRiskChart data={[]} />
+                <DepartmentRiskChart data={departmentChartData} />
               </div>
             </div>
           ) : (
