@@ -272,7 +272,7 @@ Besvar kort med JSON.`;
       return;
     }
 
-    if (islast) {
+    if (isLast) {
       await getNextQuestionAI();
       return;
     }
