@@ -199,8 +199,8 @@ export default function AssessmentResults() {
     const res = await base44.integrations.Core.InvokeLLM({
       prompt:
         `Du er en norsk HMS-rådgiver. Skriv tre korte, konkrete tiltak i et naturlig og menneskelig språk.` +
-        ` Unngå overskrift, unngå markdown, ingen stjerner eller fet tekst.` +
-        ` Svar som tre linjer nummerert 1), 2), 3).` +
+        ` Unngå overskrift, unngå markdown, ingen stjerner, ingen tall eller punkter.` +
+        ` Returner nøyaktig tre linjer, én per tiltak.` +
         `\nRisikonivå: ${profileSession.risk_level}\n` +
         `Risikosignaler: ${(profileSession.risk_signals || []).join(", ")}\n` +
         `Svar: ${JSON.stringify(answeredData).slice(0, 4000)}`,
