@@ -328,6 +328,7 @@ export default function Assessment() {
         department_id: dept?.id || "unknown",
         department_name: selectedDepartment || "Ikke oppgitt",
         respondent_user_id: currentUser?.id,
+        respondent_display_name: currentUser?.full_name || currentUser?.email,
         anonymous_id: `session_${Date.now()}`,
         path: sessionPath,
         answered_questions: answeredQuestions,

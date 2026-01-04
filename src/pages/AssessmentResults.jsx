@@ -118,7 +118,7 @@ export default function AssessmentResults() {
       const key = s.respondent_user_id || s.anonymous_id;
       if (!g.respondents.has(key)) {
         const u = userMap[s.respondent_user_id];
-        const display = u?.full_name || u?.email || "Ukjent ansatt";
+        const display = u?.full_name || s.respondent_display_name || u?.email || "Ukjent ansatt";
         g.respondents.set(key, { userId: s.respondent_user_id || null, display });
       }
     }
@@ -127,6 +127,23 @@ export default function AssessmentResults() {
       count: data.count,
       respondents: Array.from(data.respondents.values()),
     }));
+  }, [filteredSessions, userMap]);
+
+  // Flate liste over respondenter (én rad per person, seneste sesjon)
+  const respondents = React.useMemo(() => {
+    const byUser = new Map();
+    for (const s of filteredSessions) {
+      const key = s.respondent_user_id || s.anonymous_id;
+      const u = userMap[s.respondent_user_id];
+      const display = u?.full_name || s.respondent_display_name || u?.email || "Anonym bruker";
+      const dept = s.department_name || s.department || "Ikke oppgitt";
+      const ts = new Date(s.created_at || s.completed_at || s.created_date || 0).getTime();
+      const existing = byUser.get(key);
+      if (!existing || ts > existing.ts) {
+        byUser.set(key, { userId: s.respondent_user_id || null, display, department: dept, ts, session: s });
+      }
+    }
+    return Array.from(byUser.values()).sort((a, b) => b.ts - a.ts);
   }, [filteredSessions, userMap]);
 
   const openProfile = (userId, deptName) => {
@@ -286,43 +303,34 @@ export default function AssessmentResults() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Profiler per avdeling</CardTitle>
-          <CardDescription>Se hvem som har svart per avdeling og åpne profil</CardDescription>
+          <CardTitle>Ansatte som har svart</CardTitle>
+          <CardDescription>Klikk på en ansatt for å se svar og AI-forslag</CardDescription>
         </CardHeader>
         <CardContent>
-          {deptGroups.length === 0 ? (
-            <p className="text-sm text-slate-500">Ingen profiler i utvalget.</p>
+          {respondents.length === 0 ? (
+            <p className="text-sm text-slate-500">Ingen svar i utvalget.</p>
           ) : (
-            <div className="space-y-3">
-              {deptGroups.map((g) => (
-                <div key={g.department} className="p-3 rounded-lg border border-slate-200 bg-white">
-                  <div className="flex items-center justify-between">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedDepartment(g.department)}
-                      className="text-sm font-medium text-slate-900 hover:underline"
-                    >
-                      {g.department}
-                    </button>
-                    <Badge variant="secondary">{g.count}</Badge>
-                  </div>
-                  {selectedDepartment === g.department && (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {g.respondents.map((r, idx) => (
-                        <button
-                          key={(r.userId || idx) + g.department}
-                          type="button"
-                          onClick={() => r.userId && openProfile(r.userId, g.department)}
-                          className="text-xs px-2 py-1 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 disabled:opacity-60"
-                          disabled={!r.userId}
-                          title={r.userId ? "Åpne profil" : "Anonym bruker – kan ikke åpnes"}
-                        >
-                          {r.display}
-                        </button>
-                      ))}
+            <div className="space-y-2">
+              {respondents.map((r, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => r.userId && openProfile(r.userId, r.department)}
+                  className={`w-full flex items-center justify-between p-3 rounded-lg border transition ${r.userId ? 'bg-white hover:bg-slate-50 border-slate-200' : 'bg-slate-50 border-slate-200 opacity-70 cursor-not-allowed'}`}
+                  disabled={!r.userId}
+                  title={r.userId ? 'Åpne profil' : 'Anonym bruker – kan ikke åpnes'}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-full bg-slate-100 grid place-items-center text-slate-600 text-xs">
+                      {r.display?.[0] || 'A'}
                     </div>
-                  )}
-                </div>
+                    <div className="text-left">
+                      <p className="text-sm font-medium text-slate-900">{r.display}</p>
+                      <p className="text-xs text-slate-500">{r.department}</p>
+                    </div>
+                  </div>
+                  <span className="text-xs text-slate-400">Vis profil</span>
+                </button>
               ))}
             </div>
           )}
