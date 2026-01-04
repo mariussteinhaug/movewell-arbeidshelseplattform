@@ -249,7 +249,7 @@ export default function AssessmentResults() {
                           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
                             <div className="flex items-center gap-2 text-slate-600">
                               <Building2 className="h-4 w-4 text-slate-400" />
-                              {session.department}
+                              {session.department_name || session.department || 'Ikke oppgitt'}
                             </div>
                             <div className="flex items-center gap-2 text-slate-600">
                               <Calendar className="h-4 w-4 text-slate-400" />
