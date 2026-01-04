@@ -145,6 +145,36 @@ export default function Assessment() {
 
       const messageContent = `AI-forslag til tiltak for ${selectedDepartment || dept?.name || "avdeling"}:\n\n${recommendationsText}\n\nOpprettet: ${new Date().toLocaleString("nb-NO")}`;
 
+      // Opprett ActionRecommendation per punkt slik at de vises under “Anbefalinger”
+      const lines = recommendationsText
+        .split(/\r?\n/)
+        .map((l) => l.replace(/^[-•]\s*/, "").trim())
+        .filter((l) => l.length > 0);
+
+      const recPriority =
+        assessment?.risk_level === "high" ? "hoy" : assessment?.risk_level === "moderate" ? "middels" : "lav";
+
+      const weekStr = getISOWeekString(new Date());
+      if (lines.length) {
+        await base44.entities.ActionRecommendation.bulkCreate(
+          lines.slice(0, 5).map((line) => ({
+            organization_id: currentUser?.organization_id || "default",
+            department_id: dept?.id || "unknown",
+            department_name: selectedDepartment || dept?.name || "Ikke oppgitt",
+            assessment_week: weekStr,
+            source: "ai",
+            category: "generell",
+            title: line.length > 80 ? line.slice(0, 77) + "…" : line,
+            description: line,
+            priority: recPriority,
+            status: "ny",
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            visibility: "manager_and_hr",
+          }))
+        );
+      }
+
       // Opprett in-app melding synlig for leder og HR i avdelingen (broadcast)
       await base44.entities.Message.create({
         organization_id: currentUser?.organization_id || "default",
