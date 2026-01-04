@@ -11,6 +11,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -111,6 +112,7 @@ export default function AssessmentResults() {
   // 🧮 Access rules
   const isAdmin = currentUser?.role === "admin" || currentUser?.role === "hr";
   const userDepartment = currentUser?.department;
+  const canEdit = ["admin", "hr", "manager"].includes(String(currentUser?.role || "").toLowerCase());
 
   const accessFilteredSessions = React.useMemo(() => {
     if (!currentUser) return [];
@@ -219,6 +221,14 @@ export default function AssessmentResults() {
     await base44.entities.AssessmentSession.update(profileSession.id, { ai_summary: cleaned });
     setAiSuggestion(cleaned);
     setProfileSession({ ...profileSession, ai_summary: cleaned });
+    setAiLoading(false);
+  };
+
+  const saveAISuggestion = async () => {
+    if (!profileSession || !canEdit) return;
+    setAiLoading(true);
+    await base44.entities.AssessmentSession.update(profileSession.id, { ai_summary: aiSuggestion });
+    setProfileSession({ ...profileSession, ai_summary: aiSuggestion });
     setAiLoading(false);
   };
 
@@ -423,13 +433,24 @@ export default function AssessmentResults() {
                     </div>
                     <p className="text-sm font-semibold text-slate-900">AI-forslag</p>
                   </div>
-                  <Button size="sm" onClick={generateAISuggestion} disabled={aiLoading} className="bg-emerald-600 hover:bg-emerald-700">
-                    {aiLoading ? "Genererer…" : "Foreslå tiltak (AI)"}
-                  </Button>
+                  {canEdit && (
+                    <Button size="sm" onClick={saveAISuggestion} disabled={aiLoading} className="bg-slate-900 hover:bg-slate-800">
+                      {aiLoading ? "Lagrer…" : "Lagre"}
+                    </Button>
+                  )}
                 </div>
-                <div className="text-[15px] text-slate-800 whitespace-pre-wrap bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm leading-relaxed min-h-[72px]">
-                  {aiSuggestion || "Ingen forslag generert ennå."}
-                </div>
+                {canEdit ? (
+                  <Textarea
+                    value={aiSuggestion}
+                    onChange={(e) => setAiSuggestion(e.target.value)}
+                    placeholder="Skriv eller lim inn forslag..."
+                    className="min-h-[140px] bg-white"
+                  />
+                ) : (
+                  <div className="text-[15px] text-slate-800 whitespace-pre-wrap bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm leading-relaxed min-h-[72px]">
+                    {aiSuggestion || "Ingen forslag generert ennå."}
+                  </div>
+                )}
               </div>
             </div>
           ) : (
