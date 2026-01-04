@@ -234,6 +234,12 @@ export default function Dashboard() {
     enabled: !!currentUser && canSeeDashboard,
   });
 
+  const { data: sessionsAll = [] } = useQuery({
+    queryKey: ["assessment-sessions"],
+    queryFn: () => base44.entities.AssessmentSession.list("-created_date", 500),
+    enabled: !!currentUser && canSeeDashboard,
+  });
+
   const { data: recommendations = [] } = useQuery({
     queryKey: ["recommendations"],
     queryFn: () =>
@@ -279,6 +285,16 @@ export default function Dashboard() {
     );
   }, [recommendations, role, scope]);
 
+  const scopedSessions = useMemo(() => {
+    if (!currentUser) return [];
+    if (role === ROLE.HR || role === ROLE.ADMIN) return sessionsAll;
+    return sessionsAll.filter(
+      (s) =>
+        scope.ids.includes(s.department_id) ||
+        scope.names.includes(s.department || s.department_name)
+    );
+  }, [sessionsAll, role, scope]);
+
   const start = useMemo(() => getRangeStart(range), [range]);
 
   const alertsToday = useMemo(() => {
@@ -301,6 +317,15 @@ export default function Dashboard() {
     });
   }, [scopedAssessments, start]);
 
+  const timeFilteredSessions = useMemo(() => {
+    if (!start) return scopedSessions;
+    const startMs = start.getTime();
+    return scopedSessions.filter((s) => {
+      const ts = new Date(s.created_at || s.completed_at || s.created_date).getTime();
+      return ts >= startMs;
+    });
+  }, [scopedSessions, start]);
+
   const stats10 = useMemo(() => {
     if (!timeFilteredAssessments.length) return null;
     const physical10 = avg(timeFilteredAssessments.map((a) => to10From5(a.physical_load)));
@@ -313,11 +338,16 @@ export default function Dashboard() {
     (stats10?.physical10 + stats10?.mental10 + stats10?.work10) / 3 || 0;
 
   const departmentChartData = useMemo(() => {
-    if (!timeFilteredAssessments?.length) return [];
     const map = new Map();
-    timeFilteredAssessments.forEach((a) => {
+
+    // HealthAssessment (nye skjema)
+    (timeFilteredAssessments || []).forEach((a) => {
       const name = a.department || a.department_name || "Ikke oppgitt";
-      const overall5 = avg([a.physical_load, a.mental_wellbeing, a.work_environment]);
+      const overall5 = avg([
+        a.physical_load,
+        a.mental_wellbeing,
+        a.work_environment,
+      ]);
       if (!map.has(name)) {
         map.set(name, { name, scores: [], respondent_count: 0 });
       }
@@ -325,12 +355,26 @@ export default function Dashboard() {
       entry.scores.push(Number(overall5) || 0);
       entry.respondent_count += 1;
     });
+
+    // AssessmentSession (gamle kartleggingstester)
+    const riskToScore = (lvl) => (lvl === "low" ? 4 : lvl === "high" ? 2 : 3);
+    (timeFilteredSessions || []).forEach((s) => {
+      const name = s.department_name || s.department || "Ikke oppgitt";
+      const overall5 = riskToScore(String(s.risk_level || "moderate"));
+      if (!map.has(name)) {
+        map.set(name, { name, scores: [], respondent_count: 0 });
+      }
+      const entry = map.get(name);
+      entry.scores.push(Number(overall5) || 0);
+      entry.respondent_count += 1;
+    });
+
     return Array.from(map.values()).map((e) => ({
       name: e.name,
       score: avg(e.scores) || 0,
       respondent_count: e.respondent_count,
     }));
-  }, [timeFilteredAssessments]);
+  }, [timeFilteredAssessments, timeFilteredSessions]);
 
   const responseRate = useMemo(() => {
     if (!stats10) return 0;
