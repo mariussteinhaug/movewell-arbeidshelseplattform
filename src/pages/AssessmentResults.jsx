@@ -59,7 +59,7 @@ export default function AssessmentResults() {
       l
         .replace(/^[-•\u2022]+/i, "")
         .replace(/^\s+/, "")
-        .replace(/^([0-9]+)[\.)]\s*/, "$1) ")
+        .replace(/^\d+[\.)]\s*/, "")
     );
     return items.slice(0, 3).map((l, i) => `${i + 1}) ${l}`).join("\n");
   }, []);
