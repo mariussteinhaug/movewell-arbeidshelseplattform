@@ -281,6 +281,24 @@ export default function Assessment() {
         completed_at: new Date().toISOString(),
       });
 
+      // Opprett også en HealthAssessment for dashboard/statistikk
+      const score = assessment?.risk_level === "high" ? 2 : assessment?.risk_level === "low" ? 4 : 3;
+      await base44.entities.HealthAssessment.create({
+        organization_id: currentUser?.organization_id || "default",
+        department_id: dept?.id || "unknown",
+        department_name: selectedDepartment || "Ikke oppgitt",
+        assessment_week: week,
+        status: "submitted",
+        created_date: new Date().toISOString(),
+        physical_load: score,
+        mental_wellbeing: score,
+        work_environment: score,
+        recovery: score,
+        stress_level: score,
+        adaptive_responses: [],
+        risk_indicators: assessment?.risk_signals || [],
+      });
+
       return session.id;
     } catch (error) {
       console.error("Feil ved lagring av sesjon:", error);
