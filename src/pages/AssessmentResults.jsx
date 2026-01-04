@@ -482,7 +482,7 @@ export default function AssessmentResults() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {(userMap[selectedProfileUserId]?.full_name || "Ansatt")} — {selectedProfileDept || ""}
+              {(selectedProfileName || userMap[selectedProfileUserId]?.full_name || "Ansatt")} — {selectedProfileDept || ""}
             </DialogTitle>
           </DialogHeader>
 
