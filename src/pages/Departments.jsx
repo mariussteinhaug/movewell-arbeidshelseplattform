@@ -4,7 +4,9 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building2, Users, TrendingUp, TrendingDown, Minus, Activity, Brain, Briefcase } from 'lucide-react';
+import { Building2, Users, TrendingUp, TrendingDown, Minus, Activity, Brain, Briefcase, Calendar } from 'lucide-react';
+import { format } from 'date-fns';
+import { nb } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 
@@ -25,28 +27,39 @@ export default function Departments() {
     if (!assessments.length) return {};
 
     const stats = {};
+    const now = new Date();
+    const fourWeeksAgo = new Date(now.getTime() - 28 * 24 * 60 * 60 * 1000);
+
     assessments.forEach(a => {
-      if (!stats[a.department]) {
-        stats[a.department] = {
+      const key = a.department || a.department_name || 'Ikke oppgitt';
+      if (!stats[key]) {
+        stats[key] = {
           physical: [],
           mental: [],
           work: [],
           recovery: [],
           stress: [],
-          total: 0
+          total: 0,
+          lastUpdated: null,
+          last4w: 0
         };
       }
-      stats[a.department].physical.push(a.physical_load || 0);
-      stats[a.department].mental.push(a.mental_wellbeing || 0);
-      stats[a.department].work.push(a.work_environment || 0);
-      if (a.recovery) stats[a.department].recovery.push(a.recovery);
-      if (a.stress_level) stats[a.department].stress.push(a.stress_level);
-      stats[a.department].total++;
+      stats[key].physical.push(a.physical_load || 0);
+      stats[key].mental.push(a.mental_wellbeing || 0);
+      stats[key].work.push(a.work_environment || 0);
+      if (a.recovery) stats[key].recovery.push(a.recovery);
+      if (a.stress_level) stats[key].stress.push(a.stress_level);
+      stats[key].total++;
+
+      const ts = new Date(a.created_date || a.created_at || Date.now());
+      if (!stats[key].lastUpdated || ts > stats[key].lastUpdated) stats[key].lastUpdated = ts;
+      if (ts >= fourWeeksAgo) stats[key].last4w++;
     });
 
     const result = {};
     Object.entries(stats).forEach(([dept, data]) => {
       const avg = (arr) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+      const overall = (avg(data.physical) + avg(data.mental) + avg(data.work)) / 3;
       result[dept] = {
         physical: avg(data.physical),
         mental: avg(data.mental),
@@ -54,7 +67,10 @@ export default function Departments() {
         recovery: avg(data.recovery),
         stress: avg(data.stress),
         responses: data.total,
-        overall: (avg(data.physical) + avg(data.mental) + avg(data.work)) / 3
+        overall,
+        overall10: Math.max(0, Math.min(10, overall * 2)),
+        lastUpdated: data.lastUpdated,
+        last4w: data.last4w,
       };
     });
 
@@ -216,8 +232,16 @@ export default function Departments() {
                   {stats && (
                     <div className="mt-4 pt-4 border-t border-slate-100">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-slate-500">Helseindeks</span>
-                        <span className="font-semibold text-slate-900">{stats.overall.toFixed(1)}</span>
+                        <span className="text-slate-500">Indeks</span>
+                        <span className="font-semibold text-slate-900">{stats.overall10.toFixed(1)}/10</span>
+                      </div>
+                      <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
+                        <span>Siste 4 uker: <span className="font-medium text-slate-700">{stats.last4w}</span></span>
+                        {stats.lastUpdated && (
+                          <span>
+                            Sist oppdatert: {format(new Date(stats.lastUpdated), 'dd. MMM yyyy', { locale: nb })}
+                          </span>
+                        )}
                       </div>
                     </div>
                   )}
