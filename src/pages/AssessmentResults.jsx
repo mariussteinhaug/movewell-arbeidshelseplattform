@@ -68,21 +68,20 @@ export default function AssessmentResults() {
     if (!currentUser) return [];
     if (isAdmin) return sessions;
     if (userDepartment)
-      return sessions.filter((s) => s.department === userDepartment);
+      return sessions.filter((s) => (s.department_name || s.department) === userDepartment);
     return sessions.filter((s) => s.created_by === currentUser.email);
   }, [sessions, currentUser, isAdmin, userDepartment]);
 
   // 🧹 Filters
   const filteredSessions = accessFilteredSessions.filter((session) => {
-    const matchesDept =
-      selectedDepartment === "all" || session.department === selectedDepartment;
-    const matchesRisk =
-      selectedRiskLevel === "all" || session.risk_level === selectedRiskLevel;
+    const deptName = session.department_name || session.department;
+    const matchesDept = selectedDepartment === "all" || deptName === selectedDepartment;
+    const matchesRisk = selectedRiskLevel === "all" || session.risk_level === selectedRiskLevel;
     const matchesSearch =
       !searchTerm ||
-      session.department?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      deptName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       session.anonymous_id?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesDept && matchesRisk && matchesSearch && session.completed;
+    return matchesDept && matchesRisk && matchesSearch && session.status === "completed";
   });
 
   const toggleExpanded = (sessionId) => {
@@ -131,7 +130,7 @@ export default function AssessmentResults() {
           <CardHeader className="pb-3">
             <CardDescription>Totalt fullførte</CardDescription>
             <CardTitle className="text-3xl">
-              {sessions.filter((s) => s.completed).length}
+              {sessions.filter((s) => s.status === "completed").length}
             </CardTitle>
           </CardHeader>
         </Card>
