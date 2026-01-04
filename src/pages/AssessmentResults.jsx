@@ -79,7 +79,7 @@ export default function AssessmentResults() {
   const { data: users = [] } = useQuery({
     queryKey: ["users"],
     queryFn: () => base44.entities.User.list(),
-    enabled: currentUser?.role === "admin",
+    enabled: ["admin", "hr"].includes(String(currentUser?.role || "").toLowerCase()),
   });
 
   // 🧮 Access rules
@@ -126,7 +126,7 @@ export default function AssessmentResults() {
       const key = s.respondent_user_id || s.anonymous_id;
       if (!g.respondents.has(key)) {
         const u = userMap[s.respondent_user_id];
-        const display = u?.full_name || s.respondent_display_name || u?.email || "Ukjent ansatt";
+        const display = s.respondent_display_name || u?.full_name || u?.email || s.created_by || "Ukjent ansatt";
         g.respondents.set(key, { userId: s.respondent_user_id || null, display });
       }
     }
@@ -144,7 +144,7 @@ export default function AssessmentResults() {
     for (const s of filteredSessions) {
       const key = s.respondent_user_id || s.anonymous_id || s.created_by;
       const u = userMap[s.respondent_user_id];
-      const display = s.respondent_display_name || u?.full_name || nameFromEmail(s.created_by);
+      const display = s.respondent_display_name || u?.full_name || u?.email || s.created_by || nameFromEmail(s.created_by);
       const dept = s.department_name || s.department || "Ikke oppgitt";
       const ts = new Date(s.created_at || s.completed_at || s.created_date || 0).getTime();
       const existing = byUser.get(key);
