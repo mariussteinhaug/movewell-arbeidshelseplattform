@@ -77,7 +77,7 @@ export default function Layout({ children, currentPageName }) {
       { name: "Dashboard", page: "Dashboard", icon: LayoutDashboard, roles: [ROLE.MANAGER, ROLE.HR] },
       { name: "AI-Rapporter", page: "Reports", icon: FileText, roles: [ROLE.MANAGER, ROLE.HR] },
       { name: "Anbefalinger", page: "Recommendations", icon: Lightbulb, roles: [ROLE.MANAGER, ROLE.HR] },
-      { name: "Meldingssenter", page: "MessageCenter", icon: Mail, roles: [ROLE.MANAGER, ROLE.HR] },
+
       { name: "Tilrettelegging", page: "Accommodation", icon: Wrench, roles: [ROLE.MANAGER, ROLE.HR] },
 
       // HR-only
