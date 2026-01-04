@@ -137,6 +137,14 @@ export default function Assessment() {
   };
 
   /* ---------------------------
+     Create notification
+  --------------------------- */
+  const createInAppNotification = async (assessment, sessionId) => {
+    // Placeholder for notification logic
+    console.log("Notification created:", { assessment, sessionId });
+  };
+
+  /* ---------------------------
      AI: decide next step (failsafe)
   --------------------------- */
   const getNextQuestionAI = async () => {
