@@ -506,26 +506,51 @@ export default function Dashboard() {
               </div>
 
               <div className="lg:col-span-8">
-                {/* Bruk GaugeCarden din her */}
-                <GaugeCard
+                <Panel
                   title="Helseindeks"
-                  value10={healthIndex10}
-                  delta10={0}
-                  subtitle="Høy score = bra (grønn). Lav score = risiko (rød)."
-                  footnote="Aggregert"
-                />
+                  subtitle="Aggregert score på tvers av kategorier"
+                  icon={Activity}
+                >
+                  <div className="text-center py-8">
+                    <div className="text-6xl font-bold text-slate-900 mb-2">
+                      {healthIndex10.toFixed(1)}
+                    </div>
+                    <div className={cn(
+                      "inline-block px-4 py-2 rounded-full text-sm font-semibold",
+                      riskBand10(healthIndex10) === "good" ? "bg-emerald-100 text-emerald-700" :
+                      riskBand10(healthIndex10) === "warn" ? "bg-amber-100 text-amber-800" :
+                      "bg-red-100 text-red-700"
+                    )}>
+                      {band}
+                    </div>
+                    <p className="text-sm text-slate-500 mt-3">
+                      Høy score = bra (grønn). Lav score = risiko (rød).
+                    </p>
+                  </div>
+                </Panel>
               </div>
 
               <div className="lg:col-span-12">
-                {/* Bruk SegmentBarsen din her */}
-                <SegmentBars
+                <Panel
                   title="Kategori-poengsum"
-                  items={[
-                    { key: "physical", label: "Fysisk belastning", value10: stats10.physical10 },
-                    { key: "mental", label: "Psykisk helse", value10: stats10.mental10 },
-                    { key: "work", label: "Arbeidsforhold", value10: stats10.work10 },
-                  ]}
-                />
+                  subtitle="Individuelle målinger"
+                  icon={BarChart3}
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="text-center p-4 rounded-2xl border border-slate-200 bg-white">
+                      <p className="text-sm font-medium text-slate-600 mb-2">Fysisk belastning</p>
+                      <p className="text-3xl font-bold text-slate-900">{stats10.physical10.toFixed(1)}</p>
+                    </div>
+                    <div className="text-center p-4 rounded-2xl border border-slate-200 bg-white">
+                      <p className="text-sm font-medium text-slate-600 mb-2">Psykisk helse</p>
+                      <p className="text-3xl font-bold text-slate-900">{stats10.mental10.toFixed(1)}</p>
+                    </div>
+                    <div className="text-center p-4 rounded-2xl border border-slate-200 bg-white">
+                      <p className="text-sm font-medium text-slate-600 mb-2">Arbeidsforhold</p>
+                      <p className="text-3xl font-bold text-slate-900">{stats10.work10.toFixed(1)}</p>
+                    </div>
+                  </div>
+                </Panel>
               </div>
             </div>
 
