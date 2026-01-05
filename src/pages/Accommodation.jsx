@@ -2,15 +2,57 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Search, ChevronLeft, ChevronRight, Calendar as CalendarIcon, User as UserIcon, Building2, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { nb } from 'date-fns/locale';
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import CaseListItem from "../components/accommodation/CaseListItem";
+import CaseDetail from "../components/accommodation/CaseDetail";
 
 export default function Accommodation() {
   const { data: accommodations = [], isLoading } = useQuery({
     queryKey: ['accommodations'],
-    queryFn: () => base44.entities.Accommodation.list('-created_date', 200),
+    queryFn: () => base44.entities.Accommodation.list('-created_date', 500),
   });
+
+  const [search, setSearch] = React.useState("");
+  const [statusFilter, setStatusFilter] = React.useState("alle");
+  const [page, setPage] = React.useState(1);
+  const pageSize = 20;
+
+  const filtered = React.useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return (accommodations || []).filter((it) => {
+      const matchesStatus = statusFilter === "alle" || it.status === statusFilter;
+      if (!q) return matchesStatus;
+      const hay = [
+        it.accommodation_type,
+        it.employee_display_name,
+        it.department_name,
+        it.description,
+        it.notes,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return matchesStatus && hay.includes(q);
+    });
+  }, [accommodations, search, statusFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  React.useEffect(() => {
+    if (page > totalPages) setPage(1);
+  }, [filtered.length, page, totalPages]);
+
+  const start = (page - 1) * pageSize;
+  const paged = filtered.slice(start, start + pageSize);
+
+  const [selectedCase, setSelectedCase] = React.useState(null);
+  React.useEffect(() => {
+    setSelectedCase(filtered[0] || null);
+  }, [search, statusFilter, accommodations]);
 
   if (isLoading) {
     return (
@@ -27,40 +69,110 @@ export default function Accommodation() {
         <p className="text-slate-500 mt-1">Saker opprettes fra Mine meldinger og vises her.</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Alle saker</CardTitle>
-          <CardDescription>{accommodations.length} registrert{accommodations.length === 1 ? '' : 'e'}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {accommodations.length === 0 ? (
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+        <div className="relative sm:w-80">
+          <Search className="h-4 w-4 text-slate-400 absolute left-3 top-3" />
+          <Input
+            placeholder="Søk i saker..."
+            className="pl-9"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-slate-600">Status</label>
+          <select
+            className="h-9 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700"
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(1);
+            }}
+          >
+            <option value="alle">Alle</option>
+            <option value="planlagt">Planlagt</option>
+            <option value="pagaende">Pågående</option>
+            <option value="fullfort">Fullført</option>
+          </select>
+        </div>
+      </div>
+
+      {accommodations.length === 0 ? (
+        <Card>
+          <CardContent className="py-10">
             <p className="text-slate-600">Ingen saker ennå.</p>
-          ) : (
-            <div className="space-y-3">
-              {accommodations.map((item) => (
-                <div key={item.id} className="p-4 rounded-lg border border-slate-200 bg-white">
-                  <div className="flex items-center justify-between">
-                    <p className="font-medium text-slate-900">{item.accommodation_type || 'Tilrettelegging'}</p>
-                    <span className="text-xs text-slate-500">
-                      {item.created_at ? format(new Date(item.created_at), 'dd. MMM yyyy', { locale: nb }) : ''}
-                    </span>
-                  </div>
-                  {item.employee_display_name && (
-                    <p className="text-xs text-slate-600 mt-1">Ansatt: {item.employee_display_name}</p>
-                  )}
-                  {item.department_name && (
-                    <p className="text-xs text-slate-600">Avdeling: {item.department_name}</p>
-                  )}
-                  <p className="text-sm text-slate-700 mt-2 whitespace-pre-wrap">{item.description}</p>
-                  {item.notes && (
-                    <p className="text-xs text-slate-500 mt-2 italic">Notat: {item.notes}</p>
-                  )}
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Liste */}
+          <Card className="lg:col-span-1">
+            <CardHeader>
+              <CardTitle>Alle saker</CardTitle>
+              <CardDescription>
+                {filtered.length} treff • side {page} av {totalPages}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {paged.map((item) => (
+                  <CaseListItem
+                    key={item.id}
+                    item={item}
+                    selected={selectedCase?.id === item.id}
+                    onClick={() => setSelectedCase(item)}
+                  />
+                ))}
+              </div>
+
+              {/* Paginering */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between gap-2 mt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4 mr-1" /> Forrige
+                  </Button>
+                  <span className="text-xs text-slate-500">
+                    Viser {(start + 1)}–{Math.min(start + pageSize, filtered.length)} av {filtered.length}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                  >
+                    Neste <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Detalj */}
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle>{selectedCase ? (selectedCase.accommodation_type || 'Tilrettelegging') : 'Ingen sak valgt'}</CardTitle>
+              <CardDescription>
+                {selectedCase ? 'Detaljer' : 'Velg en sak fra listen for å se details'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {selectedCase ? (
+                <CaseDetail item={selectedCase} />
+              ) : (
+                <div className="text-center py-16 text-slate-500">Velg en sak i listen</div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
