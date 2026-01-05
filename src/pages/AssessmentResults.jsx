@@ -23,7 +23,6 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Loader2, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
-import { FixedSizeList as List } from "react-window";
 
 /** Fancy loader mens AI genererer */
 function AISkeleton() {
@@ -80,14 +79,14 @@ function useElementHeight() {
     return () => ro.disconnect();
   }, []);
 
-  return { ref, height };
-}
 
 export default function AssessmentResults() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [selectedRiskLevel, setSelectedRiskLevel] = useState("all");
   const [sortMode, setSortMode] = useState("alpha"); // "alpha" | "latest"
+  const [page, setPage] = useState(1);
+  const pageSize = 25;
 
   const [selectedProfileUserId, setSelectedProfileUserId] = useState(null);
   const [selectedProfileDept, setSelectedProfileDept] = useState(null);
@@ -242,6 +241,17 @@ export default function AssessmentResults() {
     return arr;
   }, [filteredSessions, userMap, sortMode]);
 
+  // Paging
+  const totalPages = Math.max(1, Math.ceil(respondents.length / pageSize));
+  const pagedRespondents = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return respondents.slice(start, start + pageSize);
+  }, [respondents, page]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, selectedDepartment, selectedRiskLevel, sortMode]);
+
   const openProfile = (userId, deptName, fallbackSession, displayName) => {
     setSelectedProfileUserId(userId || null);
     setSelectedProfileDept(deptName);
@@ -312,50 +322,6 @@ export default function AssessmentResults() {
   const highCount = sessions.filter((s) => s.risk_level === "high").length;
   const moderateCount = sessions.filter((s) => s.risk_level === "moderate").length;
   const lowCount = sessions.filter((s) => s.risk_level === "low").length;
-
-  // react-window: mål containerhøyde
-  const { ref: listWrapRef, height: listHeight } = useElementHeight();
-  const ITEM_SIZE = 74; // px (rad-høyde)
-
-  // Row renderer for react-window
-  const Row = ({ index, style }) => {
-    const r = respondents[index];
-    if (!r) return null;
-
-    const lastDate = r.session?.completed_at || r.session?.created_at || r.session?.created_date;
-    return (
-      <div style={style} className="px-1">
-        <button
-          type="button"
-          onClick={() => openProfile(r.userId, r.department, r.session, r.display)}
-          className="w-full flex items-center justify-between p-3 rounded-lg border transition bg-white hover:bg-slate-50 border-slate-200"
-          title="Åpne profil"
-        >
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-slate-100 grid place-items-center text-slate-700 text-xs font-semibold">
-              {(r.display?.[0] || "A").toUpperCase()}
-            </div>
-
-            <div className="text-left">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-medium text-slate-900">{r.display}</p>
-                <Badge className={riskLevelColors[r.risk_level] || riskLevelColors.unknown}>
-                  {(riskLevelLabels[r.risk_level] || "Ukjent")} risiko
-                </Badge>
-              </div>
-
-              <p className="text-xs text-slate-500">
-                {r.department}
-                {lastDate ? ` • ${format(new Date(lastDate), "dd. MMM yyyy", { locale: nb })}` : ""}
-              </p>
-            </div>
-          </div>
-
-          <span className="text-xs text-slate-400">Vis profil</span>
-        </button>
-      </div>
-    );
-  };
 
   if (loadingSessions) {
     return (
@@ -468,24 +434,68 @@ export default function AssessmentResults() {
           ) : (
             <>
               <div className="flex items-center justify-between mb-3">
-                <p className="text-xs text-slate-500">Totalt: {respondents.length}</p>
-                <p className="text-xs text-slate-500">Scroller uten paging</p>
+                <p className="text-xs text-slate-500">
+                  Viser {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, respondents.length)} av {respondents.length}
+                </p>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page <= 1}
+                  >
+                    Forrige
+                  </Button>
+                  <span className="text-xs text-slate-500">
+                    Side {page} / {totalPages}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page >= totalPages}
+                  >
+                    Neste
+                  </Button>
+                </div>
               </div>
 
-              {/* react-window trenger en fast høyde: vi måler containeren */}
-              <div
-                ref={listWrapRef}
-                className="h-[420px] sm:h-[520px] border border-slate-200 rounded-xl bg-slate-50/30"
-              >
-                <List
-                  height={listHeight}
-                  itemCount={respondents.length}
-                  itemSize={ITEM_SIZE}
-                  width="100%"
-                  overscanCount={8}
-                >
-                  {Row}
-                </List>
+              <div className="space-y-2">
+                {pagedRespondents.map((r) => {
+                  const lastDate = r.session?.completed_at || r.session?.created_at || r.session?.created_date;
+
+                  return (
+                    <button
+                      key={r.key}
+                      type="button"
+                      onClick={() => openProfile(r.userId, r.department, r.session, r.display)}
+                      className="w-full flex items-center justify-between p-3 rounded-lg border transition bg-white hover:bg-slate-50 border-slate-200"
+                      title="Åpne profil"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-full bg-slate-100 grid place-items-center text-slate-700 text-xs font-semibold">
+                          {(r.display?.[0] || "A").toUpperCase()}
+                        </div>
+
+                        <div className="text-left">
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium text-slate-900">{r.display}</p>
+                            <Badge className={riskLevelColors[r.risk_level] || riskLevelColors.unknown}>
+                              {(riskLevelLabels[r.risk_level] || "Ukjent")} risiko
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-slate-500">
+                            {r.department}
+                            {lastDate ? ` • ${format(new Date(lastDate), "dd. MMM yyyy", { locale: nb })}` : ""}
+                          </p>
+                        </div>
+                      </div>
+
+                      <span className="text-xs text-slate-400">Vis profil</span>
+                    </button>
+                  );
+                })}
               </div>
             </>
           )}
