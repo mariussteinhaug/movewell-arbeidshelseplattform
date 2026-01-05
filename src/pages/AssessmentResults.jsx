@@ -96,7 +96,7 @@ export default function AssessmentResults() {
       .filter((l) => !/^her er/i.test(l));
     const items = lines.map((l) =>
       l
-        .replace(/^[−-•\u2022]+/i, "")
+        .replace(/^[−•\u2022-]+/i, "")
         .replace(/^\s+/, "")
         .replace(/^\d+[\.)]\s*/, "")
     );
