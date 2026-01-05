@@ -121,14 +121,16 @@ export default function Assessment() {
       const deptList = await base44.entities.Department.list();
       const dept = deptList.find((d) => d.name === selectedDepartment);
 
+      // Forbered besvarte spørsmål til melding/AI
+      const answeredIds = Object.keys(answers).filter((qid) => answers[qid] != null);
+      const answeredData = answeredIds.map((qid) => {
+        const q = allQuestions.find((qq) => qq.question_id === qid);
+        return { question: q?.text || qid, answer: answers[qid] };
+      });
+
       // Generer korte AI-forslag til tiltak
       let recommendationsText = "";
       try {
-        const answeredIds = Object.keys(answers).filter((qid) => answers[qid] != null);
-        const answeredData = answeredIds.map((qid) => {
-          const q = allQuestions.find((qq) => qq.question_id === qid);
-          return { question: q?.text || qid, answer: answers[qid] };
-        });
         const aiRes = await base44.integrations.Core.InvokeLLM({
           prompt: `Du er en norsk HMS-rådgiver. Basert på input under, lag 3 konkrete forslag til tiltak (korte punkt) for avdeling "${selectedDepartment || "ukjent"}".\n\nRisikonivå: ${assessment?.risk_level}\nRisikosignaler: ${(assessment?.risk_signals || []).join(", ")}\nSvar: ${JSON.stringify(answeredData).slice(0, 4000)}\n\nSvar kun som punktopplistet tekst.`,
         });
