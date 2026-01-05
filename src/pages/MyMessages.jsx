@@ -37,13 +37,20 @@ export default function MyMessages() {
   });
 
   const departmentAlerts = React.useMemo(() => {
+    const role = String(currentUser?.role || '').toLowerCase();
     const deptId = currentUser?.department_id;
-    const isMgrHr = ['manager', 'hr', 'admin'].includes(String(currentUser?.role || '').toLowerCase());
-    return (deptMessages || []).filter((m) =>
-      m.type === 'broadcast' &&
-      (!!deptId && m.recipient_department_id === deptId) &&
-      (isMgrHr || m.visibility !== 'hr_only')
-    );
+    const isHR = role === 'hr' || role === 'admin';
+    const isManager = role === 'manager';
+    return (deptMessages || []).filter((m) => {
+      if (m.type !== 'broadcast') return false;
+      if (isHR) {
+        return m.visibility !== 'employee_only';
+      }
+      if (isManager && deptId) {
+        return m.recipient_department_id === deptId && m.visibility !== 'hr_only';
+      }
+      return false;
+    });
   }, [deptMessages, currentUser?.department_id, currentUser?.role]);
 
   const markAsRead = useMutation({
