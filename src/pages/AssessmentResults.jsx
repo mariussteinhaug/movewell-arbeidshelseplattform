@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import {
@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Loader2, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
+import { FixedSizeList as List } from "react-window";
 
 /** Fancy loader mens AI genererer */
 function AISkeleton() {
@@ -57,15 +58,36 @@ function AISkeleton() {
   );
 }
 
+/** Måler høyden på et element (for react-window) */
+function useElementHeight() {
+  const ref = useRef(null);
+  const [height, setHeight] = useState(520);
+
+  useEffect(() => {
+    if (!ref.current) return;
+
+    const el = ref.current;
+    const ro = new ResizeObserver(() => {
+      const h = Math.max(240, Math.floor(el.getBoundingClientRect().height));
+      setHeight(h);
+    });
+
+    ro.observe(el);
+    // init
+    const h = Math.max(240, Math.floor(el.getBoundingClientRect().height));
+    setHeight(h);
+
+    return () => ro.disconnect();
+  }, []);
+
+  return { ref, height };
+}
+
 export default function AssessmentResults() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [selectedRiskLevel, setSelectedRiskLevel] = useState("all");
-
-  // ✅ For 500 ansatte: sort + paging
   const [sortMode, setSortMode] = useState("alpha"); // "alpha" | "latest"
-  const [page, setPage] = useState(1);
-  const pageSize = 25;
 
   const [selectedProfileUserId, setSelectedProfileUserId] = useState(null);
   const [selectedProfileDept, setSelectedProfileDept] = useState(null);
@@ -77,16 +99,12 @@ export default function AssessmentResults() {
   const [aiLoading, setAiLoading] = useState(false);
 
   // Når vi åpner en profil med lagret AI-svar, fyll det inn
-  React.useEffect(() => {
-    if (profileSession?.ai_summary) {
-      setAiSuggestion(profileSession.ai_summary);
-    } else {
-      setAiSuggestion("");
-    }
+  useEffect(() => {
+    if (profileSession?.ai_summary) setAiSuggestion(profileSession.ai_summary);
+    else setAiSuggestion("");
   }, [profileSession?.id]);
 
-  // Rens og formater AI-tekst: fjern stjerner/markdown og behold maks 3 tiltak (én pr linje)
-  const formatSuggestion = React.useCallback((raw) => {
+  const formatSuggestion = useCallback((raw) => {
     if (!raw) return "";
     const txt = String(raw).replace(/\*\*/g, "");
     const lines = txt
@@ -95,21 +113,18 @@ export default function AssessmentResults() {
       .filter(Boolean)
       .filter((l) => !/^her er/i.test(l));
     const items = lines.map((l) =>
-      l
-        .replace(/^[-•\u2022]+/i, "")
-        .replace(/^\s+/, "")
-        .replace(/^\d+[\.)]\s*/, "")
+      l.replace(/^[-•\u2022]+/i, "").replace(/^\s+/, "").replace(/^\d+[\.)]\s*/, "")
     );
     return items.slice(0, 3).join("\n");
   }, []);
 
-  // 🧠 Get current user
+  // 🧠 Current user
   const { data: currentUser } = useQuery({
     queryKey: ["current-user"],
     queryFn: () => base44.auth.me(),
   });
 
-  // 🔍 Load data
+  // Data
   const { data: sessions = [], isLoading: loadingSessions } = useQuery({
     queryKey: ["assessment-sessions"],
     queryFn: () => base44.entities.AssessmentSession.list("created_date"),
@@ -125,21 +140,18 @@ export default function AssessmentResults() {
     queryFn: () => base44.entities.QuestionBank.list("order"),
   });
 
-  // Brukere (kun admin/hr kan liste brukere)
   const { data: users = [] } = useQuery({
     queryKey: ["users"],
     queryFn: () => base44.entities.User.list(),
     enabled: ["admin", "hr"].includes(String(currentUser?.role || "").toLowerCase()),
   });
 
-  // 🧮 Access rules
+  // Access rules
   const isAdmin = currentUser?.role === "admin" || currentUser?.role === "hr";
   const userDepartment = currentUser?.department;
-  const canEdit = ["admin", "hr", "manager"].includes(
-    String(currentUser?.role || "").toLowerCase()
-  );
+  const canEdit = ["admin", "hr", "manager"].includes(String(currentUser?.role || "").toLowerCase());
 
-  const accessFilteredSessions = React.useMemo(() => {
+  const accessFilteredSessions = useMemo(() => {
     if (!currentUser) return [];
     if (isAdmin) return sessions;
     if (userDepartment) {
@@ -148,26 +160,25 @@ export default function AssessmentResults() {
     return sessions.filter((s) => s.created_by === currentUser.email);
   }, [sessions, currentUser, isAdmin, userDepartment]);
 
-  // 🧹 Filters (vis kun completed)
-  const filteredSessions = React.useMemo(() => {
+  // Filters (kun completed)
+  const filteredSessions = useMemo(() => {
     return accessFilteredSessions.filter((session) => {
+      if (session.status !== "completed") return false;
+
       const deptName = session.department_name || session.department;
       const matchesDept = selectedDepartment === "all" || deptName === selectedDepartment;
       const matchesRisk = selectedRiskLevel === "all" || session.risk_level === selectedRiskLevel;
 
-      const haystack = `${deptName || ""} ${session.anonymous_id || ""} ${session.created_by || ""}`.toLowerCase();
+      const haystack = `${deptName || ""} ${session.created_by || ""} ${session.anonymous_id || ""}`.toLowerCase();
       const matchesSearch = !searchTerm || haystack.includes(searchTerm.toLowerCase());
 
-      return matchesDept && matchesRisk && matchesSearch && session.status === "completed";
+      return matchesDept && matchesRisk && matchesSearch;
     });
   }, [accessFilteredSessions, selectedDepartment, selectedRiskLevel, searchTerm]);
 
-  // Map for å finne brukernavn fra respondent_user_id
-  const userMap = React.useMemo(() => {
+  const userMap = useMemo(() => {
     const m = {};
-    (users || []).forEach((u) => {
-      m[u.id] = u;
-    });
+    (users || []).forEach((u) => (m[u.id] = u));
     return m;
   }, [users]);
 
@@ -185,14 +196,13 @@ export default function AssessmentResults() {
     unknown: "Ukjent",
   };
 
-  // ✅ Respondenter: dedupe riktig + sort + risk + latest session
-  const respondents = React.useMemo(() => {
+  // ✅ Respondenter: dedupe + sort
+  const respondents = useMemo(() => {
     const byPerson = new Map();
     const normalizeName = (s) => (s || "").toString().trim();
     const nameFromEmail = (email) => (email ? String(email).split("@")[0] : "Anonym bruker");
 
     for (const s of filteredSessions) {
-      // Stabil nøkkel: userId -> email -> anonymous (siste utvei)
       const key = s.respondent_user_id || s.created_by || s.anonymous_id;
       if (!key) continue;
 
@@ -232,17 +242,6 @@ export default function AssessmentResults() {
     return arr;
   }, [filteredSessions, userMap, sortMode]);
 
-  // Paging
-  const totalPages = Math.max(1, Math.ceil(respondents.length / pageSize));
-  const pagedRespondents = React.useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return respondents.slice(start, start + pageSize);
-  }, [respondents, page]);
-
-  React.useEffect(() => {
-    setPage(1);
-  }, [searchTerm, selectedDepartment, selectedRiskLevel, sortMode]);
-
   const openProfile = (userId, deptName, fallbackSession, displayName) => {
     setSelectedProfileUserId(userId || null);
     setSelectedProfileDept(deptName);
@@ -250,15 +249,11 @@ export default function AssessmentResults() {
 
     if (userId) {
       const userSessions = accessFilteredSessions
-        .filter(
-          (s) =>
-            (s.department_name || s.department) === deptName &&
-            s.respondent_user_id === userId
-        )
+        .filter((s) => (s.department_name || s.department) === deptName && s.respondent_user_id === userId)
         .sort(
           (a, b) =>
-            new Date(b.created_at || b.completed_at || b.created_date || 0) -
-            new Date(a.created_at || a.completed_at || a.created_date || 0)
+            new Date(b.completed_at || b.created_at || b.created_date || 0) -
+            new Date(a.completed_at || a.created_at || a.created_date || 0)
         );
       setProfileSession(userSessions[0] || fallbackSession || null);
     } else {
@@ -268,7 +263,6 @@ export default function AssessmentResults() {
     setProfileOpen(true);
   };
 
-  /** MANUELL generering: AI skal IKKE auto-kjøre når profil åpnes */
   const generateAISuggestion = async ({ force = false } = {}) => {
     if (!profileSession) return;
     if (!force && profileSession.ai_summary) return;
@@ -293,9 +287,7 @@ export default function AssessmentResults() {
       const toStr = typeof res === "string" ? res : JSON.stringify(res);
       const cleaned = formatSuggestion(toStr);
 
-      await base44.entities.AssessmentSession.update(profileSession.id, {
-        ai_summary: cleaned,
-      });
+      await base44.entities.AssessmentSession.update(profileSession.id, { ai_summary: cleaned });
 
       setAiSuggestion(cleaned);
       setProfileSession({ ...profileSession, ai_summary: cleaned });
@@ -308,20 +300,62 @@ export default function AssessmentResults() {
     if (!profileSession || !canEdit) return;
     setAiLoading(true);
     try {
-      await base44.entities.AssessmentSession.update(profileSession.id, {
-        ai_summary: aiSuggestion,
-      });
+      await base44.entities.AssessmentSession.update(profileSession.id, { ai_summary: aiSuggestion });
       setProfileSession({ ...profileSession, ai_summary: aiSuggestion });
     } finally {
       setAiLoading(false);
     }
   };
 
-  // Stats teller (for admin/hr kan du velge å bruke accessFilteredSessions istedenfor sessions)
+  // Stats
   const completedCount = sessions.filter((s) => s.status === "completed").length;
   const highCount = sessions.filter((s) => s.risk_level === "high").length;
   const moderateCount = sessions.filter((s) => s.risk_level === "moderate").length;
   const lowCount = sessions.filter((s) => s.risk_level === "low").length;
+
+  // react-window: mål containerhøyde
+  const { ref: listWrapRef, height: listHeight } = useElementHeight();
+  const ITEM_SIZE = 74; // px (rad-høyde)
+
+  // Row renderer for react-window
+  const Row = ({ index, style }) => {
+    const r = respondents[index];
+    if (!r) return null;
+
+    const lastDate = r.session?.completed_at || r.session?.created_at || r.session?.created_date;
+    return (
+      <div style={style} className="px-1">
+        <button
+          type="button"
+          onClick={() => openProfile(r.userId, r.department, r.session, r.display)}
+          className="w-full flex items-center justify-between p-3 rounded-lg border transition bg-white hover:bg-slate-50 border-slate-200"
+          title="Åpne profil"
+        >
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-full bg-slate-100 grid place-items-center text-slate-700 text-xs font-semibold">
+              {(r.display?.[0] || "A").toUpperCase()}
+            </div>
+
+            <div className="text-left">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-medium text-slate-900">{r.display}</p>
+                <Badge className={riskLevelColors[r.risk_level] || riskLevelColors.unknown}>
+                  {(riskLevelLabels[r.risk_level] || "Ukjent")} risiko
+                </Badge>
+              </div>
+
+              <p className="text-xs text-slate-500">
+                {r.department}
+                {lastDate ? ` • ${format(new Date(lastDate), "dd. MMM yyyy", { locale: nb })}` : ""}
+              </p>
+            </div>
+          </div>
+
+          <span className="text-xs text-slate-400">Vis profil</span>
+        </button>
+      </div>
+    );
+  };
 
   if (loadingSessions) {
     return (
@@ -334,12 +368,8 @@ export default function AssessmentResults() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
-          Kartleggingsresultater
-        </h1>
-        <p className="text-slate-500 mt-1">
-          Oversikt over alle fullførte helsekartlegginger
-        </p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Kartleggingsresultater</h1>
+        <p className="text-slate-500 mt-1">Oversikt over alle fullførte helsekartlegginger</p>
       </div>
 
       {/* Stats */}
@@ -428,79 +458,34 @@ export default function AssessmentResults() {
         <CardHeader>
           <CardTitle>Ansatte som har svart</CardTitle>
           <CardDescription>
-            Sorter alfabetisk eller etter siste svar. Klikk på en ansatt for å se svar og AI-forslag.
+            Virtuell liste (raskt med 500+). Klikk på en ansatt for å se svar og AI-forslag.
           </CardDescription>
         </CardHeader>
+
         <CardContent>
           {respondents.length === 0 ? (
             <p className="text-sm text-slate-500">Ingen svar i utvalget.</p>
           ) : (
             <>
               <div className="flex items-center justify-between mb-3">
-                <p className="text-xs text-slate-500">
-                  Viser {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, respondents.length)} av{" "}
-                  {respondents.length}
-                </p>
-
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page <= 1}
-                  >
-                    Forrige
-                  </Button>
-                  <span className="text-xs text-slate-500">
-                    Side {page} / {totalPages}
-                  </span>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={page >= totalPages}
-                  >
-                    Neste
-                  </Button>
-                </div>
+                <p className="text-xs text-slate-500">Totalt: {respondents.length}</p>
+                <p className="text-xs text-slate-500">Scroller uten paging</p>
               </div>
 
-              <div className="space-y-2">
-                {pagedRespondents.map((r) => {
-                  const lastDate =
-                    r.session?.completed_at || r.session?.created_at || r.session?.created_date;
-
-                  return (
-                    <button
-                      key={r.key}
-                      type="button"
-                      onClick={() => openProfile(r.userId, r.department, r.session, r.display)}
-                      className="w-full flex items-center justify-between p-3 rounded-lg border transition bg-white hover:bg-slate-50 border-slate-200"
-                      title="Åpne profil"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-full bg-slate-100 grid place-items-center text-slate-700 text-xs font-semibold">
-                          {(r.display?.[0] || "A").toUpperCase()}
-                        </div>
-
-                        <div className="text-left">
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm font-medium text-slate-900">{r.display}</p>
-                            <Badge className={riskLevelColors[r.risk_level] || riskLevelColors.unknown}>
-                              {(riskLevelLabels[r.risk_level] || "Ukjent")} risiko
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-slate-500">
-                            {r.department}
-                            {lastDate ? ` • ${format(new Date(lastDate), "dd. MMM yyyy", { locale: nb })}` : ""}
-                          </p>
-                        </div>
-                      </div>
-
-                      <span className="text-xs text-slate-400">Vis profil</span>
-                    </button>
-                  );
-                })}
+              {/* react-window trenger en fast høyde: vi måler containeren */}
+              <div
+                ref={listWrapRef}
+                className="h-[420px] sm:h-[520px] border border-slate-200 rounded-xl bg-slate-50/30"
+              >
+                <List
+                  height={listHeight}
+                  itemCount={respondents.length}
+                  itemSize={ITEM_SIZE}
+                  width="100%"
+                  overscanCount={8}
+                >
+                  {Row}
+                </List>
               </div>
             </>
           )}
@@ -537,9 +522,7 @@ export default function AssessmentResults() {
                   const q = questions.find((qu) => qu.question_id === qa.question_id);
                   return (
                     <div key={idx} className="bg-white rounded-lg p-3 border border-slate-200">
-                      <p className="text-sm font-medium text-slate-900">
-                        {q?.text || qa.question_id}
-                      </p>
+                      <p className="text-sm font-medium text-slate-900">{q?.text || qa.question_id}</p>
                       <p className="text-sm text-slate-700 mt-1">
                         {Array.isArray(qa.answer) ? qa.answer.join(", ") : qa.answer}
                       </p>
@@ -571,11 +554,7 @@ export default function AssessmentResults() {
                       onClick={() => generateAISuggestion({ force: false })}
                       disabled={aiLoading || !profileSession || !!profileSession?.ai_summary}
                       className="border-slate-200"
-                      title={
-                        profileSession?.ai_summary
-                          ? "Allerede lagret for denne kartleggingen"
-                          : "Generer forslag"
-                      }
+                      title={profileSession?.ai_summary ? "Allerede lagret" : "Generer forslag"}
                     >
                       {aiLoading ? "Genererer…" : "Generer"}
                     </Button>
@@ -586,13 +565,10 @@ export default function AssessmentResults() {
                         variant="ghost"
                         disabled={aiLoading}
                         onClick={() => {
-                          const ok = window.confirm(
-                            "Vil du generere på nytt og overskrive lagret AI-forslag?"
-                          );
+                          const ok = window.confirm("Vil du generere på nytt og overskrive lagret AI-forslag?");
                           if (ok) generateAISuggestion({ force: true });
                         }}
                         className="text-slate-600 hover:text-slate-900"
-                        title="Generer på nytt (overskriver)"
                       >
                         Regenerer
                       </Button>
