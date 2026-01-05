@@ -223,9 +223,7 @@ export default function Accommodation() {
     </div>
   );
 
-  // Legacy UI under (ikke i bruk)
-  return (
-    <div className="space-y-8">
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Tilrettelegging</h1>
