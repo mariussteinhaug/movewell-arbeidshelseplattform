@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import {
@@ -8,7 +8,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -62,31 +67,23 @@ export default function AssessmentResults() {
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [selectedRiskLevel, setSelectedRiskLevel] = useState("all");
 
-  // ✅ For 500 ansatte: sort + paging
+  // ✅ paging
   const [sortMode, setSortMode] = useState("alpha"); // "alpha" | "latest"
   const [page, setPage] = useState(1);
-  const pageSize = 25;
+  const [pageSize, setPageSize] = useState(25);
 
+  // profil/dialog
   const [selectedProfileUserId, setSelectedProfileUserId] = useState(null);
   const [selectedProfileDept, setSelectedProfileDept] = useState(null);
   const [selectedProfileName, setSelectedProfileName] = useState("");
   const [profileSession, setProfileSession] = useState(null);
   const [profileOpen, setProfileOpen] = useState(false);
 
+  // AI
   const [aiSuggestion, setAiSuggestion] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
 
-  // Når vi åpner en profil med lagret AI-svar, fyll det inn
-  React.useEffect(() => {
-    if (profileSession?.ai_summary) {
-      setAiSuggestion(profileSession.ai_summary);
-    } else {
-      setAiSuggestion("");
-    }
-  }, [profileSession?.id]);
-
-  // Rens og formater AI-tekst: fjern stjerner/markdown og behold maks 3 tiltak (én pr linje)
-  const formatSuggestion = React.useCallback((raw) => {
+  const formatSuggestion = useCallback((raw) => {
     if (!raw) return "";
     const txt = String(raw).replace(/\*\*/g, "");
     const lines = txt
@@ -96,20 +93,26 @@ export default function AssessmentResults() {
       .filter((l) => !/^her er/i.test(l));
     const items = lines.map((l) =>
       l
-        .replace(/^[−•\u2022-]+/i, "")
+        .replace(/^[-•\u2022]+/i, "")
         .replace(/^\s+/, "")
         .replace(/^\d+[\.)]\s*/, "")
     );
     return items.slice(0, 3).join("\n");
   }, []);
 
-  // 🧠 Get current user
+  // Når vi åpner en profil med lagret AI-svar, fyll det inn
+  useEffect(() => {
+    if (profileSession?.ai_summary) setAiSuggestion(profileSession.ai_summary);
+    else setAiSuggestion("");
+  }, [profileSession?.id]);
+
+  // 🧠 Current user
   const { data: currentUser } = useQuery({
     queryKey: ["current-user"],
     queryFn: () => base44.auth.me(),
   });
 
-  // 🔍 Load data
+  // 🔍 Data
   const { data: sessions = [], isLoading: loadingSessions } = useQuery({
     queryKey: ["assessment-sessions"],
     queryFn: () => base44.entities.AssessmentSession.list("created_date"),
@@ -125,11 +128,12 @@ export default function AssessmentResults() {
     queryFn: () => base44.entities.QuestionBank.list("order"),
   });
 
-  // Brukere (kun admin/hr kan liste brukere)
   const { data: users = [] } = useQuery({
     queryKey: ["users"],
     queryFn: () => base44.entities.User.list(),
-    enabled: ["admin", "hr"].includes(String(currentUser?.role || "").toLowerCase()),
+    enabled: ["admin", "hr"].includes(
+      String(currentUser?.role || "").toLowerCase()
+    ),
   });
 
   // 🧮 Access rules
@@ -139,31 +143,19 @@ export default function AssessmentResults() {
     String(currentUser?.role || "").toLowerCase()
   );
 
-  const accessFilteredSessions = React.useMemo(() => {
+  const accessFilteredSessions = useMemo(() => {
     if (!currentUser) return [];
     if (isAdmin) return sessions;
     if (userDepartment) {
-      return sessions.filter((s) => (s.department_name || s.department) === userDepartment);
+      return sessions.filter(
+        (s) => (s.department_name || s.department) === userDepartment
+      );
     }
     return sessions.filter((s) => s.created_by === currentUser.email);
   }, [sessions, currentUser, isAdmin, userDepartment]);
 
-  // 🧹 Filters (vis kun completed)
-  const filteredSessions = React.useMemo(() => {
-    return accessFilteredSessions.filter((session) => {
-      const deptName = session.department_name || session.department;
-      const matchesDept = selectedDepartment === "all" || deptName === selectedDepartment;
-      const matchesRisk = selectedRiskLevel === "all" || session.risk_level === selectedRiskLevel;
-
-      const haystack = `${deptName || ""} ${session.anonymous_id || ""} ${session.created_by || ""}`.toLowerCase();
-      const matchesSearch = !searchTerm || haystack.includes(searchTerm.toLowerCase());
-
-      return matchesDept && matchesRisk && matchesSearch && session.status === "completed";
-    });
-  }, [accessFilteredSessions, selectedDepartment, selectedRiskLevel, searchTerm]);
-
-  // Map for å finne brukernavn fra respondent_user_id
-  const userMap = React.useMemo(() => {
+  // Map for å finne brukernavn
+  const userMap = useMemo(() => {
     const m = {};
     (users || []).forEach((u) => {
       m[u.id] = u;
@@ -185,14 +177,35 @@ export default function AssessmentResults() {
     unknown: "Ukjent",
   };
 
-  // ✅ Respondenter: dedupe riktig + sort + risk + latest session
-  const respondents = React.useMemo(() => {
+  // 🧹 Filter sessions (kun completed)
+  const filteredSessions = useMemo(() => {
+    return accessFilteredSessions.filter((session) => {
+      if (session.status !== "completed") return false;
+
+      const deptName = session.department_name || session.department;
+      const matchesDept = selectedDepartment === "all" || deptName === selectedDepartment;
+      const matchesRisk =
+        selectedRiskLevel === "all" || session.risk_level === selectedRiskLevel;
+
+      const haystack = `${deptName || ""} ${session.created_by || ""} ${
+        session.anonymous_id || ""
+      }`.toLowerCase();
+      const matchesSearch =
+        !searchTerm || haystack.includes(searchTerm.toLowerCase());
+
+      return matchesDept && matchesRisk && matchesSearch;
+    });
+  }, [accessFilteredSessions, selectedDepartment, selectedRiskLevel, searchTerm]);
+
+  // ✅ Respondenter: dedupe + sort
+  const respondents = useMemo(() => {
     const byPerson = new Map();
     const normalizeName = (s) => (s || "").toString().trim();
-    const nameFromEmail = (email) => (email ? String(email).split("@")[0] : "Anonym bruker");
+    const nameFromEmail = (email) =>
+      email ? String(email).split("@")[0] : "Anonym bruker";
 
     for (const s of filteredSessions) {
-      // Stabil nøkkel: userId -> email -> anonymous (siste utvei)
+      // Stabil nøkkel: respondent_user_id -> created_by -> anonymous_id
       const key = s.respondent_user_id || s.created_by || s.anonymous_id;
       if (!key) continue;
 
@@ -205,7 +218,9 @@ export default function AssessmentResults() {
         nameFromEmail(s.created_by);
 
       const dept = s.department_name || s.department || "Ikke oppgitt";
-      const ts = new Date(s.completed_at || s.created_at || s.created_date || 0).getTime();
+      const ts = new Date(
+        s.completed_at || s.created_at || s.created_date || 0
+      ).getTime();
 
       const existing = byPerson.get(key);
       if (!existing || ts > existing.ts) {
@@ -222,27 +237,31 @@ export default function AssessmentResults() {
     }
 
     const arr = Array.from(byPerson.values());
-
     if (sortMode === "latest") {
       arr.sort((a, b) => b.ts - a.ts);
     } else {
-      arr.sort((a, b) => (a.display || "").localeCompare((b.display || ""), "nb", { sensitivity: "base" }));
+      arr.sort((a, b) =>
+        (a.display || "").localeCompare(b.display || "", "nb", {
+          sensitivity: "base",
+        })
+      );
     }
-
     return arr;
   }, [filteredSessions, userMap, sortMode]);
 
-  // Paging
+  // ✅ paging calculations
   const totalPages = Math.max(1, Math.ceil(respondents.length / pageSize));
-  const pagedRespondents = React.useMemo(() => {
+  const pagedRespondents = useMemo(() => {
     const start = (page - 1) * pageSize;
     return respondents.slice(start, start + pageSize);
-  }, [respondents, page]);
+  }, [respondents, page, pageSize]);
 
-  React.useEffect(() => {
+  // reset to page 1 when filters/sort/pageSize changes
+  useEffect(() => {
     setPage(1);
-  }, [searchTerm, selectedDepartment, selectedRiskLevel, sortMode]);
+  }, [searchTerm, selectedDepartment, selectedRiskLevel, sortMode, pageSize]);
 
+  // open profile
   const openProfile = (userId, deptName, fallbackSession, displayName) => {
     setSelectedProfileUserId(userId || null);
     setSelectedProfileDept(deptName);
@@ -250,12 +269,16 @@ export default function AssessmentResults() {
 
     if (userId) {
       const userSessions = accessFilteredSessions
-        .filter((s) => (s.department_name || s.department) === deptName && s.respondent_user_id === userId)
-        .sort(
-          (a, b) =>
-            new Date(b.created_at || b.completed_at || b.created_date || 0) -
-            new Date(a.created_at || a.completed_at || a.created_date || 0)
-        );
+        .filter(
+          (s) =>
+            (s.department_name || s.department) === deptName &&
+            s.respondent_user_id === userId
+        )
+        .sort((a, b) => {
+          const ta = new Date(a.completed_at || a.created_at || a.created_date || 0).getTime();
+          const tb = new Date(b.completed_at || b.created_at || b.created_date || 0).getTime();
+          return tb - ta;
+        });
       setProfileSession(userSessions[0] || fallbackSession || null);
     } else {
       setProfileSession(fallbackSession || null);
@@ -264,7 +287,7 @@ export default function AssessmentResults() {
     setProfileOpen(true);
   };
 
-  /** MANUELL generering: AI skal IKKE auto-kjøre når profil åpnes */
+  // AI actions
   const generateAISuggestion = async ({ force = false } = {}) => {
     if (!profileSession) return;
     if (!force && profileSession.ai_summary) return;
@@ -313,7 +336,7 @@ export default function AssessmentResults() {
     }
   };
 
-  // Stats teller (for admin/hr kan du velge å bruke accessFilteredSessions istedenfor sessions)
+  // Stats
   const completedCount = sessions.filter((s) => s.status === "completed").length;
   const highCount = sessions.filter((s) => s.risk_level === "high").length;
   const moderateCount = sessions.filter((s) => s.risk_level === "moderate").length;
@@ -369,8 +392,8 @@ export default function AssessmentResults() {
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="relative">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div className="relative md:col-span-2">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
                 placeholder="Søk etter avdeling, e-post eller ID..."
@@ -416,6 +439,30 @@ export default function AssessmentResults() {
               </SelectContent>
             </Select>
           </div>
+
+          <div className="mt-4 flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500">Vis</span>
+              <Select
+                value={String(pageSize)}
+                onValueChange={(v) => setPageSize(parseInt(v, 10))}
+              >
+                <SelectTrigger className="h-8 w-[120px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10 per side</SelectItem>
+                  <SelectItem value="25">25 per side</SelectItem>
+                  <SelectItem value="50">50 per side</SelectItem>
+                  <SelectItem value="100">100 per side</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <p className="text-xs text-slate-500">
+              Totalt: {respondents.length}
+            </p>
+          </div>
         </CardContent>
       </Card>
 
@@ -424,39 +471,58 @@ export default function AssessmentResults() {
         <CardHeader>
           <CardTitle>Ansatte som har svart</CardTitle>
           <CardDescription>
-            Sorter alfabetisk eller etter siste svar. Klikk på en ansatt for å se svar og AI-forslag.
+            Klikk på en ansatt for å se svar og AI-forslag.
           </CardDescription>
         </CardHeader>
+
         <CardContent>
           {respondents.length === 0 ? (
             <p className="text-sm text-slate-500">Ingen svar i utvalget.</p>
           ) : (
             <>
-              <div className="flex items-center justify-between mb-3">
+              {/* Paging controls */}
+              <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
                 <p className="text-xs text-slate-500">
-                  Viser {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, respondents.length)} av{" "}
-                  {respondents.length}
+                  Viser {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, respondents.length)} av {respondents.length}
                 </p>
 
                 <div className="flex items-center gap-2">
                   <Button
                     size="sm"
                     variant="outline"
+                    onClick={() => setPage(1)}
+                    disabled={page === 1}
+                  >
+                    Første
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page <= 1}
+                    disabled={page === 1}
                   >
                     Forrige
                   </Button>
+
                   <span className="text-xs text-slate-500">
                     Side {page} / {totalPages}
                   </span>
+
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={page >= totalPages}
+                    disabled={page === totalPages}
                   >
                     Neste
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setPage(totalPages)}
+                    disabled={page === totalPages}
+                  >
+                    Siste
                   </Button>
                 </div>
               </div>
@@ -464,7 +530,9 @@ export default function AssessmentResults() {
               <div className="space-y-2">
                 {pagedRespondents.map((r) => {
                   const lastDate =
-                    r.session?.completed_at || r.session?.created_at || r.session?.created_date;
+                    r.session?.completed_at ||
+                    r.session?.created_at ||
+                    r.session?.created_date;
 
                   return (
                     <button
@@ -481,14 +549,18 @@ export default function AssessmentResults() {
 
                         <div className="text-left">
                           <div className="flex items-center gap-2">
-                            <p className="text-sm font-medium text-slate-900">{r.display}</p>
+                            <p className="text-sm font-medium text-slate-900">
+                              {r.display}
+                            </p>
                             <Badge className={riskLevelColors[r.risk_level] || riskLevelColors.unknown}>
                               {(riskLevelLabels[r.risk_level] || "Ukjent")} risiko
                             </Badge>
                           </div>
                           <p className="text-xs text-slate-500">
                             {r.department}
-                            {lastDate ? ` • ${format(new Date(lastDate), "dd. MMM yyyy", { locale: nb })}` : ""}
+                            {lastDate
+                              ? ` • ${format(new Date(lastDate), "dd. MMM yyyy", { locale: nb })}`
+                              : ""}
                           </p>
                         </div>
                       </div>
@@ -508,20 +580,30 @@ export default function AssessmentResults() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {(selectedProfileName || userMap[selectedProfileUserId]?.full_name || "Ansatt")} —{" "}
-              {selectedProfileDept || ""}
+              {(selectedProfileName ||
+                userMap[selectedProfileUserId]?.full_name ||
+                "Ansatt")}{" "}
+              — {selectedProfileDept || ""}
             </DialogTitle>
           </DialogHeader>
 
           {profileSession ? (
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <Badge className={riskLevelColors[profileSession.risk_level] || riskLevelColors.unknown}>
+                <Badge
+                  className={
+                    riskLevelColors[profileSession.risk_level] || riskLevelColors.unknown
+                  }
+                >
                   {riskLevelLabels[profileSession.risk_level] || "Ukjent"} risiko
                 </Badge>
                 <span className="text-xs text-slate-500">
                   {format(
-                    new Date(profileSession.created_at || profileSession.completed_at || profileSession.created_date),
+                    new Date(
+                      profileSession.created_at ||
+                        profileSession.completed_at ||
+                        profileSession.created_date
+                    ),
                     "dd. MMM yyyy, HH:mm",
                     { locale: nb }
                   )}
@@ -532,8 +614,13 @@ export default function AssessmentResults() {
                 {profileSession.answered_questions?.map((qa, idx) => {
                   const q = questions.find((qu) => qu.question_id === qa.question_id);
                   return (
-                    <div key={idx} className="bg-white rounded-lg p-3 border border-slate-200">
-                      <p className="text-sm font-medium text-slate-900">{q?.text || qa.question_id}</p>
+                    <div
+                      key={idx}
+                      className="bg-white rounded-lg p-3 border border-slate-200"
+                    >
+                      <p className="text-sm font-medium text-slate-900">
+                        {q?.text || qa.question_id}
+                      </p>
                       <p className="text-sm text-slate-700 mt-1">
                         {Array.isArray(qa.answer) ? qa.answer.join(", ") : qa.answer}
                       </p>
@@ -565,7 +652,11 @@ export default function AssessmentResults() {
                       onClick={() => generateAISuggestion({ force: false })}
                       disabled={aiLoading || !profileSession || !!profileSession?.ai_summary}
                       className="border-slate-200"
-                      title={profileSession?.ai_summary ? "Allerede lagret for denne kartleggingen" : "Generer forslag"}
+                      title={
+                        profileSession?.ai_summary
+                          ? "Allerede lagret"
+                          : "Generer forslag"
+                      }
                     >
                       {aiLoading ? "Genererer…" : "Generer"}
                     </Button>
