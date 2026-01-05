@@ -8,12 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -66,7 +61,11 @@ export default function AssessmentResults() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [selectedRiskLevel, setSelectedRiskLevel] = useState("all");
-  const [expandedSessions, setExpandedSessions] = useState(new Set());
+
+  // ✅ For 500 ansatte: sort + paging
+  const [sortMode, setSortMode] = useState("alpha"); // "alpha" | "latest"
+  const [page, setPage] = useState(1);
+  const pageSize = 25;
 
   const [selectedProfileUserId, setSelectedProfileUserId] = useState(null);
   const [selectedProfileDept, setSelectedProfileDept] = useState(null);
@@ -82,9 +81,9 @@ export default function AssessmentResults() {
     if (profileSession?.ai_summary) {
       setAiSuggestion(profileSession.ai_summary);
     } else {
-      setAiSuggestion(""); // tom hvis det ikke finnes lagret
+      setAiSuggestion("");
     }
-  }, [profileSession?.id]); // bevisst: kun når session byttes
+  }, [profileSession?.id]);
 
   // Rens og formater AI-tekst: fjern stjerner/markdown og behold maks 3 tiltak (én pr linje)
   const formatSuggestion = React.useCallback((raw) => {
@@ -126,7 +125,7 @@ export default function AssessmentResults() {
     queryFn: () => base44.entities.QuestionBank.list("order"),
   });
 
-  // Brukere (kun admin kan liste brukere i Base44)
+  // Brukere (kun admin/hr kan liste brukere)
   const { data: users = [] } = useQuery({
     queryKey: ["users"],
     queryFn: () => base44.entities.User.list(),
@@ -143,26 +142,25 @@ export default function AssessmentResults() {
   const accessFilteredSessions = React.useMemo(() => {
     if (!currentUser) return [];
     if (isAdmin) return sessions;
-    if (userDepartment)
-      return sessions.filter(
-        (s) => (s.department_name || s.department) === userDepartment
-      );
+    if (userDepartment) {
+      return sessions.filter((s) => (s.department_name || s.department) === userDepartment);
+    }
     return sessions.filter((s) => s.created_by === currentUser.email);
   }, [sessions, currentUser, isAdmin, userDepartment]);
 
-  // 🧹 Filters
-  const filteredSessions = accessFilteredSessions.filter((session) => {
-    const deptName = session.department_name || session.department;
-    const matchesDept =
-      selectedDepartment === "all" || deptName === selectedDepartment;
-    const matchesRisk =
-      selectedRiskLevel === "all" || session.risk_level === selectedRiskLevel;
-    const matchesSearch =
-      !searchTerm ||
-      deptName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      session.anonymous_id?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesDept && matchesRisk && matchesSearch && session.status === "completed";
-  });
+  // 🧹 Filters (vis kun completed)
+  const filteredSessions = React.useMemo(() => {
+    return accessFilteredSessions.filter((session) => {
+      const deptName = session.department_name || session.department;
+      const matchesDept = selectedDepartment === "all" || deptName === selectedDepartment;
+      const matchesRisk = selectedRiskLevel === "all" || session.risk_level === selectedRiskLevel;
+
+      const haystack = `${deptName || ""} ${session.anonymous_id || ""} ${session.created_by || ""}`.toLowerCase();
+      const matchesSearch = !searchTerm || haystack.includes(searchTerm.toLowerCase());
+
+      return matchesDept && matchesRisk && matchesSearch && session.status === "completed";
+    });
+  }, [accessFilteredSessions, selectedDepartment, selectedRiskLevel, searchTerm]);
 
   // Map for å finne brukernavn fra respondent_user_id
   const userMap = React.useMemo(() => {
@@ -173,41 +171,77 @@ export default function AssessmentResults() {
     return m;
   }, [users]);
 
-  // Flate liste over respondenter (én rad per person, seneste sesjon)
+  const riskLevelColors = {
+    low: "bg-emerald-100 text-emerald-700",
+    moderate: "bg-amber-100 text-amber-700",
+    high: "bg-red-100 text-red-700",
+    unknown: "bg-slate-100 text-slate-700",
+  };
+
+  const riskLevelLabels = {
+    low: "Lav",
+    moderate: "Moderat",
+    high: "Høy",
+    unknown: "Ukjent",
+  };
+
+  // ✅ Respondenter: dedupe riktig + sort + risk + latest session
   const respondents = React.useMemo(() => {
-    const byUser = new Map();
-    const nameFromEmail = (email) =>
-      email ? String(email).split("@")[0] : "Anonym bruker";
+    const byPerson = new Map();
+    const normalizeName = (s) => (s || "").toString().trim();
+    const nameFromEmail = (email) => (email ? String(email).split("@")[0] : "Anonym bruker");
 
     for (const s of filteredSessions) {
-      const key = s.respondent_user_id || s.anonymous_id || s.created_by;
+      // Stabil nøkkel: userId -> email -> anonymous (siste utvei)
+      const key = s.respondent_user_id || s.created_by || s.anonymous_id;
+      if (!key) continue;
+
       const u = userMap[s.respondent_user_id];
       const display =
-        s.respondent_display_name ||
-        u?.full_name ||
-        u?.email ||
-        s.created_by ||
+        normalizeName(s.respondent_display_name) ||
+        normalizeName(u?.full_name) ||
+        normalizeName(u?.email) ||
+        normalizeName(s.created_by) ||
         nameFromEmail(s.created_by);
 
       const dept = s.department_name || s.department || "Ikke oppgitt";
-      const ts = new Date(
-        s.created_at || s.completed_at || s.created_date || 0
-      ).getTime();
+      const ts = new Date(s.completed_at || s.created_at || s.created_date || 0).getTime();
 
-      const existing = byUser.get(key);
+      const existing = byPerson.get(key);
       if (!existing || ts > existing.ts) {
-        byUser.set(key, {
+        byPerson.set(key, {
+          key,
           userId: s.respondent_user_id || null,
           display,
           department: dept,
           ts,
           session: s,
+          risk_level: s.risk_level || "unknown",
         });
       }
     }
 
-    return Array.from(byUser.values()).sort((a, b) => b.ts - a.ts);
-  }, [filteredSessions, userMap]);
+    const arr = Array.from(byPerson.values());
+
+    if (sortMode === "latest") {
+      arr.sort((a, b) => b.ts - a.ts);
+    } else {
+      arr.sort((a, b) => (a.display || "").localeCompare((b.display || ""), "nb", { sensitivity: "base" }));
+    }
+
+    return arr;
+  }, [filteredSessions, userMap, sortMode]);
+
+  // Paging
+  const totalPages = Math.max(1, Math.ceil(respondents.length / pageSize));
+  const pagedRespondents = React.useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return respondents.slice(start, start + pageSize);
+  }, [respondents, page]);
+
+  React.useEffect(() => {
+    setPage(1);
+  }, [searchTerm, selectedDepartment, selectedRiskLevel, sortMode]);
 
   const openProfile = (userId, deptName, fallbackSession, displayName) => {
     setSelectedProfileUserId(userId || null);
@@ -223,10 +257,10 @@ export default function AssessmentResults() {
         )
         .sort(
           (a, b) =>
-            new Date(b.created_at || b.completed_at) -
-            new Date(a.created_at || a.completed_at)
+            new Date(b.created_at || b.completed_at || b.created_date || 0) -
+            new Date(a.created_at || a.completed_at || a.created_date || 0)
         );
-      setProfileSession(userSessions[0] || null);
+      setProfileSession(userSessions[0] || fallbackSession || null);
     } else {
       setProfileSession(fallbackSession || null);
     }
@@ -237,8 +271,6 @@ export default function AssessmentResults() {
   /** MANUELL generering: AI skal IKKE auto-kjøre når profil åpnes */
   const generateAISuggestion = async ({ force = false } = {}) => {
     if (!profileSession) return;
-
-    // Ikke generer på nytt hvis allerede lagret (med mindre force=true)
     if (!force && profileSession.ai_summary) return;
 
     setAiLoading(true);
@@ -261,7 +293,6 @@ export default function AssessmentResults() {
       const toStr = typeof res === "string" ? res : JSON.stringify(res);
       const cleaned = formatSuggestion(toStr);
 
-      // Lagre på sesjonen => da blir det IKKE generert på nytt neste gang
       await base44.entities.AssessmentSession.update(profileSession.id, {
         ai_summary: cleaned,
       });
@@ -286,26 +317,11 @@ export default function AssessmentResults() {
     }
   };
 
-  const toggleExpanded = (sessionId) => {
-    const newExpanded = new Set(expandedSessions);
-    if (newExpanded.has(sessionId)) newExpanded.delete(sessionId);
-    else newExpanded.add(sessionId);
-    setExpandedSessions(newExpanded);
-  };
-
-  const riskLevelColors = {
-    low: "bg-emerald-100 text-emerald-700",
-    moderate: "bg-amber-100 text-amber-700",
-    high: "bg-red-100 text-red-700",
-    unknown: "bg-slate-100 text-slate-700",
-  };
-
-  const riskLevelLabels = {
-    low: "Lav",
-    moderate: "Moderat",
-    high: "Høy",
-    unknown: "Ukjent",
-  };
+  // Stats teller (for admin/hr kan du velge å bruke accessFilteredSessions istedenfor sessions)
+  const completedCount = sessions.filter((s) => s.status === "completed").length;
+  const highCount = sessions.filter((s) => s.risk_level === "high").length;
+  const moderateCount = sessions.filter((s) => s.risk_level === "moderate").length;
+  const lowCount = sessions.filter((s) => s.risk_level === "low").length;
 
   if (loadingSessions) {
     return (
@@ -331,33 +347,25 @@ export default function AssessmentResults() {
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>Totalt fullførte</CardDescription>
-            <CardTitle className="text-3xl">
-              {sessions.filter((s) => s.status === "completed").length}
-            </CardTitle>
+            <CardTitle className="text-3xl">{completedCount}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>Høy risiko</CardDescription>
-            <CardTitle className="text-3xl text-red-600">
-              {sessions.filter((s) => s.risk_level === "high").length}
-            </CardTitle>
+            <CardTitle className="text-3xl text-red-600">{highCount}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>Moderat risiko</CardDescription>
-            <CardTitle className="text-3xl text-amber-600">
-              {sessions.filter((s) => s.risk_level === "moderate").length}
-            </CardTitle>
+            <CardTitle className="text-3xl text-amber-600">{moderateCount}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>Lav risiko</CardDescription>
-            <CardTitle className="text-3xl text-emerald-600">
-              {sessions.filter((s) => s.risk_level === "low").length}
-            </CardTitle>
+            <CardTitle className="text-3xl text-emerald-600">{lowCount}</CardTitle>
           </CardHeader>
         </Card>
       </div>
@@ -365,11 +373,11 @@ export default function AssessmentResults() {
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
-                placeholder="Søk etter avdeling eller ID..."
+                placeholder="Søk etter avdeling, e-post eller ID..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9"
@@ -401,67 +409,123 @@ export default function AssessmentResults() {
                 <SelectItem value="low">Lav risiko</SelectItem>
               </SelectContent>
             </Select>
+
+            <Select value={sortMode} onValueChange={setSortMode}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sorter" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="alpha">Alfabetisk (A–Å)</SelectItem>
+                <SelectItem value="latest">Siste svar først</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
 
+      {/* Respondents */}
       <Card>
         <CardHeader>
           <CardTitle>Ansatte som har svart</CardTitle>
           <CardDescription>
-            Klikk på en ansatt for å se svar og AI-forslag
+            Sorter alfabetisk eller etter siste svar. Klikk på en ansatt for å se svar og AI-forslag.
           </CardDescription>
         </CardHeader>
         <CardContent>
           {respondents.length === 0 ? (
             <p className="text-sm text-slate-500">Ingen svar i utvalget.</p>
           ) : (
-            <div className="space-y-2">
-              {respondents.map((r, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => openProfile(r.userId, r.department, r.session, r.display)}
-                  className="w-full flex items-center justify-between p-3 rounded-lg border transition bg-white hover:bg-slate-50 border-slate-200"
-                  title="Åpne profil"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-slate-100 grid place-items-center text-slate-600 text-xs">
-                      {r.display?.[0] || "A"}
-                    </div>
-                    <div className="text-left">
-                      <p className="text-sm font-medium text-slate-900">{r.display}</p>
-                      <p className="text-xs text-slate-500">{r.department}</p>
-                    </div>
-                  </div>
-                  <span className="text-xs text-slate-400">Vis profil</span>
-                </button>
-              ))}
-            </div>
+            <>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs text-slate-500">
+                  Viser {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, respondents.length)} av{" "}
+                  {respondents.length}
+                </p>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page <= 1}
+                  >
+                    Forrige
+                  </Button>
+                  <span className="text-xs text-slate-500">
+                    Side {page} / {totalPages}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page >= totalPages}
+                  >
+                    Neste
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                {pagedRespondents.map((r) => {
+                  const lastDate =
+                    r.session?.completed_at || r.session?.created_at || r.session?.created_date;
+
+                  return (
+                    <button
+                      key={r.key}
+                      type="button"
+                      onClick={() => openProfile(r.userId, r.department, r.session, r.display)}
+                      className="w-full flex items-center justify-between p-3 rounded-lg border transition bg-white hover:bg-slate-50 border-slate-200"
+                      title="Åpne profil"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-full bg-slate-100 grid place-items-center text-slate-700 text-xs font-semibold">
+                          {(r.display?.[0] || "A").toUpperCase()}
+                        </div>
+
+                        <div className="text-left">
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium text-slate-900">{r.display}</p>
+                            <Badge className={riskLevelColors[r.risk_level] || riskLevelColors.unknown}>
+                              {(riskLevelLabels[r.risk_level] || "Ukjent")} risiko
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-slate-500">
+                            {r.department}
+                            {lastDate ? ` • ${format(new Date(lastDate), "dd. MMM yyyy", { locale: nb })}` : ""}
+                          </p>
+                        </div>
+                      </div>
+
+                      <span className="text-xs text-slate-400">Vis profil</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
 
+      {/* Profile dialog */}
       <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {(selectedProfileName ||
-                userMap[selectedProfileUserId]?.full_name ||
-                "Ansatt")}{" "}
-              — {selectedProfileDept || ""}
+              {(selectedProfileName || userMap[selectedProfileUserId]?.full_name || "Ansatt")} —{" "}
+              {selectedProfileDept || ""}
             </DialogTitle>
           </DialogHeader>
 
           {profileSession ? (
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <Badge className={riskLevelColors[profileSession.risk_level]}>
-                  {riskLevelLabels[profileSession.risk_level]} risiko
+                <Badge className={riskLevelColors[profileSession.risk_level] || riskLevelColors.unknown}>
+                  {riskLevelLabels[profileSession.risk_level] || "Ukjent"} risiko
                 </Badge>
                 <span className="text-xs text-slate-500">
                   {format(
-                    new Date(profileSession.created_at || profileSession.completed_at),
+                    new Date(profileSession.created_at || profileSession.completed_at || profileSession.created_date),
                     "dd. MMM yyyy, HH:mm",
                     { locale: nb }
                   )}
@@ -472,10 +536,7 @@ export default function AssessmentResults() {
                 {profileSession.answered_questions?.map((qa, idx) => {
                   const q = questions.find((qu) => qu.question_id === qa.question_id);
                   return (
-                    <div
-                      key={idx}
-                      className="bg-white rounded-lg p-3 border border-slate-200"
-                    >
+                    <div key={idx} className="bg-white rounded-lg p-3 border border-slate-200">
                       <p className="text-sm font-medium text-slate-900">
                         {q?.text || qa.question_id}
                       </p>
@@ -504,7 +565,6 @@ export default function AssessmentResults() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    {/* Generer kun manuelt (ikke auto) */}
                     <Button
                       size="sm"
                       variant="outline"
@@ -520,7 +580,6 @@ export default function AssessmentResults() {
                       {aiLoading ? "Genererer…" : "Generer"}
                     </Button>
 
-                    {/* Valgfri: Regenerer (kun hvis man vil overskrive, og kun for de som kan edit) */}
                     {canEdit && profileSession?.ai_summary && (
                       <Button
                         size="sm"
@@ -539,7 +598,6 @@ export default function AssessmentResults() {
                       </Button>
                     )}
 
-                    {/* Lagre (for HR/leder/admin) */}
                     {canEdit && (
                       <Button
                         size="sm"
