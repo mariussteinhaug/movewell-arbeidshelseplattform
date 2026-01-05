@@ -7,7 +7,6 @@ import EmployeeProfile from './pages/EmployeeProfile';
 import Landing from './pages/Landing';
 import MyMessages from './pages/MyMessages';
 import Profile from './pages/Profile';
-import Recommendations from './pages/Recommendations';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import TrendAnalysis from './pages/TrendAnalysis';
@@ -24,7 +23,6 @@ export const PAGES = {
     "Landing": Landing,
     "MyMessages": MyMessages,
     "Profile": Profile,
-    "Recommendations": Recommendations,
     "Reports": Reports,
     "Settings": Settings,
     "TrendAnalysis": TrendAnalysis,

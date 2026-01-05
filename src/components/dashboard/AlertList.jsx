@@ -49,7 +49,7 @@ export default function AlertList({ alerts }) {
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-slate-900">Varsler</h3>
         <Link
-          to={createPageUrl("Recommendations")}
+          to={createPageUrl("AssessmentResults")}
           className="text-sm text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-1"
         >
           Se alle
@@ -64,7 +64,7 @@ export default function AlertList({ alerts }) {
 
           // Hvis du senere får en konkret ID på anbefaling/tiltak,
           // kan du linke direkte til detail-siden her.
-          const rowLink = createPageUrl("Recommendations");
+          const rowLink = createPageUrl("AssessmentResults");
 
           return (
             <Link
