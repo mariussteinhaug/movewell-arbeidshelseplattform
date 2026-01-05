@@ -71,6 +71,7 @@ export default function AssessmentResults() {
   const [sortMode, setSortMode] = useState("alpha"); // "alpha" | "latest"
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
+  const [viewMode, setViewMode] = useState("unique"); // 'unique' | 'all'
 
   // profil/dialog
   const [selectedProfileUserId, setSelectedProfileUserId] = useState(null);
@@ -249,17 +250,46 @@ export default function AssessmentResults() {
     return arr;
   }, [filteredSessions, userMap, sortMode]);
 
+  // Items to render depending on view mode
+  const sessionItems = useMemo(() => {
+    return filteredSessions.map((s) => {
+      const u = userMap[s.respondent_user_id];
+      const display = (
+        s.respondent_display_name ||
+        u?.full_name ||
+        u?.email ||
+        s.created_by ||
+        "Anonym bruker"
+      ).toString().trim();
+
+      return {
+        key: s.id,
+        userId: s.respondent_user_id || null,
+        display,
+        department: s.department_name || s.department || "Ikke oppgitt",
+        ts: new Date(s.completed_at || s.created_at || s.created_date || 0).getTime(),
+        session: s,
+        risk_level: s.risk_level || "unknown",
+      };
+    });
+  }, [filteredSessions, userMap]);
+
+  const listItems = useMemo(
+    () => (viewMode === "all" ? sessionItems : respondents),
+    [viewMode, sessionItems, respondents]
+  );
+
   // ✅ paging calculations
-  const totalPages = Math.max(1, Math.ceil(respondents.length / pageSize));
-  const pagedRespondents = useMemo(() => {
+  const totalPages = Math.max(1, Math.ceil(listItems.length / pageSize));
+  const pagedItems = useMemo(() => {
     const start = (page - 1) * pageSize;
-    return respondents.slice(start, start + pageSize);
-  }, [respondents, page, pageSize]);
+    return listItems.slice(start, start + pageSize);
+  }, [listItems, page, pageSize]);
 
   // reset to page 1 when filters/sort/pageSize changes
   useEffect(() => {
     setPage(1);
-  }, [searchTerm, selectedDepartment, selectedRiskLevel, sortMode, pageSize]);
+  }, [searchTerm, selectedDepartment, selectedRiskLevel, sortMode, pageSize, viewMode]);
 
   // open profile
   const openProfile = (userId, deptName, fallbackSession, displayName) => {
@@ -460,7 +490,7 @@ export default function AssessmentResults() {
             </div>
 
             <p className="text-xs text-slate-500">
-              Totalt: {respondents.length}
+              Totalt: {listItems.length}
             </p>
           </div>
         </CardContent>
@@ -476,14 +506,14 @@ export default function AssessmentResults() {
         </CardHeader>
 
         <CardContent>
-          {respondents.length === 0 ? (
+          {listItems.length === 0 ? (
             <p className="text-sm text-slate-500">Ingen svar i utvalget.</p>
           ) : (
             <>
               {/* Paging controls */}
               <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
                 <p className="text-xs text-slate-500">
-                  Viser {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, respondents.length)} av {respondents.length}
+                  Viser {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, listItems.length)} av {listItems.length}
                 </p>
 
                 <div className="flex items-center gap-2">
@@ -528,7 +558,7 @@ export default function AssessmentResults() {
               </div>
 
               <div className="space-y-2">
-                {pagedRespondents.map((r) => {
+                {pagedItems.map((r) => {
                   const lastDate =
                     r.session?.completed_at ||
                     r.session?.created_at ||
