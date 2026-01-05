@@ -26,7 +26,7 @@ export default function MyMessages() {
     queryFn: async () => {
       const user = await base44.auth.me();
       const messages = await base44.entities.Message.list('-created_date', 100);
-      return messages.filter(m => m.recipient_email === user.email);
+      return messages.filter(m => m.recipient_user_id === user.id);
     }
   });
 
@@ -77,6 +77,42 @@ export default function MyMessages() {
     }
   });
 
+  const forwardToAccommodation = useMutation({
+    mutationFn: async (message) => {
+      const orgId = currentUser?.organization_id || 'default';
+      const now = new Date().toISOString();
+
+      let session = null;
+      if (message?.related_assessment_session_id) {
+        const sessions = await base44.entities.AssessmentSession.filter({ id: message.related_assessment_session_id });
+        session = Array.isArray(sessions) ? sessions[0] : sessions;
+      }
+
+      const deptId = message?.recipient_department_id || session?.department_id || currentUser?.department_id || 'unknown';
+      const employeeId = session?.respondent_user_id || currentUser?.id;
+      const risk = session?.risk_level === 'high' ? 'high' : session?.risk_level === 'moderate' ? 'moderate' : 'low';
+
+      return base44.entities.Accommodation.create({
+        organization_id: orgId,
+        employee_user_id: employeeId,
+        department_id: deptId,
+        accommodation_type: 'Oppfølging fra kartlegging',
+        description: message?.content || 'Oppfølging basert på melding',
+        status: 'planlagt',
+        priority: 'normal',
+        responsible_user_id: currentUser.id,
+        visibility: 'manager_and_hr',
+        risk_level: risk,
+        related_assessment_session_id: message?.related_assessment_session_id,
+        created_at: now,
+        updated_at: now,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['accommodations'] });
+    }
+  });
+
   const handleOpenMessage = (message) => {
     setSelectedMessage(message);
     if (message.status === 'ulest') {
@@ -102,6 +138,8 @@ export default function MyMessages() {
     normal: 'bg-blue-100 text-blue-700',
     høy: 'bg-red-100 text-red-700'
   };
+
+  const canForward = ['manager', 'hr', 'admin'].includes(String(currentUser?.role || '').toLowerCase());
 
   const unreadCount = myMessages.filter(m => m.status === 'ulest').length;
 
@@ -297,13 +335,27 @@ export default function MyMessages() {
                 </div>
 
                 {/* Message Content */}
-                <div className="prose prose-sm max-w-none">
-                  <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
-                    {selectedMessage.content}
-                  </p>
-                </div>
+                 <div className="prose prose-sm max-w-none">
+                   <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
+                     {selectedMessage.content}
+                   </p>
+                 </div>
 
-                {/* Replies */}
+                 {canForward && (
+                   <div>
+                     <Button
+                       variant="outline"
+                       className="gap-2"
+                       onClick={() => forwardToAccommodation.mutate(selectedMessage)}
+                       disabled={forwardToAccommodation?.isPending}
+                     >
+                       <SettingsIcon className="h-4 w-4" />
+                       Send til tilrettelegging
+                     </Button>
+                   </div>
+                 )}
+
+                 {/* Replies */}
                 {selectedMessage.replies?.length > 0 && (
                   <div className="space-y-3 pt-4 border-t border-slate-200">
                     <p className="text-sm font-medium text-slate-900">Tidligere svar:</p>

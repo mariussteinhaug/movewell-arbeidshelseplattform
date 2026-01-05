@@ -146,7 +146,8 @@ export default function Assessment() {
           ? "normal"
           : "lav";
 
-      const messageContent = `AI-forslag til tiltak for ${selectedDepartment || dept?.name || "avdeling"}:\n\n${recommendationsText}\n\nOpprettet: ${new Date().toLocaleString("nb-NO")}`;
+      const answersText = answeredData.slice(0, 100).map((it, idx) => `${idx + 1}. ${it.question}: ${it.answer}`).join("\n");
+      const messageContent = `AI-forslag til tiltak for ${selectedDepartment || dept?.name || "avdeling"}:\n\n${recommendationsText}\n\nSvar:\n${answersText}\n\nOpprettet: ${new Date().toLocaleString("nb-NO")}`;
 
       // Opprett ActionRecommendation per punkt slik at de vises under “Anbefalinger”
       const lines = recommendationsText
@@ -179,32 +180,7 @@ export default function Assessment() {
         );
       }
 
-      // Opprett automatisk tilrettelegging for moderat/høy risiko
-      if (["high", "moderate"].includes(String(assessment?.risk_level))) {
-        const days = assessment?.risk_level === "high" ? 14 : 30;
-        const due = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
-        const accPriority = assessment?.risk_level === "high" ? "hoy" : "normal";
-        const desc = lines.length ? lines.slice(0, 3).map((l) => `• ${l}`).join("\n") : (assessment?.risk_signals || []).join(", ");
-        await base44.entities.Accommodation.create({
-          organization_id: currentUser?.organization_id || "default",
-          employee_user_id: currentUser.id,
-          employee_display_name: currentUser.full_name,
-          department_id: dept?.id || "unknown",
-          department_name: selectedDepartment || dept?.name || "Ikke oppgitt",
-          accommodation_type: "AI-foreslått oppfølging",
-          description: `Basert på kartlegging (${assessment?.risk_level}).\n${desc}`,
-          status: "planlagt",
-          priority: accPriority,
-          responsible_user_id: dept?.manager_user_id || currentUser.id,
-          responsible_display_name: dept?.manager_display_name || undefined,
-          visibility: "manager_and_hr",
-          risk_level: assessment?.risk_level === "high" ? "high" : "moderate",
-          related_assessment_session_id: sessionId,
-          due_date: due,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
-      }
+      // (Autotilrettelegging fjernet – leder kan videresende fra Mine meldinger)
 
       // Opprett in-app melding synlig for leder og HR i avdelingen (broadcast)
       await base44.entities.Message.create({
@@ -222,6 +198,25 @@ export default function Assessment() {
         related_assessment_session_id: sessionId,
         sent_at: new Date().toISOString(),
       });
+
+      // Direktemelding til avdelingsleder
+      if (dept?.manager_user_id) {
+        await base44.entities.Message.create({
+          organization_id: currentUser?.organization_id || "default",
+          thread_id: `assessment_${sessionId}`,
+          type: "direct",
+          category: "oppfolging",
+          priority,
+          subject: `Ny kartlegging mottatt – ${selectedDepartment || dept?.name || ""}`,
+          content: messageContent,
+          sender_user_id: currentUser.id,
+          sender_display_name: currentUser.full_name,
+          recipient_user_id: dept.manager_user_id,
+          related_assessment_session_id: sessionId,
+          visibility: "manager_and_hr",
+          sent_at: new Date().toISOString(),
+        });
+      }
 
       console.log("✅ Varsel opprettet + tilrettelegging opprettet ved behov", {
         department: dept?.name,
