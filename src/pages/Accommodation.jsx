@@ -193,6 +193,37 @@ export default function Accommodation() {
     );
   }
 
+  // Enkel visning: kun liste over saker opprettet fra Mine meldinger
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Tilrettelegging</h1>
+        <p className="text-slate-500 mt-1">Saker opprettes fra Mine meldinger og vises her.</p>
+      </div>
+      <Card>
+        <CardContent className="pt-6">
+          {filteredAccommodations.length === 0 ? (
+            <p className="text-slate-600">Ingen saker ennå.</p>
+          ) : (
+            <div className="space-y-3">
+              {filteredAccommodations.map((item) => (
+                <div key={item.id} className="p-4 rounded-lg border border-slate-200 bg-white">
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium text-slate-900">{item.accommodation_type || 'Tilrettelegging'}</p>
+                    <span className="text-xs text-slate-500">{item.created_at ? format(new Date(item.created_at), 'dd. MMM yyyy', { locale: nb }) : ''}</span>
+                  </div>
+                  <p className="text-sm text-slate-700 mt-1">{item.description}</p>
+                  {item.notes && <p className="text-xs text-slate-500 mt-2 italic">Notat: {item.notes}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  // Legacy UI under (ikke i bruk)
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">

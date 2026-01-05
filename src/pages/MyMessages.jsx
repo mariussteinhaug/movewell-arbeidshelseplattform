@@ -15,6 +15,7 @@ export default function MyMessages() {
   const queryClient = useQueryClient();
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [replyText, setReplyText] = useState('');
+  const [forwardNote, setForwardNote] = useState('');
 
   const { data: currentUser } = useQuery({
     queryKey: ['current-user'],
@@ -118,7 +119,7 @@ export default function MyMessages() {
   });
 
   const forwardToAccommodation = useMutation({
-    mutationFn: async (message) => {
+    mutationFn: async ({ message, note }) => {
       const orgId = currentUser?.organization_id || 'default';
       const now = new Date().toISOString();
 
@@ -132,24 +133,30 @@ export default function MyMessages() {
       const employeeId = session?.respondent_user_id || currentUser?.id;
       const risk = session?.risk_level === 'high' ? 'high' : session?.risk_level === 'moderate' ? 'moderate' : 'low';
 
+      const description = ((session?.ai_summary) || (message?.content) || 'Oppfølging basert på melding') + (note ? `\n\nNotat: ${note}` : '');
+
       return base44.entities.Accommodation.create({
         organization_id: orgId,
         employee_user_id: employeeId,
+        employee_display_name: session?.respondent_display_name,
         department_id: deptId,
-        accommodation_type: 'Oppfølging fra kartlegging',
-        description: message?.content || 'Oppfølging basert på melding',
+        department_name: session?.department_name,
+        accommodation_type: message?.category ? `Tilrettelegging – ${message.category}` : 'Tilrettelegging fra melding',
+        description,
         status: 'planlagt',
         priority: 'normal',
         responsible_user_id: currentUser.id,
         visibility: 'manager_and_hr',
         risk_level: risk,
         related_assessment_session_id: message?.related_assessment_session_id,
+        notes: note || '',
         created_at: now,
         updated_at: now,
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accommodations'] });
+      setForwardNote('');
     }
   });
 
@@ -367,60 +374,35 @@ export default function MyMessages() {
                   </>
                 )}
 
-                {/* Replies */}
-                {selectedMessage.replies?.length > 0 && (
-                  <div className="space-y-3 pt-4 border-t border-slate-200">
-                    <p className="text-sm font-medium text-slate-900">Tidligere svar:</p>
-                    {selectedMessage.replies.map((reply, idx) => (
-                      <motion.div
-                        key={idx}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-slate-50 rounded-lg p-4 border border-slate-200"
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="text-sm font-medium text-slate-900">
-                            {reply.sender_name}
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {format(new Date(reply.timestamp), 'dd. MMM yyyy, HH:mm', { locale: nb })}
-                          </p>
-                        </div>
-                        <p className="text-sm text-slate-700 whitespace-pre-wrap">
-                          {reply.content}
-                        </p>
-                      </motion.div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Reply Form */}
+                {/* Tilrettelegging - notat og send */}
                 <div className="space-y-3 pt-4 border-t border-slate-200">
-                  <p className="text-sm font-medium text-slate-900">Send svar:</p>
+                  <p className="text-sm font-medium text-slate-900">Notat til tilrettelegging (valgfritt)</p>
                   <Textarea
-                    value={replyText}
-                    onChange={(e) => setReplyText(e.target.value)}
-                    placeholder="Skriv ditt svar her..."
-                    rows={4}
+                    value={forwardNote}
+                    onChange={(e) => setForwardNote(e.target.value)}
+                    placeholder="Skriv et kort notat som blir med i saken..."
+                    rows={3}
                     className="resize-none"
                   />
-                  <Button
-                    onClick={handleSendReply}
-                    disabled={!replyText.trim() || sendReply.isPending}
-                    className="bg-emerald-600 hover:bg-emerald-700"
-                  >
-                    {sendReply.isPending ? (
-                      <>
-                        <Send className="h-4 w-4 mr-2 animate-pulse" />
-                        Sender...
-                      </>
-                    ) : (
-                      <>
-                        <Send className="h-4 w-4 mr-2" />
-                        Send svar
-                      </>
-                    )}
-                  </Button>
+                  {canForward && (
+                    <Button
+                      onClick={() => forwardToAccommodation.mutate({ message: selectedMessage, note: forwardNote })}
+                      disabled={forwardToAccommodation.isPending}
+                      className="bg-emerald-600 hover:bg-emerald-700 gap-2"
+                    >
+                      {forwardToAccommodation.isPending ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                          Sender...
+                        </>
+                      ) : (
+                        <>
+                          <SettingsIcon className="h-4 w-4" />
+                          Send til tilrettelegging
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </div>
               </div>
             )}
