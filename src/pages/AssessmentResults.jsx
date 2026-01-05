@@ -91,6 +91,8 @@ export default function AssessmentResults() {
   const pageSize = 25;
   const [page, setPage] = useState(1);
   const pageSize = 25;
+  const [page, setPage] = useState(1);
+  const pageSize = 25;
 
   const [selectedProfileUserId, setSelectedProfileUserId] = useState(null);
   const [selectedProfileDept, setSelectedProfileDept] = useState(null);
