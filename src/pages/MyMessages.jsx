@@ -21,6 +21,27 @@ export default function MyMessages() {
     queryFn: () => base44.auth.me()
   });
 
+  // Sessions og spørsmål for å vise navn + svar
+  const { data: sessionsForMsgs = [] } = useQuery({
+    queryKey: ['messages-sessions'],
+    queryFn: () => base44.entities.AssessmentSession.list('-created_date', 500)
+  });
+  const sessionMap = React.useMemo(() => {
+    const m = {};
+    (sessionsForMsgs || []).forEach((s) => { m[s.id] = s; });
+    return m;
+  }, [sessionsForMsgs]);
+
+  const { data: questions = [] } = useQuery({
+    queryKey: ['questions'],
+    queryFn: () => base44.entities.QuestionBank.list('order')
+  });
+  const questionMap = React.useMemo(() => {
+    const m = {};
+    (questions || []).forEach((q) => { m[q.question_id] = q.text; });
+    return m;
+  }, [questions]);
+
   const { data: myMessages = [], isLoading } = useQuery({
     queryKey: ['my-messages'],
     queryFn: async () => {
@@ -179,28 +200,7 @@ export default function MyMessages() {
         </Card>
       )}
 
-      {departmentAlerts.length > 0 && (
-        <Card className="border-slate-200 bg-slate-50/60">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Info className="h-5 w-5 text-slate-400" />
-              Varsler til din avdeling
-            </CardTitle>
-            <CardDescription>System- og AI-meldinger som gjelder din avdeling</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {departmentAlerts.map((msg) => (
-              <div key={msg.id} className="p-4 rounded-lg border border-slate-200 bg-white">
-                <p className="font-medium text-slate-900">{msg.subject || 'Varsel'}</p>
-                <p className="text-xs text-slate-500 mb-2">
-                  {format(new Date(msg.sent_at), 'dd. MMM yyyy, HH:mm', { locale: nb })}
-                </p>
-                <p className="text-sm text-slate-700 whitespace-pre-wrap">{msg.content}</p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Message List */}
@@ -228,7 +228,9 @@ export default function MyMessages() {
                   </div>
                 ) : (
                   myMessages.map((msg) => {
-                    const Icon = categoryIcons[msg.category] || MessageSquare;
+                    const session = sessionMap[msg.related_assessment_session_id];
+                    const displayName = session?.respondent_display_name || 'Anonym';
+                    const timeStr = msg?.sent_at ? format(new Date(msg.sent_at), 'dd. MMM yyyy, HH:mm', { locale: nb }) : '';
                     return (
                       <button
                         key={msg.id}
@@ -236,28 +238,15 @@ export default function MyMessages() {
                         className={`w-full text-left p-3 rounded-lg border transition-all ${
                           selectedMessage?.id === msg.id
                             ? 'border-emerald-500 bg-emerald-50'
-                            : msg.status === 'ulest'
-                            ? 'border-slate-300 bg-white hover:bg-slate-50'
-                            : 'border-slate-200 bg-slate-50/50 hover:bg-slate-50'
+                            : 'border-slate-200 bg-white hover:bg-slate-50'
                         }`}
                       >
-                        <div className="flex items-center gap-2 mb-1">
-                          <Icon className="h-4 w-4 text-slate-400" />
-                          {msg.status === 'ulest' && (
-                            <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                          )}
-                          <p className={`font-medium text-sm flex-1 truncate ${
-                            msg.status === 'ulest' ? 'text-slate-900' : 'text-slate-600'
-                          }`}>
-                            {msg.subject}
+                        <div className="flex items-center justify-between gap-3">
+                          <p className={`font-medium text-sm flex-1 truncate ${msg.status === 'ulest' ? 'text-slate-900' : 'text-slate-700'}`}>
+                            {displayName}
                           </p>
+                          <p className="text-xs text-slate-400 whitespace-nowrap">{timeStr}</p>
                         </div>
-                        <p className="text-xs text-slate-500">
-                         Fra: {msg.sender_name || msg.sender_display_name || 'System'}
-                        </p>
-                        <p className="text-xs text-slate-400 mt-1">
-                          {format(new Date(msg.sent_at), 'dd. MMM yyyy', { locale: nb })}
-                        </p>
                       </button>
                     );
                   })
@@ -266,7 +255,9 @@ export default function MyMessages() {
 
               <TabsContent value="ulest" className="space-y-2 mt-4">
                 {myMessages.filter(m => m.status === 'ulest').map((msg) => {
-                  const Icon = categoryIcons[msg.category] || MessageSquare;
+                  const session = sessionMap[msg.related_assessment_session_id];
+                  const displayName = session?.respondent_display_name || 'Anonym';
+                  const timeStr = msg?.sent_at ? format(new Date(msg.sent_at), 'dd. MMM yyyy, HH:mm', { locale: nb }) : '';
                   return (
                     <button
                       key={msg.id}
@@ -274,20 +265,16 @@ export default function MyMessages() {
                       className={`w-full text-left p-3 rounded-lg border transition-all ${
                         selectedMessage?.id === msg.id
                           ? 'border-emerald-500 bg-emerald-50'
-                          : 'border-slate-300 bg-white hover:bg-slate-50'
+                          : 'border-slate-200 bg-white hover:bg-slate-50'
                       }`}
                     >
-                      <div className="flex items-center gap-2 mb-1">
-                        <Icon className="h-4 w-4 text-slate-400" />
-                        <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                        <p className="font-medium text-sm flex-1 truncate">
-                          {msg.subject}
-                        </p>
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="font-medium text-sm flex-1 truncate">{displayName}</p>
+                        <p className="text-xs text-slate-400 whitespace-nowrap">{timeStr}</p>
                       </div>
-                      <p className="text-xs text-slate-500">Fra: {msg.sender_name}</p>
                     </button>
                   );
-                })}
+                })
               </TabsContent>
             </Tabs>
           </CardContent>
@@ -297,7 +284,7 @@ export default function MyMessages() {
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="text-lg">
-              {selectedMessage ? selectedMessage.subject : 'Velg en melding'}
+              {selectedMessage ? (sessionMap[selectedMessage.related_assessment_session_id]?.respondent_display_name || 'Melding') : 'Velg en melding'}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -343,27 +330,32 @@ export default function MyMessages() {
                 </div>
 
                 {/* Message Content */}
-                 <div className="prose prose-sm max-w-none">
-                   <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
-                     {selectedMessage.content}
-                   </p>
-                 </div>
+                {selectedMessage && (
+                  <>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900 mb-2">AI-forslag</p>
+                      <div className="text-sm text-slate-800 whitespace-pre-wrap bg-white border border-slate-200 rounded-2xl p-4">
+                        {sessionMap[selectedMessage.related_assessment_session_id]?.ai_summary || selectedMessage.content}
+                      </div>
+                    </div>
 
-                 {canForward && (
-                   <div>
-                     <Button
-                       variant="outline"
-                       className="gap-2"
-                       onClick={() => forwardToAccommodation.mutate(selectedMessage)}
-                       disabled={forwardToAccommodation?.isPending}
-                     >
-                       <SettingsIcon className="h-4 w-4" />
-                       Send til tilrettelegging
-                     </Button>
-                   </div>
-                 )}
+                    {sessionMap[selectedMessage.related_assessment_session_id] && (
+                      <div className="pt-4">
+                        <p className="text-sm font-semibold text-slate-900 mb-2">Svar fra kartlegging</p>
+                        <div className="space-y-2 max-h-72 overflow-auto pr-1">
+                          {sessionMap[selectedMessage.related_assessment_session_id].answered_questions?.map((qa, idx) => (
+                            <div key={idx} className="bg-white rounded-lg p-3 border border-slate-200">
+                              <p className="text-sm font-medium text-slate-900">{questionMap[qa.question_id] || qa.question_id}</p>
+                              <p className="text-sm text-slate-700 mt-1">{Array.isArray(qa.answer) ? qa.answer.join(', ') : qa.answer}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
 
-                 {/* Replies */}
+                {/* Replies */}
                 {selectedMessage.replies?.length > 0 && (
                   <div className="space-y-3 pt-4 border-t border-slate-200">
                     <p className="text-sm font-medium text-slate-900">Tidligere svar:</p>
