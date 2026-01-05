@@ -274,7 +274,7 @@ export default function MyMessages() {
                       </div>
                     </button>
                   );
-                })
+                })}
               </TabsContent>
             </Tabs>
           </CardContent>
