@@ -93,6 +93,8 @@ export default function AssessmentResults() {
   const pageSize = 25;
   const [page, setPage] = useState(1);
   const pageSize = 25;
+  const [page, setPage] = useState(1);
+  const pageSize = 25;
 
   const [selectedProfileUserId, setSelectedProfileUserId] = useState(null);
   const [selectedProfileDept, setSelectedProfileDept] = useState(null);
@@ -246,6 +248,17 @@ export default function AssessmentResults() {
 
     return arr;
   }, [filteredSessions, userMap, sortMode]);
+
+  // Paging
+  const totalPages = Math.max(1, Math.ceil(respondents.length / pageSize));
+  const pagedRespondents = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return respondents.slice(start, start + pageSize);
+  }, [respondents, page]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, selectedDepartment, selectedRiskLevel, sortMode]);
 
   // Paging
   const totalPages = Math.max(1, Math.ceil(respondents.length / pageSize));
