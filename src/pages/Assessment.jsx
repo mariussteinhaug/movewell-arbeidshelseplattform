@@ -50,6 +50,7 @@ export default function Assessment() {
   const [riskAssessment, setRiskAssessment] = useState(null);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [dynamicQuestions, setDynamicQuestions] = useState([]);
 
   const { data: currentUser } = useQuery({
     queryKey: ["current-user"],
@@ -76,13 +77,15 @@ export default function Assessment() {
     return generalQuestions.sort((a, b) => (a.order || 0) - (b.order || 0));
   }, [allQuestions, sessionPath]);
 
-  const currentQuestion = relevantQuestions[currentQuestionIndex];
+  const displayedQuestions = useMemo(() => [...relevantQuestions, ...dynamicQuestions], [relevantQuestions, dynamicQuestions]);
+
+  const currentQuestion = displayedQuestions[currentQuestionIndex];
   const currentQid = currentQuestion?.question_id;
 
   const progress = useMemo(() => {
-    if (!relevantQuestions.length) return 0;
-    return ((currentQuestionIndex + 1) / relevantQuestions.length) * 100;
-  }, [currentQuestionIndex, relevantQuestions.length]);
+    if (!displayedQuestions.length) return 0;
+    return ((currentQuestionIndex + 1) / displayedQuestions.length) * 100;
+  }, [currentQuestionIndex, displayedQuestions.length]);
 
   const canGoNext =
     !!currentQid &&
@@ -240,7 +243,11 @@ export default function Assessment() {
       let result = null;
       try {
         result = await base44.integrations.Core.InvokeLLM({
-          prompt: `Du er en ekspert på arbeidshelse. Gi en kort JSON-beslutning.`,
+          prompt: `Du er en ekspert på arbeidshelse. Gi en kort JSON-beslutning.
+        - Hvis du trenger flere datapunkter, foreslå inntil 3 oppfølgingsspørsmål i new_questions.
+        - Hvert spørsmål må ha text og answer_type (en av: text, scale, choice, multichoice, number).
+        - For choice/multichoice gi answer_options, for scale gi scale {min,max,step,min_label,max_label}.
+        - Ikke bruk markdown i tekster.`,
           response_json_schema: {
             type: "object",
             properties: {
@@ -250,8 +257,31 @@ export default function Assessment() {
               confidence: { type: "number" },
               next_question_id: { type: "string" },
               reason: { type: "string" },
-            },
-          },
+              new_questions: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    id: { type: "string" },
+                    text: { type: "string" },
+                    answer_type: { type: "string", enum: ["text", "scale", "choice", "multichoice", "number"] },
+                    answer_options: { type: "array", items: { type: "string" } },
+                    scale: {
+                      type: "object",
+                      properties: {
+                        min: { type: "number" },
+                        max: { type: "number" },
+                        step: { type: "number" },
+                        min_label: { type: "string" },
+                        max_label: { type: "string" }
+                      }
+                    }
+                  },
+                  required: ["text", "answer_type"]
+                }
+              }
+            }
+          }
         });
       } catch {
         console.warn("⚠️ AI disabled or failed, using fallback.");
@@ -266,7 +296,26 @@ export default function Assessment() {
         };
       }
 
-      if (result.stop_assessment) {
+      const aiQs = Array.isArray(result?.new_questions) ? result.new_questions : [];
+      if (aiQs.length) {
+        const normalized = aiQs.slice(0, 5).map((q, idx) => ({
+          question_id: q.id || `AI${Date.now()}_${idx + 1}`,
+          text: q.text || "Oppfølgingsspørsmål",
+          answer_type: q.answer_type || "text",
+          answer_options: q.answer_options || [],
+          scale: q.scale,
+          path: "generell",
+          category: "tiltak",
+          order: 1000 + idx,
+        }));
+        setDynamicQuestions((prev) => {
+          const merged = [...prev, ...normalized].slice(0, 5);
+          return merged;
+        });
+        setCurrentQuestionIndex((i) => Math.min(i + 1, relevantQuestions.length));
+        setIsAnalyzing(false);
+        return;
+      } else if (result.stop_assessment) {
         const sessionId = await saveSession(result);
         await createInAppNotification(result, sessionId);
         setRiskAssessment(result);
@@ -276,7 +325,7 @@ export default function Assessment() {
       }
 
       const nextId = result?.next_question_id;
-      const idx = relevantQuestions.findIndex((q) => q.question_id === nextId);
+      const idx = displayedQuestions.findIndex((q) => q.question_id === nextId);
       if (idx !== -1) setCurrentQuestionIndex(idx);
       else {
         const sessionId = await saveSession(result);
@@ -332,6 +381,7 @@ export default function Assessment() {
         anonymous_id: `session_${Date.now()}`,
         path: sessionPath,
         answered_questions: answeredQuestions,
+        generated_questions: dynamicQuestions,
         risk_signals: assessment?.risk_signals || [],
         risk_level: assessment?.risk_level || "unknown",
         confidence: assessment?.confidence || 0,
@@ -371,7 +421,7 @@ export default function Assessment() {
   --------------------------- */
   const handleNext = async () => {
     if (!canGoNext || isAnalyzing) return;
-    const isLast = currentQuestionIndex >= relevantQuestions.length - 1;
+    const isLast = currentQuestionIndex >= displayedQuestions.length - 1;
     if (isLast) {
       await getNextQuestionAI();
     } else {
@@ -496,7 +546,7 @@ export default function Assessment() {
       <div className="mb-6">
         <div className="flex justify-between text-sm text-slate-600 mb-2">
           <span>
-            Spørsmål {currentQuestionIndex + 1} av {relevantQuestions.length}
+            Spørsmål {currentQuestionIndex + 1} av {displayedQuestions.length}
           </span>
           <span>{Math.round(progress)}%</span>
         </div>
@@ -553,7 +603,7 @@ export default function Assessment() {
                 />
               )}
 
-              {currentQuestionIndex === relevantQuestions.length - 1 && (
+              {currentQuestionIndex === displayedQuestions.length - 1 && (
                 <DocumentUpload
                   uploadedFiles={uploadedFiles}
                   onFilesChange={setUploadedFiles}
