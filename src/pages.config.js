@@ -1,6 +1,5 @@
 import Accommodation from './pages/Accommodation';
 import Assessment from './pages/Assessment';
-import AssessmentResults from './pages/AssessmentResults';
 import Dashboard from './pages/Dashboard';
 import Departments from './pages/Departments';
 import EmployeeProfile from './pages/EmployeeProfile';
@@ -16,7 +15,6 @@ import __Layout from './Layout.jsx';
 export const PAGES = {
     "Accommodation": Accommodation,
     "Assessment": Assessment,
-    "AssessmentResults": AssessmentResults,
     "Dashboard": Dashboard,
     "Departments": Departments,
     "EmployeeProfile": EmployeeProfile,

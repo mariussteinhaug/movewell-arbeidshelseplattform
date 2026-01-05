@@ -79,7 +79,7 @@ export default function Layout({ children, currentPageName }) {
       { name: "Tilrettelegging", page: "Accommodation", icon: Wrench, roles: [ROLE.MANAGER, ROLE.HR] },
 
       // HR-only
-      { name: "Kartleggingsdata", page: "AssessmentResults", icon: FileText, roles: [ROLE.HR] },
+
       { name: "Trendanalyse", page: "TrendAnalysis", icon: TrendingUp, roles: [ROLE.HR] },
       { name: "Ansattprofil", page: "EmployeeProfile", icon: Shield, roles: [ROLE.HR] },
       { name: "Avdelinger", page: "Departments", icon: Building2, roles: [ROLE.HR] },

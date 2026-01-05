@@ -74,6 +74,18 @@ export default function MyMessages() {
     });
   }, [deptMessages, currentUser?.department_id, currentUser?.role]);
 
+  const inboxMessages = React.useMemo(() => {
+    const byId = new Map();
+    [...(myMessages || []), ...(departmentAlerts || [])].forEach((m) => {
+      if (m && m.id) byId.set(m.id, m);
+    });
+    return Array.from(byId.values()).sort((a, b) => {
+      const ta = new Date(a.sent_at || a.created_date || 0).getTime();
+      const tb = new Date(b.sent_at || b.created_date || 0).getTime();
+      return tb - ta;
+    });
+  }, [myMessages, departmentAlerts]);
+
   const markAsRead = useMutation({
     mutationFn: (messageId) => 
       base44.entities.Message.update(messageId, { status: 'lest' }),
@@ -170,7 +182,7 @@ export default function MyMessages() {
 
   const canForward = ['manager', 'hr', 'admin'].includes(String(currentUser?.role || '').toLowerCase());
 
-  const unreadCount = myMessages.filter(m => m.status === 'ulest').length;
+  const unreadCount = inboxMessages.filter(m => m.status === 'ulest').length;
 
   if (isLoading) {
     return (
@@ -207,7 +219,7 @@ export default function MyMessages() {
         <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle className="text-lg">Innboks</CardTitle>
-            <CardDescription>{myMessages.length} meldinger</CardDescription>
+            <CardDescription>{inboxMessages.length} meldinger</CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="alle">
@@ -221,13 +233,13 @@ export default function MyMessages() {
               </TabsList>
 
               <TabsContent value="alle" className="space-y-2 mt-4">
-                {myMessages.length === 0 ? (
+                {inboxMessages.length === 0 ? (
                   <div className="text-center py-8">
                     <Mail className="h-10 w-10 text-slate-300 mx-auto mb-3" />
                     <p className="text-sm text-slate-500">Ingen meldinger ennå</p>
                   </div>
                 ) : (
-                  myMessages.map((msg) => {
+                  inboxMessages.map((msg) => {
                     const session = sessionMap[msg.related_assessment_session_id];
                     const displayName = session?.respondent_display_name || 'Anonym';
                     const timeStr = msg?.sent_at ? format(new Date(msg.sent_at), 'dd. MMM yyyy, HH:mm', { locale: nb }) : '';
@@ -254,7 +266,7 @@ export default function MyMessages() {
               </TabsContent>
 
               <TabsContent value="ulest" className="space-y-2 mt-4">
-                {myMessages.filter(m => m.status === 'ulest').map((msg) => {
+                {inboxMessages.filter(m => m.status === 'ulest').map((msg) => {
                   const session = sessionMap[msg.related_assessment_session_id];
                   const displayName = session?.respondent_display_name || 'Anonym';
                   const timeStr = msg?.sent_at ? format(new Date(msg.sent_at), 'dd. MMM yyyy, HH:mm', { locale: nb }) : '';
