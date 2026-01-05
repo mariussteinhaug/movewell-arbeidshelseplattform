@@ -136,7 +136,8 @@ export default function MyMessages() {
   const priorityColors = {
     lav: 'bg-slate-100 text-slate-700',
     normal: 'bg-blue-100 text-blue-700',
-    høy: 'bg-red-100 text-red-700'
+    høy: 'bg-red-100 text-red-700',
+    hoy: 'bg-red-100 text-red-700'
   };
 
   const canForward = ['manager', 'hr', 'admin'].includes(String(currentUser?.role || '').toLowerCase());
@@ -245,7 +246,7 @@ export default function MyMessages() {
                           </p>
                         </div>
                         <p className="text-xs text-slate-500">
-                          Fra: {msg.sender_name}
+                         Fra: {msg.sender_name || msg.sender_display_name || 'System'}
                         </p>
                         <p className="text-xs text-slate-400 mt-1">
                           {format(new Date(msg.sent_at), 'dd. MMM yyyy', { locale: nb })}
@@ -321,7 +322,7 @@ export default function MyMessages() {
                   </div>
                   <div className="space-y-1">
                     <p className="text-sm text-slate-600">
-                      <span className="font-medium">Fra:</span> {selectedMessage.sender_name} ({selectedMessage.sender_email})
+                      <span className="font-medium">Fra:</span> {selectedMessage.sender_name || selectedMessage.sender_display_name}
                     </p>
                     {selectedMessage.related_department && (
                       <p className="text-sm text-slate-600">
