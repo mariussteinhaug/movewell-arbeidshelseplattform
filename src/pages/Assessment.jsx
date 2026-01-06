@@ -369,6 +369,7 @@ export default function Assessment() {
           timestamp: new Date().toISOString(),
         }));
 
+      const nowIso = new Date().toISOString();
       const session = await base44.entities.AssessmentSession.create({
         organization_id: currentUser?.organization_id || "default",
         department_id: dept?.id || "unknown",
@@ -384,8 +385,9 @@ export default function Assessment() {
         confidence: assessment?.confidence || 0,
         status: "completed",
         session_week: week,
-        created_at: new Date().toISOString(),
-        completed_at: new Date().toISOString(),
+        created_at: nowIso,
+        submitted_at: nowIso,
+        completed_at: nowIso,
       });
 
       // Opprett også en HealthAssessment for dashboard/statistikk

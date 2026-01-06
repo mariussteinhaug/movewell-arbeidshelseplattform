@@ -9,6 +9,8 @@ import Profile from './pages/Profile';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import TrendAnalysis from './pages/TrendAnalysis';
+import AcceptInvite from './pages/AcceptInvite';
+import Invite from './pages/Invite';
 import __Layout from './Layout.jsx';
 
 
@@ -24,6 +26,8 @@ export const PAGES = {
     "Reports": Reports,
     "Settings": Settings,
     "TrendAnalysis": TrendAnalysis,
+    "AcceptInvite": AcceptInvite,
+    "Invite": Invite,
 }
 
 export const pagesConfig = {

@@ -2,19 +2,20 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "./utils";
 import {
-  LayoutDashboard,
-  ClipboardCheck,
-  Building2,
-  Settings,
-  Menu,
-  X,
-  Shield,
-  FileText,
-  Mail,
-  TrendingUp,
-  Wrench,
-  User,
-} from "lucide-react";
+        LayoutDashboard,
+        ClipboardCheck,
+        Building2,
+        Settings,
+        Menu,
+        X,
+        Shield,
+        FileText,
+        Mail,
+        TrendingUp,
+        Wrench,
+        User,
+        UserPlus,
+      } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { cn } from "@/lib/utils";
 
@@ -77,6 +78,7 @@ export default function Layout({ children, currentPageName }) {
       { name: "AI-Rapporter", page: "Reports", icon: FileText, roles: [ROLE.MANAGER, ROLE.HR] },
 
       { name: "Tilrettelegging", page: "Accommodation", icon: Wrench, roles: [ROLE.MANAGER, ROLE.HR] },
+      { name: "Invitasjoner", page: "Invite", icon: UserPlus, roles: [ROLE.MANAGER, ROLE.HR] },
 
       // HR-only
 

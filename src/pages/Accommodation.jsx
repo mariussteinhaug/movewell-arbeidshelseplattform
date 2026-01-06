@@ -1,6 +1,7 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { createPageUrl } from "../utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Loader2, Search, ChevronLeft, ChevronRight, Calendar as CalendarIcon, User as UserIcon, Building2, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
@@ -13,6 +14,10 @@ import CaseListItem from "../components/accommodation/CaseListItem";
 import CaseDetail from "../components/accommodation/CaseDetail";
 
 export default function Accommodation() {
+  const { data: currentUser } = useQuery({
+    queryKey: ['current-user'],
+    queryFn: () => base44.auth.me()
+  });
   const { data: accommodations = [], isLoading } = useQuery({
     queryKey: ['accommodations'],
     queryFn: () => base44.entities.Accommodation.list('-created_date', 500),
@@ -32,8 +37,12 @@ export default function Accommodation() {
 
   const filtered = React.useMemo(() => {
     const q = search.trim().toLowerCase();
+    const appRole = String((currentUser?.app_role || currentUser?.role || '')).toLowerCase();
+    const orgId = currentUser?.organization_id || 'eramet';
     return (accommodations || []).filter((it) => {
       if (!includeArchived && it.archived) return false;
+      if (it.organization_id !== orgId) return false;
+      if (appRole === 'manager' && currentUser?.department_id && it.department_id !== currentUser.department_id) return false;
       const matchesStatus = statusFilter === "alle" || it.status === statusFilter;
       if (!q) return matchesStatus;
       const hay = [
@@ -48,7 +57,7 @@ export default function Accommodation() {
         .toLowerCase();
       return matchesStatus && hay.includes(q);
     });
-  }, [accommodations, search, statusFilter, includeArchived]);
+  }, [accommodations, search, statusFilter, includeArchived, currentUser]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   React.useEffect(() => {
@@ -62,6 +71,13 @@ export default function Accommodation() {
   React.useEffect(() => {
     setSelectedCase(filtered[0] || null);
   }, [search, statusFilter, accommodations]);
+
+  React.useEffect(() => {
+    const appRole = String((currentUser?.app_role || currentUser?.role || '')).toLowerCase();
+    if (currentUser && !['hr', 'owner', 'manager'].includes(appRole)) {
+      window.location.href = createPageUrl('Assessment');
+    }
+  }, [currentUser]);
 
   if (isLoading) {
     return (
