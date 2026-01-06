@@ -1,6 +1,6 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, Archive } from "lucide-react";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
 
@@ -33,6 +33,14 @@ export default function CaseListItem({ item, selected, onClick }) {
       }
     >
       <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 min-w-0">
+          {item.archived && (
+            <Archive className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+          )}
+          <p className="font-medium text-slate-900 truncate">
+            {item.accommodation_type || "Tilrettelegging"}
+          </p>
+        </div>
         <p className="font-medium text-slate-900 truncate">
           {item.accommodation_type || "Tilrettelegging"}
         </p>

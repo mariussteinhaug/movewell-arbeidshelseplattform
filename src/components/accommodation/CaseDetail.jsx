@@ -1,6 +1,7 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
-import { Calendar as CalendarIcon, User as UserIcon, Building2, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar as CalendarIcon, User as UserIcon, Building2, AlertTriangle, CheckCircle2, PlayCircle, PauseCircle, Archive, Undo2 } from "lucide-react";
 import { format } from "date-fns";
 import { nb } from "date-fns/locale";
 
@@ -16,7 +17,7 @@ const priorityColors = {
   hoy: "bg-red-100 text-red-800",
 };
 
-export default function CaseDetail({ item }) {
+export default function CaseDetail({ item, onStatusChange, onArchiveToggle, saving }) {
   if (!item) return null;
   const dateStr = item?.created_at
     ? format(new Date(item.created_at), "dd. MMM yyyy", { locale: nb })
@@ -24,6 +25,59 @@ export default function CaseDetail({ item }) {
 
   return (
     <div className="space-y-4">
+      {/* Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            variant={item.status === 'planlagt' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onStatusChange?.('planlagt')}
+            disabled={saving}
+            className={item.status === 'planlagt' ? 'bg-slate-900 hover:bg-slate-800' : ''}
+          >
+            <PauseCircle className="h-4 w-4 mr-1" /> Planlagt
+          </Button>
+          <Button
+            variant={item.status === 'pagaende' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onStatusChange?.('pagaende')}
+            disabled={saving}
+            className={item.status === 'pagaende' ? 'bg-slate-900 hover:bg-slate-800' : ''}
+          >
+            <PlayCircle className="h-4 w-4 mr-1" /> Pågår
+          </Button>
+          <Button
+            variant={item.status === 'fullfort' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onStatusChange?.('fullfort')}
+            disabled={saving}
+            className={item.status === 'fullfort' ? 'bg-slate-900 hover:bg-slate-800' : ''}
+          >
+            <CheckCircle2 className="h-4 w-4 mr-1" /> Fullført
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant={item.archived ? 'outline' : 'secondary'}
+            size="sm"
+            onClick={() => onArchiveToggle?.(!item.archived)}
+            disabled={saving}
+            className={item.archived ? '' : 'bg-amber-600 hover:bg-amber-700 text-white'}
+          >
+            {item.archived ? (
+              <>
+                <Undo2 className="h-4 w-4 mr-1" /> Gjenopprett
+              </>
+            ) : (
+              <>
+                <Archive className="h-4 w-4 mr-1" /> Arkiver
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-slate-900">

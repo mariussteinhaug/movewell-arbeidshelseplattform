@@ -1,5 +1,5 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Loader2, Search, ChevronLeft, ChevronRight, Calendar as CalendarIcon, User as UserIcon, Building2, AlertTriangle } from 'lucide-react';
@@ -8,6 +8,7 @@ import { nb } from 'date-fns/locale';
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import CaseListItem from "../components/accommodation/CaseListItem";
 import CaseDetail from "../components/accommodation/CaseDetail";
 
@@ -19,12 +20,20 @@ export default function Accommodation() {
 
   const [search, setSearch] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("alle");
+  const [includeArchived, setIncludeArchived] = React.useState(false);
   const [page, setPage] = React.useState(1);
   const pageSize = 20;
+
+  const queryClient = useQueryClient();
+  const updateCase = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Accommodation.update(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['accommodations'] }),
+  });
 
   const filtered = React.useMemo(() => {
     const q = search.trim().toLowerCase();
     return (accommodations || []).filter((it) => {
+      if (!includeArchived && it.archived) return false;
       const matchesStatus = statusFilter === "alle" || it.status === statusFilter;
       if (!q) return matchesStatus;
       const hay = [
@@ -39,7 +48,7 @@ export default function Accommodation() {
         .toLowerCase();
       return matchesStatus && hay.includes(q);
     });
-  }, [accommodations, search, statusFilter]);
+  }, [accommodations, search, statusFilter, includeArchived]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   React.useEffect(() => {
@@ -97,6 +106,10 @@ export default function Accommodation() {
             <option value="pagaende">Pågående</option>
             <option value="fullfort">Fullført</option>
           </select>
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-slate-600">Inkluder arkiv</label>
+          <Switch checked={includeArchived} onCheckedChange={(v) => setIncludeArchived(!!v)} />
         </div>
       </div>
 
@@ -165,7 +178,23 @@ export default function Accommodation() {
             </CardHeader>
             <CardContent>
               {selectedCase ? (
-                <CaseDetail item={selectedCase} />
+                <CaseDetail
+                  item={selectedCase}
+                  saving={updateCase.isPending}
+                  onStatusChange={(newStatus) => {
+                    if (!selectedCase) return;
+                    updateCase.mutate({ id: selectedCase.id, data: { status: newStatus, updated_at: new Date().toISOString() } });
+                    setSelectedCase({ ...selectedCase, status: newStatus });
+                  }}
+                  onArchiveToggle={(arch) => {
+                    if (!selectedCase) return;
+                    const data = { archived: arch, updated_at: new Date().toISOString() };
+                    // If archiving, also mark as fullført automatically (optional UX)
+                    if (arch && selectedCase.status !== 'fullfort') data.status = 'fullfort';
+                    updateCase.mutate({ id: selectedCase.id, data });
+                    setSelectedCase({ ...selectedCase, ...data });
+                  }}
+                />
               ) : (
                 <div className="text-center py-16 text-slate-500">Velg en sak i listen</div>
               )}
