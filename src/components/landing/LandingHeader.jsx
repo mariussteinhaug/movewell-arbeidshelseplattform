@@ -69,28 +69,15 @@ export default function LandingHeader() {
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
             <Link to={createPageUrl("Dashboard")}>
-              <motion.button
-                className="relative overflow-hidden bg-[#33c58f]/10 backdrop-blur-2xl border border-[#33c58f]/50 text-[#2a9e73] font-medium rounded-full px-6 py-2 shadow-[0_4px_16px_rgba(51,197,143,0.15),inset_0_1px_1px_rgba(255,255,255,0.6)]"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+              <button
+                className="bg-[#33c58f]/10 backdrop-blur-2xl border border-[#33c58f]/50 text-[#2a9e73] font-medium rounded-full px-6 py-2 shadow-[0_4px_16px_rgba(51,197,143,0.15),inset_0_1px_1px_rgba(255,255,255,0.6)] hover:bg-[#33c58f]/20 transition-colors"
               >
-                <motion.span
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-[#33c58f]/30 to-transparent"
-                  initial={{ x: "-100%" }}
-                  animate={{ x: "200%" }}
-                  transition={{
-                    repeat: Infinity,
-                    repeatType: "loop",
-                    duration: 2.5,
-                    ease: "linear",
-                  }}
-                />
-                <span className="relative z-10">Logg inn</span>
-              </motion.button>
+                Logg inn
+              </button>
             </Link>
 
             <Button
-              className="bg-slate-900 hover:bg-slate-800 text-white rounded-full px-6 shadow-lg"
+              className="bg-[#33c58f] hover:bg-[#2aa876] text-white rounded-full px-6 shadow-lg"
               onClick={() => scrollToId("contact")}
             >
               Book et møte
@@ -134,28 +121,15 @@ export default function LandingHeader() {
               ))}
 
               <Link to={createPageUrl("Dashboard")} className="mt-2">
-                <motion.button
-                  className="relative overflow-hidden w-full bg-[#33c58f]/10 backdrop-blur-2xl border border-[#33c58f]/50 text-[#2a9e73] font-medium rounded-full py-3 shadow-[0_4px_16px_rgba(51,197,143,0.15),inset_0_1px_1px_rgba(255,255,255,0.6)]"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                <button
+                  className="w-full bg-[#33c58f]/10 backdrop-blur-2xl border border-[#33c58f]/50 text-[#2a9e73] font-medium rounded-full py-3 shadow-[0_4px_16px_rgba(51,197,143,0.15),inset_0_1px_1px_rgba(255,255,255,0.6)] hover:bg-[#33c58f]/20 transition-colors"
                 >
-                  <motion.span
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-[#33c58f]/30 to-transparent"
-                    initial={{ x: "-100%" }}
-                    animate={{ x: "200%" }}
-                    transition={{
-                      repeat: Infinity,
-                      repeatType: "loop",
-                      duration: 2.5,
-                      ease: "linear",
-                    }}
-                  />
-                  <span className="relative z-10">Logg inn</span>
-                </motion.button>
+                  Logg inn
+                </button>
               </Link>
 
               <Button
-                className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-full py-6 shadow-lg mt-2"
+                className="w-full bg-[#33c58f] hover:bg-[#2aa876] text-white rounded-full py-6 shadow-lg mt-2"
                 onClick={() => {
                   setIsMenuOpen(false);
                   scrollToId("contact");
