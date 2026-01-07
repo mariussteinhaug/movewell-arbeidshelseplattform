@@ -22,7 +22,7 @@ export default function LogoSection() {
           {items.map((item, index) => (
             <span
               key={index}
-              className="px-5 py-2 rounded-full border border-slate-200 bg-slate-50 text-slate-500 text-sm"
+              className="px-5 py-2 rounded-full border border-slate-100 bg-slate-50/50 text-slate-400 text-sm"
             >
               {item}
             </span>
