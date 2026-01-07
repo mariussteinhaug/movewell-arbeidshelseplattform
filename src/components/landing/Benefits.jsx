@@ -80,7 +80,7 @@ export default function Benefits() {
         </div>
 
         {/* Industries */}
-        <div className="mt-12 rounded-3xl border border-[#33c58f]/30 bg-[#33c58f] p-6 sm:p-10 md:p-14 shadow-[0_25px_60px_rgba(51,197,143,0.25)]">
+        <div className="mt-12 rounded-3xl border border-[#2a9e73]/30 bg-[#2a9e73] p-6 sm:p-10 md:p-14 shadow-[0_25px_60px_rgba(42,158,115,0.3)]">
           <div className="flex flex-col md:flex-row items-center md:items-center justify-between gap-6 md:gap-8">
             <div className="text-center md:text-left max-w-xl">
               <p className="text-sm font-medium uppercase tracking-wide text-white/80">
