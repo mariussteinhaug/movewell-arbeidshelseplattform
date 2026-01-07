@@ -50,7 +50,7 @@ export default function TestimonialsSection() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch max-w-5xl mx-auto">
             {testimonials.map((t, index) => (
               <div key={index} className="relative h-full">
                 {/* Green glow behind card */}
