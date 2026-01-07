@@ -80,16 +80,16 @@ export default function Benefits() {
         </div>
 
         {/* Industries */}
-        <div className="mt-12 rounded-3xl border border-slate-200 bg-slate-950 p-6 sm:p-10 md:p-14 shadow-[0_25px_60px_rgba(0,0,0,0.22)]">
+        <div className="mt-12 rounded-3xl border border-[#33c58f]/30 bg-[#33c58f] p-6 sm:p-10 md:p-14 shadow-[0_25px_60px_rgba(51,197,143,0.25)]">
           <div className="flex flex-col md:flex-row items-center md:items-center justify-between gap-6 md:gap-8">
             <div className="text-center md:text-left max-w-xl">
-              <p className="text-sm font-medium uppercase tracking-wide text-white/60">
+              <p className="text-sm font-medium uppercase tracking-wide text-white/80">
                 Bransjer
               </p>
               <h3 className="mt-3 text-xl sm:text-2xl md:text-4xl font-semibold tracking-tight text-white">
                 Skreddersydd for din hverdag
               </h3>
-              <p className="mt-4 text-white/70 text-sm sm:text-base">
+              <p className="mt-4 text-white/90 text-sm sm:text-base">
                 Tilpasset arbeidshverdagen i bransjer med høy belastning og krav til tydelig oppfølging.
               </p>
             </div>
@@ -98,7 +98,7 @@ export default function Benefits() {
               {targetIndustries.map((industry, index) => (
                 <span
                   key={index}
-                  className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/10 text-white text-xs sm:text-sm border border-white/15 hover:bg-white/15 transition-colors"
+                  className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/20 text-white text-xs sm:text-sm border border-white/30 hover:bg-white/30 transition-colors"
                 >
                   <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                   {industry}
