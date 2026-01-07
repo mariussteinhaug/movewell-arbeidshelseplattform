@@ -25,7 +25,7 @@ export default function CTASection() {
           <div className="relative mt-10 flex flex-col sm:flex-row gap-3 justify-center px-4 sm:px-0">
             <Button
               size="lg"
-              className="w-full sm:w-auto rounded-full px-8 py-6 bg-white text-slate-950 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+              className="w-full sm:w-auto rounded-full px-8 py-6 bg-[#33c58f] text-white shadow-sm hover:bg-[#2aa876] hover:shadow-md hover:-translate-y-0.5 transition-all"
               onClick={() => scrollTo("contact")}
             >
               Book et møte
