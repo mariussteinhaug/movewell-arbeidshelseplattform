@@ -8,7 +8,7 @@ export default function Hero() {
   };
 
   return (
-    <section className="relative bg-white overflow-hidden py-20 md:py-32">
+    <section className="relative bg-white overflow-hidden py-16 md:py-24">
       {/* Subtle background */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-40 left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-slate-200/40 blur-3xl" />
@@ -56,8 +56,8 @@ export default function Hero() {
           </div>
 
           {/* Trust cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl w-full mx-auto mt-16">
-            <div className="rounded-2xl border border-slate-200 bg-white/70 p-6 text-left shadow-sm backdrop-blur">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl w-full mx-auto mt-12">
+            <div className="rounded-2xl border border-slate-200/60 bg-white/50 backdrop-blur-xl p-5 sm:p-6 text-left shadow-[0_8px_32px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.9)]">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center">
                   <LineChart className="h-5 w-5 text-slate-700" />
@@ -69,7 +69,7 @@ export default function Hero() {
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white/70 p-6 text-left shadow-sm backdrop-blur">
+            <div className="rounded-2xl border border-slate-200/60 bg-white/50 backdrop-blur-xl p-5 sm:p-6 text-left shadow-[0_8px_32px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.9)]">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center">
                   <Users className="h-5 w-5 text-slate-700" />
@@ -81,7 +81,7 @@ export default function Hero() {
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white/70 p-6 text-left shadow-sm backdrop-blur">
+            <div className="rounded-2xl border border-slate-200/60 bg-white/50 backdrop-blur-xl p-5 sm:p-6 text-left shadow-[0_8px_32px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.9)]">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center">
                   <Shield className="h-5 w-5 text-slate-700" />

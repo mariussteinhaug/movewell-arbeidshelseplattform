@@ -27,7 +27,7 @@ const steps = [
 
 export default function HowItWorks() {
   return (
-    <section id="how-it-works" className="py-20 md:py-28 bg-white">
+    <section id="how-it-works" className="py-14 md:py-20 bg-white">
       <div className="container mx-auto px-6 md:px-20">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto">
@@ -47,7 +47,7 @@ export default function HowItWorks() {
           {steps.map((s, index) => (
             <div
               key={index}
-              className="relative rounded-3xl border border-slate-200 bg-white p-8 shadow-sm hover:shadow-md transition-shadow"
+              className="relative rounded-3xl border border-slate-200/60 bg-white/50 backdrop-blur-xl p-6 sm:p-8 shadow-[0_8px_32px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.9)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.9)] transition-shadow"
             >
               {/* Top row */}
               <div className="flex items-start justify-between">

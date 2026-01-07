@@ -26,7 +26,7 @@ export default function Contact() {
   };
 
   return (
-    <section id="contact" className="py-20 md:py-28 bg-white">
+    <section id="contact" className="py-14 md:py-20 bg-white">
       <div className="container mx-auto px-6 md:px-20">
         <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
           {/* Left: Info */}
@@ -43,7 +43,7 @@ export default function Contact() {
 
             {/* Contact cards */}
             <div className="mt-10 grid gap-4 max-w-xl">
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="rounded-2xl border border-slate-200/60 bg-white/50 backdrop-blur-xl p-5 shadow-[0_4px_16px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.9)]">
                 <div className="flex items-center gap-4">
                   <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center">
                     <Mail className="h-5 w-5 text-slate-700" />
@@ -60,7 +60,7 @@ export default function Contact() {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="rounded-2xl border border-slate-200/60 bg-white/50 backdrop-blur-xl p-5 shadow-[0_4px_16px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.9)]">
                 <div className="flex items-center gap-4">
                   <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center">
                     <Phone className="h-5 w-5 text-slate-700" />
@@ -77,7 +77,7 @@ export default function Contact() {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="rounded-2xl border border-slate-200/60 bg-white/50 backdrop-blur-xl p-5 shadow-[0_4px_16px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.9)]">
                 <div className="flex items-center gap-4">
                   <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center">
                     <MapPin className="h-5 w-5 text-slate-700" />
@@ -96,7 +96,7 @@ export default function Contact() {
           </div>
 
           {/* Right: Form */}
-          <div className="rounded-3xl border border-slate-200 bg-white shadow-sm p-8 md:p-10">
+          <div className="rounded-3xl border border-slate-200/60 bg-white/50 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.9)] p-6 sm:p-8 md:p-10">
             {submitted ? (
               <div className="flex flex-col items-center justify-center py-14">
                 <div className="h-16 w-16 rounded-full bg-slate-100 flex items-center justify-center mb-6">

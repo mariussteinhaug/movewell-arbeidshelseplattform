@@ -29,7 +29,7 @@ export default function TestimonialsSection() {
   ];
 
   return (
-    <section className="relative py-20 md:py-28 bg-white overflow-hidden">
+    <section className="relative py-14 md:py-20 bg-white overflow-hidden">
       {/* subtle background */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-40 left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-slate-200/40 blur-3xl" />
@@ -54,7 +54,7 @@ export default function TestimonialsSection() {
             {testimonials.map((t, index) => (
               <div
                 key={index}
-                className="rounded-3xl border border-slate-200 bg-white/70 p-8 shadow-sm backdrop-blur"
+                className="rounded-3xl border border-slate-200/60 bg-white/50 backdrop-blur-xl p-6 sm:p-8 shadow-[0_8px_32px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.9)]"
               >
                 <div className="flex items-center gap-4 mb-6">
                   <img

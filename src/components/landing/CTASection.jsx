@@ -8,7 +8,7 @@ export default function CTASection() {
   };
 
   return (
-    <section className="py-20 md:py-28 bg-white">
+    <section className="py-14 md:py-20 bg-white">
       <div className="container mx-auto px-6 md:px-20">
         <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-slate-950 px-8 py-12 md:px-16 md:py-16 text-center shadow-[0_25px_60px_rgba(0,0,0,0.25)]">
           {/* subtle highlight */}

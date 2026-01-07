@@ -16,12 +16,12 @@ export default function ProductSection({
   };
 
   return (
-    <section className="py-16 md:py-24 bg-white">
+    <section className="py-12 md:py-16 bg-white">
       <div className="container mx-auto px-6 md:px-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           {/* Image */}
           <div className={reversed ? "lg:order-2" : ""}>
-            <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <div className="rounded-3xl border border-slate-200/80 bg-white/60 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.8)] overflow-hidden">
               <img
                 src={image}
                 alt={title}
