@@ -1,3 +1,4 @@
+
 const TODO = `# Project To‑Do (Incremental)
 
 Updated: 2026-01-07
@@ -11,11 +12,11 @@ Updated: 2026-01-07
 
 ## P1 — Soon
 - [x] Centralize role/access helper and apply across pages
-- [ ] Message schema: status/replies + MyMessages alignment
+- [x] Message schema: status/replies + MyMessages alignment
 
 ## P2 — Polish
-- [ ] Route guard helper; unify redirects
-- [ ] Invitations: revoke/resend, org-scoped listing
+- [x] Route guard helper; unify redirects
+- [x] Invitations: revoke/resend, org-scoped listing
 `;
 
 export default TODO;

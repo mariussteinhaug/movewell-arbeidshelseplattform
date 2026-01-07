@@ -6,8 +6,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useRequireRoles, ROLE } from "../components/access/guard";
 
 export default function Invite() {
+  useRequireRoles([ROLE.MANAGER, ROLE.HR], 'Assessment');
   const { data: me } = useQuery({ queryKey: ['current-user'], queryFn: () => base44.auth.me() });
   const { data: invites = [] } = useQuery({
     queryKey: ['invites', me?.organization_id],
