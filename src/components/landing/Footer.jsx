@@ -27,7 +27,7 @@ export default function Footer() {
 
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
               <Button
-                className="rounded-full px-7 py-6 bg-slate-900 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+                className="w-full sm:w-auto rounded-full px-7 py-6 bg-slate-900 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
                 onClick={() => scrollTo("contact")}
               >
                 Book et møte
@@ -36,7 +36,7 @@ export default function Footer() {
 
               <Button
                 variant="ghost"
-                className="rounded-full px-7 py-6 bg-slate-100 text-slate-900 hover:bg-slate-200 transition-colors"
+                className="w-full sm:w-auto rounded-full px-7 py-6 bg-slate-100 text-slate-900 hover:bg-slate-200 transition-colors"
                 onClick={() => scrollTo("how-it-works")}
               >
                 Se hvordan det fungerer
@@ -45,7 +45,7 @@ export default function Footer() {
           </div>
 
           {/* Link columns */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-10 w-full md:w-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 sm:gap-10 w-full md:w-auto">
             <div>
               <h3 className="text-sm font-semibold text-slate-900 mb-4">
                 Innhold
@@ -122,7 +122,7 @@ export default function Footer() {
               </ul>
             </div>
 
-            <div className="sm:block hidden">
+            <div className="col-span-2 sm:col-span-1">
               <h3 className="text-sm font-semibold text-slate-900 mb-4">
                 Sosialt
               </h3>

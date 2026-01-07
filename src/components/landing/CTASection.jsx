@@ -22,10 +22,10 @@ export default function CTASection() {
             La oss vise deg hvordan MoveWell kan gi tidlige signaler, tydelig oppfølging og bedre beslutningsgrunnlag.
           </p>
 
-          <div className="relative mt-10 flex flex-col sm:flex-row gap-3 justify-center">
+          <div className="relative mt-10 flex flex-col sm:flex-row gap-3 justify-center px-4 sm:px-0">
             <Button
               size="lg"
-              className="rounded-full px-8 py-6 bg-white text-slate-950 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+              className="w-full sm:w-auto rounded-full px-8 py-6 bg-white text-slate-950 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
               onClick={() => scrollTo("contact")}
             >
               Book et møte
@@ -35,7 +35,7 @@ export default function CTASection() {
             <Button
               size="lg"
               variant="ghost"
-              className="rounded-full px-8 py-6 bg-white/10 text-white hover:bg-white/15 border border-white/15 transition-all"
+              className="w-full sm:w-auto rounded-full px-8 py-6 bg-white/10 text-white hover:bg-white/15 border border-white/15 transition-all"
               onClick={() => scrollTo("how-it-works")}
             >
               Se hvordan det fungerer
