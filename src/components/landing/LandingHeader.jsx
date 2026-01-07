@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "../../utils";
+import { motion } from "framer-motion";
 
 export default function LandingHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -68,12 +69,24 @@ export default function LandingHeader() {
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
             <Link to={createPageUrl("Dashboard")}>
-              <Button
-                variant="ghost"
-                className="bg-slate-100 hover:bg-slate-200 text-slate-700 border-0 rounded-full px-6"
+              <motion.button
+                className="relative overflow-hidden bg-white/20 backdrop-blur-2xl border border-slate-300 text-slate-700 font-medium rounded-full px-6 py-2 shadow-[0_4px_16px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.6)]"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                Logg inn
-              </Button>
+                <motion.span
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
+                  initial={{ x: "-100%" }}
+                  animate={{ x: "200%" }}
+                  transition={{
+                    repeat: Infinity,
+                    repeatType: "loop",
+                    duration: 2.5,
+                    ease: "linear",
+                  }}
+                />
+                <span className="relative z-10">Logg inn</span>
+              </motion.button>
             </Link>
 
             <Button
@@ -121,12 +134,24 @@ export default function LandingHeader() {
               ))}
 
               <Link to={createPageUrl("Dashboard")} className="mt-2">
-                <Button
-                  variant="ghost"
-                  className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 border-0 rounded-full py-6"
+                <motion.button
+                  className="relative overflow-hidden w-full bg-white/20 backdrop-blur-2xl border border-slate-300 text-slate-700 font-medium rounded-full py-3 shadow-[0_4px_16px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.6)]"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  Logg inn
-                </Button>
+                  <motion.span
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
+                    initial={{ x: "-100%" }}
+                    animate={{ x: "200%" }}
+                    transition={{
+                      repeat: Infinity,
+                      repeatType: "loop",
+                      duration: 2.5,
+                      ease: "linear",
+                    }}
+                  />
+                  <span className="relative z-10">Logg inn</span>
+                </motion.button>
               </Link>
 
               <Button
