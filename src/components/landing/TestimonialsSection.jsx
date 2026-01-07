@@ -54,8 +54,13 @@ export default function TestimonialsSection() {
             {testimonials.map((t, index) => (
               <div
                 key={index}
-                className="rounded-3xl border border-white/40 bg-white/20 backdrop-blur-2xl p-6 sm:p-8 shadow-[0_8px_32px_rgba(0,0,0,0.08),inset_0_1px_1px_rgba(255,255,255,0.6)]"
+                className="relative"
               >
+                {/* Green glow behind card */}
+                <div className="absolute inset-0 -z-10 rounded-3xl bg-[#33c58f]/30 blur-2xl scale-90" />
+                <div
+                  className="relative rounded-3xl border border-white/40 bg-white/20 backdrop-blur-2xl p-6 sm:p-8 shadow-[0_8px_32px_rgba(0,0,0,0.08),inset_0_1px_1px_rgba(255,255,255,0.6)]"
+                >
                 <div className="flex items-center gap-4 mb-6">
                   <img
                     src={t.image}
