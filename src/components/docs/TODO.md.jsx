@@ -4,15 +4,15 @@ Updated: 2026-01-07
 
 ## P0 — Do Now
 - [x] Dashboard: ADMIN parity with HR (visibility)
-- [x] Dashboard: org scoping at query level (HealthAssessment, AssessmentSession, Department, Message, Recommendations)
-- [x] AcceptInvite: enforce email match with invitation
+- [x] Scope Dashboard queries by organization_id (HealthAssessment, AssessmentSession, Department, Message, ActionRecommendation)
+- [x] AcceptInvite: enforce email == invitation.email
 - [x] simulateAssessmentFlow: include submitted_at on AssessmentSession
-- [x] Assessment submit: create HealthAssessment snapshot (already in place)
+- [x] Assessment submit creates HealthAssessment snapshot
 
-## Next (P1)
-- [ ] Centralize role/access (useAppRole/useAccessScope) and apply across pages
-- [ ] Message schema update (status, replies) + align MyMessages
+## P1 — Soon
+- [ ] Centralize role/access helper and apply across pages
+- [ ] Message schema: status/replies + MyMessages alignment
 
-## Later (P2)
+## P2 — Polish
 - [ ] Route guard helper; unify redirects
 - [ ] Invitations: revoke/resend, org-scoped listing
