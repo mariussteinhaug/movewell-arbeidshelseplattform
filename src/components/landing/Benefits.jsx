@@ -42,37 +42,37 @@ export default function Benefits() {
       <div className="container mx-auto px-6 md:px-20">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto">
-          <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
+          <p className="text-xs sm:text-sm font-medium uppercase tracking-wide text-slate-500">
             Fordeler
           </p>
-          <h2 className="mt-3 text-3xl md:text-5xl font-semibold tracking-tight text-slate-900">
+          <h2 className="mt-3 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-slate-900 leading-tight">
             Målbar forbedring over tid
           </h2>
-          <p className="mt-4 text-slate-600 text-base md:text-lg">
+          <p className="mt-4 text-slate-600 text-sm sm:text-base md:text-lg leading-relaxed">
             MoveWell gjør forebyggende helsearbeid enklere – og mer handlingsrettet.
           </p>
         </div>
 
         {/* Grid */}
-        <div className="mt-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="mt-10 sm:mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {benefits.map((b, index) => (
             <div
               key={index}
-              className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm hover:shadow-md transition-shadow"
+              className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow"
             >
-              <div className="flex items-center justify-between">
-                <div className="h-12 w-12 rounded-2xl bg-slate-100 flex items-center justify-center">
-                  <b.icon className="h-6 w-6 text-slate-700" />
+              <div className="flex items-center justify-between gap-2">
+                <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-2xl bg-slate-100 flex items-center justify-center flex-shrink-0">
+                  <b.icon className="h-5 w-5 sm:h-6 sm:w-6 text-slate-700" />
                 </div>
-                <span className="text-xs font-semibold text-slate-500 rounded-full border border-slate-200 px-3 py-1">
+                <span className="text-xs font-semibold text-slate-500 rounded-full border border-slate-200 px-2.5 sm:px-3 py-1 whitespace-nowrap">
                   {b.stat}
                 </span>
               </div>
 
-              <h3 className="mt-6 text-lg font-semibold text-slate-900">
+              <h3 className="mt-5 sm:mt-6 text-base sm:text-lg font-semibold text-slate-900 leading-snug">
                 {b.title}
               </h3>
-              <p className="mt-3 text-slate-600 leading-relaxed text-sm md:text-base">
+              <p className="mt-2 sm:mt-3 text-slate-600 leading-relaxed text-sm">
                 {b.description}
               </p>
             </div>
