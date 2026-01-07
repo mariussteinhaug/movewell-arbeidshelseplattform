@@ -50,13 +50,13 @@ export default function TestimonialsSection() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
             {testimonials.map((t, index) => (
-              <div key={index} className="relative">
+              <div key={index} className="relative h-full">
                 {/* Green glow behind card */}
                 <div className="absolute -inset-4 -z-10 rounded-3xl bg-[#33c58f]/40 blur-3xl" />
                 <div className="absolute -inset-2 -z-10 rounded-3xl bg-[#33c58f]/20 blur-xl" />
-                <div className="relative rounded-2xl border border-white/40 bg-white/30 backdrop-blur-2xl p-6 sm:p-8 text-left shadow-[0_8px_32px_rgba(0,0,0,0.08),inset_0_1px_1px_rgba(255,255,255,0.6)]">
+                <div className="relative h-full rounded-2xl border border-white/40 bg-white/30 backdrop-blur-2xl p-6 sm:p-8 text-left shadow-[0_8px_32px_rgba(0,0,0,0.08),inset_0_1px_1px_rgba(255,255,255,0.6)]">
                   <div className="flex items-center gap-4 mb-4">
                     <img
                       src={t.image}
