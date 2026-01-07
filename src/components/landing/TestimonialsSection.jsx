@@ -54,7 +54,7 @@ export default function TestimonialsSection() {
             {testimonials.map((t, index) => (
               <div
                 key={index}
-                className="rounded-3xl border border-slate-200/60 bg-white/50 backdrop-blur-xl p-6 sm:p-8 shadow-[0_8px_32px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.9)]"
+                className="rounded-3xl border border-white/40 bg-white/20 backdrop-blur-2xl p-6 sm:p-8 shadow-[0_8px_32px_rgba(0,0,0,0.08),inset_0_1px_1px_rgba(255,255,255,0.6)]"
               >
                 <div className="flex items-center gap-4 mb-6">
                   <img

@@ -21,7 +21,7 @@ export default function ProductSection({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           {/* Image */}
           <div className={reversed ? "lg:order-2" : ""}>
-            <div className="rounded-3xl border border-slate-200/80 bg-white/60 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.8)] overflow-hidden">
+            <div className="rounded-3xl border border-white/40 bg-white/20 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08),inset_0_1px_1px_rgba(255,255,255,0.6)] overflow-hidden">
               <img
                 src={image}
                 alt={title}

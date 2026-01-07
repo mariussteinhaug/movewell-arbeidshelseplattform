@@ -47,11 +47,11 @@ export default function HowItWorks() {
           {steps.map((s, index) => (
             <div
               key={index}
-              className="relative rounded-3xl border border-slate-200/60 bg-white/50 backdrop-blur-xl p-6 sm:p-8 shadow-[0_8px_32px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.9)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.9)] transition-shadow"
+              className="relative rounded-3xl border border-white/40 bg-white/20 backdrop-blur-2xl p-6 sm:p-8 shadow-[0_8px_32px_rgba(0,0,0,0.08),inset_0_1px_1px_rgba(255,255,255,0.6)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.12),inset_0_1px_1px_rgba(255,255,255,0.6)] transition-shadow"
             >
               {/* Top row */}
               <div className="flex items-start justify-between">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/40 backdrop-blur">
                   <s.icon className="h-6 w-6 text-slate-700" />
                 </div>
                 <span className="text-sm font-semibold text-slate-400">

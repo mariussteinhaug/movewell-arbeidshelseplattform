@@ -58,10 +58,10 @@ export default function Benefits() {
           {benefits.map((b, index) => (
             <div
               key={index}
-              className="rounded-3xl border border-slate-200/60 bg-white/50 backdrop-blur-xl p-6 sm:p-8 shadow-[0_8px_32px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.9)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.9)] transition-shadow"
+              className="rounded-3xl border border-white/40 bg-white/20 backdrop-blur-2xl p-6 sm:p-8 shadow-[0_8px_32px_rgba(0,0,0,0.08),inset_0_1px_1px_rgba(255,255,255,0.6)] hover:shadow-[0_16px_48px_rgba(0,0,0,0.12),inset_0_1px_1px_rgba(255,255,255,0.6)] transition-shadow"
             >
               <div className="flex items-center justify-between gap-2">
-                <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-2xl bg-slate-100 flex items-center justify-center flex-shrink-0">
+                <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-2xl bg-white/40 backdrop-blur flex items-center justify-center flex-shrink-0">
                   <b.icon className="h-5 w-5 sm:h-6 sm:w-6 text-slate-700" />
                 </div>
                 <span className="text-xs font-semibold text-slate-500 rounded-full border border-slate-200 px-2.5 sm:px-3 py-1 whitespace-nowrap">
