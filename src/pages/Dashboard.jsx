@@ -260,7 +260,7 @@ export default function Dashboard() {
 
   const scopedAssessments = useMemo(() => {
     if (!currentUser) return [];
-    if (role === ROLE.HR) return assessmentsRaw;
+    if (role === ROLE.HR || role === ROLE.ADMIN) return assessmentsRaw;
     return assessmentsRaw.filter(
       (a) =>
         scope.ids.includes(a.department_id) ||
@@ -270,7 +270,7 @@ export default function Dashboard() {
 
   const scopedDepartments = useMemo(() => {
     if (!currentUser) return [];
-    if (role === ROLE.HR) return departments;
+    if (role === ROLE.HR || role === ROLE.ADMIN) return departments;
     return departments.filter(
       (d) => scope.ids.includes(d.id) || scope.names.includes(d.name)
     );
@@ -278,7 +278,7 @@ export default function Dashboard() {
 
   const scopedRecommendations = useMemo(() => {
     if (!currentUser) return [];
-    if (role === ROLE.HR) return recommendations;
+    if (role === ROLE.HR || role === ROLE.ADMIN) return recommendations;
     return recommendations.filter(
       (r) =>
         scope.ids.includes(r.department_id) || scope.names.includes(r.department)
@@ -304,7 +304,7 @@ export default function Dashboard() {
       if (m.type !== "broadcast") return false;
       const ts = m.sent_at ? new Date(m.sent_at).getTime() : 0;
       if (ts < startMs) return false;
-      if (role === ROLE.HR) return true;
+      if (role === ROLE.HR || role === ROLE.ADMIN) return true;
       return scope.ids.includes(m.recipient_department_id);
     }).length;
   }, [messagesAll, role, scope]);
