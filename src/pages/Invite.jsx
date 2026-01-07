@@ -1,15 +1,39 @@
 import React from "react";
 import InviteUserModal from "../components/invitations/InviteUserModal";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { createPageUrl } from "../utils";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 export default function Invite() {
   const { data: me } = useQuery({ queryKey: ['current-user'], queryFn: () => base44.auth.me() });
   const { data: invites = [] } = useQuery({
-    queryKey: ['invites'],
-    queryFn: () => base44.entities.Invitation.filter({ status: 'pending' })
+    queryKey: ['invites', me?.organization_id],
+    enabled: !!me?.organization_id,
+    queryFn: () => base44.entities.Invitation.filter({ status: 'pending', organization_id: me.organization_id })
+  });
+
+  const queryClient = useQueryClient();
+
+  const revokeInvite = useMutation({
+    mutationFn: (id) => base44.entities.Invitation.update(id, { status: 'revoked' }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['invites'] })
+  });
+
+  const resendInvite = useMutation({
+    mutationFn: async (inv) => {
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      await base44.entities.Invitation.update(inv.id, { expires_at: expiresAt, status: 'pending' });
+      const link = window.location.origin + createPageUrl('AcceptInvite') + `?token=${encodeURIComponent(inv.token)}`;
+      await base44.integrations.Core.SendEmail({
+        to: inv.email,
+        subject: 'Ny invitasjon til MoveWell',
+        body: `Hei! Du er invitert til MoveWell. Klikk for å akseptere: ${link}`
+      });
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['invites'] })
   });
 
   return (
@@ -36,7 +60,15 @@ export default function Invite() {
                 <p className="font-medium text-slate-900">{i.email}</p>
                 <p className="text-slate-600">Rolle: {i.role}{i.department_id ? ` • Avd: ${i.department_id}` : ''}</p>
               </div>
-              <Badge className="bg-amber-100 text-amber-800">{i.status}</Badge>
+              <div className="flex items-center gap-2">
+                <Badge className="bg-amber-100 text-amber-800">{i.status}</Badge>
+                <Button variant="outline" size="sm" onClick={() => resendInvite.mutate(i)}>
+                  Send på nytt
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => revokeInvite.mutate(i.id)}>
+                  Opphev
+                </Button>
+              </div>
             </div>
           ))}
         </CardContent>

@@ -96,27 +96,25 @@ export default function MyMessages() {
   });
 
   const sendReply = useMutation({
-    mutationFn: async ({ messageId, message }) => {
-      const newReply = {
-        sender_email: currentUser.email,
-        sender_name: currentUser.full_name,
-        content: replyText,
-        timestamp: new Date().toISOString()
-      };
-
-      const updatedReplies = [...(message.replies || []), newReply];
-
-      return base44.entities.Message.update(messageId, {
-        replies: updatedReplies,
-        status: 'besvart'
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-messages'] });
-      setReplyText('');
-      setSelectedMessage(null);
-    }
-  });
+      mutationFn: async ({ messageId, message }) => {
+        const newReply = {
+          sender_user_id: currentUser.id,
+          sender_display_name: currentUser.full_name,
+          content: replyText,
+          sent_at: new Date().toISOString()
+        };
+        const updatedReplies = [...(message.replies || []), newReply];
+        return base44.entities.Message.update(messageId, {
+          replies: updatedReplies,
+          status: 'besvart'
+        });
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['my-messages'] });
+        setReplyText('');
+        setSelectedMessage(null);
+      }
+    });
 
   const forwardToAccommodation = useMutation({
     mutationFn: async ({ message, note }) => {
