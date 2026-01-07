@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { createPageUrl } from "../utils";
 import { ROLE, normalizeRole, hasRole, accessScopeFromUser } from "../components/access/role";
+import { useRequireRoles } from "../components/access/guard";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Loader2, Search, ChevronLeft, ChevronRight, Calendar as CalendarIcon, User as UserIcon, Building2, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
@@ -73,12 +74,7 @@ export default function Accommodation() {
     setSelectedCase(filtered[0] || null);
   }, [search, statusFilter, accommodations]);
 
-  React.useEffect(() => {
-    const role = normalizeRole(currentUser);
-    if (currentUser && !hasRole(role, [ROLE.MANAGER, ROLE.HR])) {
-      window.location.href = createPageUrl('Assessment');
-    }
-  }, [currentUser]);
+  useRequireRoles([ROLE.MANAGER, ROLE.HR], 'Assessment');
 
   if (isLoading) {
     return (
