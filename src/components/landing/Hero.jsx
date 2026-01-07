@@ -37,22 +37,19 @@ export default function Hero() {
           {/* CTA row */}
           <div className="mt-10 flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
             <Button
-              size="lg"
-              className="w-full sm:w-auto rounded-full px-8 py-6 bg-slate-900 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+              className="w-full sm:w-auto h-12 px-8 rounded-full bg-[#33c58f] hover:bg-[#2aa876] text-white shadow-lg transition-colors"
               onClick={() => scrollTo("contact")}
             >
               Book et møte
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
 
-            <Button
-              size="lg"
-              variant="ghost"
-              className="w-full sm:w-auto rounded-full px-8 py-6 bg-white/70 hover:bg-white border border-slate-200 text-slate-900 shadow-sm transition-all"
+            <button
+              className="w-full sm:w-auto h-12 px-8 bg-[#33c58f]/10 backdrop-blur-2xl border border-[#33c58f]/50 text-[#2a9e73] font-medium rounded-full shadow-[0_4px_16px_rgba(51,197,143,0.15),inset_0_1px_1px_rgba(255,255,255,0.6)] hover:bg-[#33c58f]/20 transition-colors"
               onClick={() => scrollTo("how-it-works")}
             >
               Se hvordan det fungerer
-            </Button>
+            </button>
           </div>
 
           {/* Trust cards */}
