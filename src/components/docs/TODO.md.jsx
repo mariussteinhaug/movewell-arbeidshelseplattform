@@ -10,7 +10,7 @@ Updated: 2026-01-07
 - [x] Assessment submit creates HealthAssessment snapshot
 
 ## P1 — Soon
-- [ ] Centralize role/access helper and apply across pages
+- [x] Centralize role/access helper and apply across pages
 - [ ] Message schema: status/replies + MyMessages alignment
 
 ## P2 — Polish
