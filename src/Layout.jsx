@@ -18,29 +18,12 @@ import {
       } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { cn } from "@/lib/utils";
+import { ROLE, normalizeRole, hasRole } from "./components/access/role";
 
-const ROLE = {
-  EMPLOYEE: "employee",
-  MANAGER: "manager", // leder
-  HR: "hr",
-  ADMIN: "admin", // hvis du har legacy admin i Base44
-};
 
 // Normaliser role fra Base44 (så du ikke knekker hvis den heter "admin" i dag)
-function normalizeRole(rawRole) {
-  if (!rawRole) return ROLE.EMPLOYEE;
-  const r = String(rawRole).toLowerCase();
-  if (r === "hr") return ROLE.HR;
-  if (r === "manager" || r === "leader" || r === "leder") return ROLE.MANAGER;
-  if (r === "admin") return ROLE.HR; // ofte er "admin" i praksis HR i MoveWell
-  return ROLE.EMPLOYEE;
-}
 
 // RBAC helper
-function hasRole(userRole, allowedRoles) {
-  if (!allowedRoles || allowedRoles.length === 0) return true;
-  return allowedRoles.includes(userRole);
-}
 
 export default function Layout({ children, currentPageName }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -64,7 +47,7 @@ export default function Layout({ children, currentPageName }) {
     fetchUser();
   }, []);
 
-  const userRole = normalizeRole(user?.role);
+  const userRole = normalizeRole(user);
 
   const navigation = useMemo(() => {
     const items = [

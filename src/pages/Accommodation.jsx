@@ -2,6 +2,7 @@ import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { createPageUrl } from "../utils";
+import { ROLE, normalizeRole, hasRole, accessScopeFromUser } from "../components/access/role";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Loader2, Search, ChevronLeft, ChevronRight, Calendar as CalendarIcon, User as UserIcon, Building2, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
@@ -37,12 +38,12 @@ export default function Accommodation() {
 
   const filtered = React.useMemo(() => {
     const q = search.trim().toLowerCase();
-    const appRole = String((currentUser?.app_role || currentUser?.role || '')).toLowerCase();
-    const orgId = currentUser?.organization_id || 'eramet';
+    const role = normalizeRole(currentUser);
+    const scope = accessScopeFromUser(currentUser);
     return (accommodations || []).filter((it) => {
       if (!includeArchived && it.archived) return false;
-      if (it.organization_id !== orgId) return false;
-      if (appRole === 'manager' && currentUser?.department_id && it.department_id !== currentUser.department_id) return false;
+      if (it.organization_id !== scope.organization_id) return false;
+      if (role === ROLE.MANAGER && scope.department_id && it.department_id !== scope.department_id) return false;
       const matchesStatus = statusFilter === "alle" || it.status === statusFilter;
       if (!q) return matchesStatus;
       const hay = [
@@ -73,8 +74,8 @@ export default function Accommodation() {
   }, [search, statusFilter, accommodations]);
 
   React.useEffect(() => {
-    const appRole = String((currentUser?.app_role || currentUser?.role || '')).toLowerCase();
-    if (currentUser && !['hr', 'owner', 'manager'].includes(appRole)) {
+    const role = normalizeRole(currentUser);
+    if (currentUser && !hasRole(role, [ROLE.MANAGER, ROLE.HR])) {
       window.location.href = createPageUrl('Assessment');
     }
   }, [currentUser]);
