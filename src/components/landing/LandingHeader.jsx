@@ -70,12 +70,12 @@ export default function LandingHeader() {
           <div className="hidden md:flex items-center gap-4">
             <Link to={createPageUrl("Dashboard")}>
               <motion.button
-                className="relative overflow-hidden bg-white/20 backdrop-blur-2xl border border-slate-300 text-slate-700 font-medium rounded-full px-6 py-2 shadow-[0_4px_16px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.6)]"
+                className="relative overflow-hidden bg-teal-500/10 backdrop-blur-2xl border border-teal-400/50 text-teal-700 font-medium rounded-full px-6 py-2 shadow-[0_4px_16px_rgba(20,184,166,0.12),inset_0_1px_1px_rgba(255,255,255,0.6)]"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
                 <motion.span
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-teal-200/50 to-transparent"
                   initial={{ x: "-100%" }}
                   animate={{ x: "200%" }}
                   transition={{
@@ -135,12 +135,12 @@ export default function LandingHeader() {
 
               <Link to={createPageUrl("Dashboard")} className="mt-2">
                 <motion.button
-                  className="relative overflow-hidden w-full bg-white/20 backdrop-blur-2xl border border-slate-300 text-slate-700 font-medium rounded-full py-3 shadow-[0_4px_16px_rgba(0,0,0,0.06),inset_0_1px_1px_rgba(255,255,255,0.6)]"
+                  className="relative overflow-hidden w-full bg-teal-500/10 backdrop-blur-2xl border border-teal-400/50 text-teal-700 font-medium rounded-full py-3 shadow-[0_4px_16px_rgba(20,184,166,0.12),inset_0_1px_1px_rgba(255,255,255,0.6)]"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
                   <motion.span
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent"
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-teal-200/50 to-transparent"
                     initial={{ x: "-100%" }}
                     animate={{ x: "200%" }}
                     transition={{
