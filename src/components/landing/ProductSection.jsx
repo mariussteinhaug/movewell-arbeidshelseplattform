@@ -64,7 +64,7 @@ export default function ProductSection({
 
             <div className="mt-10">
               <Button
-                className="w-full sm:w-auto rounded-full px-7 py-6 bg-slate-900 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+                className="w-full sm:w-auto rounded-full px-7 py-6 bg-[#33c58f] hover:bg-[#2aa876] text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
                 onClick={scrollToContact}
               >
                 {buttonText}

@@ -162,7 +162,7 @@ export default function Contact() {
                   <Button
                     type="submit"
                     size="lg"
-                    className="w-full rounded-full py-6 bg-slate-900 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+                    className="w-full rounded-full py-6 bg-[#33c58f] hover:bg-[#2aa876] text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
                   >
                     Send forespørsel
                     <ArrowRight className="w-5 h-5 ml-2" />
