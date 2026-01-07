@@ -57,9 +57,9 @@ export default function Hero() {
 
           {/* Trust cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl w-full mx-auto mt-12">
-            <div className="rounded-2xl border border-slate-200/60 bg-white/50 backdrop-blur-xl p-5 sm:p-6 text-left shadow-[0_8px_32px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.9)]">
+            <div className="rounded-2xl border border-white/40 bg-white/20 backdrop-blur-2xl p-5 sm:p-6 text-left shadow-[0_8px_32px_rgba(0,0,0,0.08),inset_0_1px_1px_rgba(255,255,255,0.6)]">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                <div className="h-10 w-10 rounded-xl bg-white/40 backdrop-blur flex items-center justify-center">
                   <LineChart className="h-5 w-5 text-slate-700" />
                 </div>
                 <p className="font-semibold text-slate-900">Tidlige risikosignaler</p>
@@ -69,9 +69,9 @@ export default function Hero() {
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-200/60 bg-white/50 backdrop-blur-xl p-5 sm:p-6 text-left shadow-[0_8px_32px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.9)]">
+            <div className="rounded-2xl border border-white/40 bg-white/20 backdrop-blur-2xl p-5 sm:p-6 text-left shadow-[0_8px_32px_rgba(0,0,0,0.08),inset_0_1px_1px_rgba(255,255,255,0.6)]">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                <div className="h-10 w-10 rounded-xl bg-white/40 backdrop-blur flex items-center justify-center">
                   <Users className="h-5 w-5 text-slate-700" />
                 </div>
                 <p className="font-semibold text-slate-900">Anonym kartlegging</p>
@@ -81,9 +81,9 @@ export default function Hero() {
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-200/60 bg-white/50 backdrop-blur-xl p-5 sm:p-6 text-left shadow-[0_8px_32px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.9)]">
+            <div className="rounded-2xl border border-white/40 bg-white/20 backdrop-blur-2xl p-5 sm:p-6 text-left shadow-[0_8px_32px_rgba(0,0,0,0.08),inset_0_1px_1px_rgba(255,255,255,0.6)]">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center">
+                <div className="h-10 w-10 rounded-xl bg-white/40 backdrop-blur flex items-center justify-center">
                   <Shield className="h-5 w-5 text-slate-700" />
                 </div>
                 <p className="font-semibold text-slate-900">GDPR og personvern</p>
