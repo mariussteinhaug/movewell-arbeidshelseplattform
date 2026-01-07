@@ -69,6 +69,7 @@ export default function Layout({ children, currentPageName }) {
       { name: "Ansattprofil", page: "EmployeeProfile", icon: Shield, roles: [ROLE.HR] },
       { name: "Avdelinger", page: "Departments", icon: Building2, roles: [ROLE.HR] },
       { name: "Innstillinger", page: "Settings", icon: Settings, roles: [ROLE.HR] },
+            { name: "Docs", page: "Docs", icon: FileText, roles: [ROLE.HR] },
     ];
 
     return items.filter((item) => hasRole(userRole, item.roles));
