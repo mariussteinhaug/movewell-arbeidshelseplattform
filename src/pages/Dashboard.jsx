@@ -224,19 +224,19 @@ export default function Dashboard() {
 
   const { data: assessmentsRaw = [], isLoading: loadingAssessments } = useQuery({
     queryKey: ["assessments"],
-    queryFn: () => base44.entities.HealthAssessment.list("-created_date", 500),
+    queryFn: () => base44.entities.HealthAssessment.filter({ organization_id: currentUser?.organization_id }, "-created_date", 500),
     enabled: !!currentUser && canSeeDashboard,
   });
 
   const { data: departments = [], isLoading: loadingDepartments } = useQuery({
     queryKey: ["departments"],
-    queryFn: () => base44.entities.Department.list(),
+    queryFn: () => base44.entities.Department.filter({ organization_id: currentUser?.organization_id }),
     enabled: !!currentUser && canSeeDashboard,
   });
 
   const { data: sessionsAll = [] } = useQuery({
     queryKey: ["assessment-sessions"],
-    queryFn: () => base44.entities.AssessmentSession.list("-created_date", 500),
+    queryFn: () => base44.entities.AssessmentSession.filter({ organization_id: currentUser?.organization_id }, "-created_date", 500),
     enabled: !!currentUser && canSeeDashboard,
   });
 
@@ -244,7 +244,7 @@ export default function Dashboard() {
     queryKey: ["recommendations"],
     queryFn: () =>
       base44.entities.ActionRecommendation.filter(
-        { status: "ny" },
+        { status: "ny", organization_id: currentUser?.organization_id },
         "-created_date",
         10
       ),
@@ -254,7 +254,7 @@ export default function Dashboard() {
   // Meldinger (for varsler i dag)
   const { data: messagesAll = [] } = useQuery({
     queryKey: ["messages"],
-    queryFn: () => base44.entities.Message.list("-sent_at", 200),
+    queryFn: () => base44.entities.Message.filter({ organization_id: currentUser?.organization_id }, "-sent_at", 200),
     enabled: !!currentUser && canSeeDashboard,
   });
 

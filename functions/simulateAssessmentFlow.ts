@@ -148,6 +148,7 @@ Deno.serve(async (req) => {
       confidence: assessmentResult.confidence,
       session_week: weekStr,
       created_at: nowIso,
+      submitted_at: nowIso,
       completed_at: nowIso,
     });
 

@@ -59,6 +59,11 @@ export default function AcceptInvite() {
         await handleLogin();
         return;
       }
+      if (String(me.email || '').toLowerCase() !== String(inv.email || '').toLowerCase()) {
+        setError('Innlogget e-post stemmer ikke med invitasjonen');
+        setLoading(false);
+        return;
+      }
       const appRole = inv.role; // hr | manager | employee
       const profile = {
         app_role: appRole,
