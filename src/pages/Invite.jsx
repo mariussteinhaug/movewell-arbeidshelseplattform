@@ -13,7 +13,7 @@ export default function Invite() {
   const { user: me, role, isLoading: authLoading, scope } = useRequireRoles([ROLE.MANAGER, ROLE.HR], 'Assessment');
   const queryClient = useQueryClient();
   
-  const { data: invites = [] } = useQuery({
+  const { data: invites = [], isLoading: invitesLoading } = useQuery({
     queryKey: ['invites', me?.organization_id],
     enabled: !authLoading && !!me?.organization_id,
     queryFn: () => base44.entities.Invitation.filter({ status: 'pending', organization_id: me.organization_id })
@@ -38,7 +38,8 @@ export default function Invite() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['invites'] })
   });
 
-  if (authLoading) {
+  // Loading check moved AFTER all hooks
+  if (authLoading || invitesLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
