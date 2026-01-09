@@ -11,21 +11,13 @@ import { Loader2 } from "lucide-react";
 
 export default function Invite() {
   const { user: me, role, isLoading: authLoading, scope } = useRequireRoles([ROLE.MANAGER, ROLE.HR], 'Assessment');
+  const queryClient = useQueryClient();
+  
   const { data: invites = [] } = useQuery({
     queryKey: ['invites', me?.organization_id],
     enabled: !authLoading && !!me?.organization_id,
     queryFn: () => base44.entities.Invitation.filter({ status: 'pending', organization_id: me.organization_id })
   });
-
-  const queryClient = useQueryClient();
-
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
-      </div>
-    );
-  }
 
   const revokeInvite = useMutation({
     mutationFn: (id) => base44.entities.Invitation.update(id, { status: 'revoked' }),
@@ -45,6 +37,14 @@ export default function Invite() {
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['invites'] })
   });
+
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
