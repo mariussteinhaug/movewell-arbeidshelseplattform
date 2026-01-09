@@ -200,30 +200,22 @@ export default function Dashboard() {
   const canSeeDashboard = role === ROLE.HR || role === ROLE.MANAGER;
   const scope = useMemo(() => getManagedDepartmentKeys(currentUser), [currentUser?.id]);
 
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
-      </div>
-    );
-  }
-
   const { data: assessmentsRaw = [], isLoading: loadingAssessments } = useQuery({
     queryKey: ["assessments"],
     queryFn: () => base44.entities.HealthAssessment.filter({ organization_id: currentUser?.organization_id }, "-created_date", 500),
-    enabled: !!currentUser && canSeeDashboard,
+    enabled: !authLoading && !!currentUser && canSeeDashboard,
   });
 
   const { data: departments = [], isLoading: loadingDepartments } = useQuery({
     queryKey: ["departments"],
     queryFn: () => base44.entities.Department.filter({ organization_id: currentUser?.organization_id }),
-    enabled: !!currentUser && canSeeDashboard,
+    enabled: !authLoading && !!currentUser && canSeeDashboard,
   });
 
   const { data: sessionsAll = [] } = useQuery({
     queryKey: ["assessment-sessions"],
     queryFn: () => base44.entities.AssessmentSession.filter({ organization_id: currentUser?.organization_id }, "-created_date", 500),
-    enabled: !!currentUser && canSeeDashboard,
+    enabled: !authLoading && !!currentUser && canSeeDashboard,
   });
 
   const { data: recommendations = [] } = useQuery({
@@ -234,14 +226,14 @@ export default function Dashboard() {
         "-created_date",
         10
       ),
-    enabled: !!currentUser && canSeeDashboard,
+    enabled: !authLoading && !!currentUser && canSeeDashboard,
   });
 
   // Meldinger (for varsler i dag)
   const { data: messagesAll = [] } = useQuery({
     queryKey: ["messages"],
     queryFn: () => base44.entities.Message.filter({ organization_id: currentUser?.organization_id }, "-sent_at", 200),
-    enabled: !!currentUser && canSeeDashboard,
+    enabled: !authLoading && !!currentUser && canSeeDashboard,
   });
 
   const scopedAssessments = useMemo(() => {
@@ -379,7 +371,15 @@ export default function Dashboard() {
       ? "Følg med"
       : "Tiltak";
 
-  const isLoading = loadingAssessments || loadingDepartments;
+  const isLoading = authLoading || loadingAssessments || loadingDepartments;
+
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+      </div>
+    );
+  }
 
   if (currentUser && !canSeeDashboard) {
     return (
