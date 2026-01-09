@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { useRequireRoles, ROLE, accessScopeFromUser } from "@/components/access/guard";
+import { useRequireRoles, ROLE, accessScopeFromUser } from "../components/access/guard";
 
 // Lazy load heavy charts for performance
 const DepartmentRiskChart = lazy(() =>
@@ -194,15 +194,19 @@ function StatCard({ label, value, hint, icon: Icon, chip }) {
    Main Dashboard
 --------------------------- */
 export default function Dashboard() {
-  const { user: currentUser, role, isLoading: authLoading, scope: authScope } = useRequireRoles(
-    [ROLE.MANAGER, ROLE.HR], 
-    "Assessment"
-  );
-  
+  const { user: currentUser, role, isLoading: authLoading, scope: authScope } = useRequireRoles([ROLE.MANAGER, ROLE.HR], "Assessment");
   const [range, setRange] = useState(RANGE.D30);
 
   const canSeeDashboard = role === ROLE.HR || role === ROLE.MANAGER;
   const scope = useMemo(() => getManagedDepartmentKeys(currentUser), [currentUser?.id]);
+
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+      </div>
+    );
+  }
 
   const { data: assessmentsRaw = [], isLoading: loadingAssessments } = useQuery({
     queryKey: ["assessments"],
@@ -375,12 +379,17 @@ export default function Dashboard() {
       ? "Følg med"
       : "Tiltak";
 
-  const isLoading = loadingAssessments || loadingDepartments || authLoading;
+  const isLoading = loadingAssessments || loadingDepartments;
 
-  if (authLoading) {
+  if (currentUser && !canSeeDashboard) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+      <div className="min-h-[60vh] grid place-items-center text-center">
+        <div className="max-w-md">
+          <h2 className="text-2xl font-semibold text-slate-900">Ingen tilgang</h2>
+          <p className="text-slate-600 mt-2">
+            Denne siden er kun tilgjengelig for HR og ledere.
+          </p>
+        </div>
       </div>
     );
   }
