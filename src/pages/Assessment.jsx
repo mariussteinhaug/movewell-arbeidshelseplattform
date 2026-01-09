@@ -306,7 +306,8 @@ export default function Assessment() {
           const merged = [...prev, ...normalized].slice(0, 5);
           return merged;
         });
-        setCurrentQuestionIndex((i) => Math.min(i + 1, relevantQuestions.length));
+        // Move to next question (first dynamic question)
+        setCurrentQuestionIndex((i) => i + 1);
         setIsAnalyzing(false);
         return;
       } else if (result.stop_assessment) {
@@ -388,20 +389,28 @@ export default function Assessment() {
       });
 
       // Opprett også en HealthAssessment for dashboard/statistikk
+      // Map risk_level to 1-5 scale (1=worst, 5=best)
       const score = assessment?.risk_level === "high" ? 2 : assessment?.risk_level === "low" ? 4 : 3;
       await base44.entities.HealthAssessment.create({
         organization_id: currentUser?.organization_id || "default",
         department_id: dept?.id || "unknown",
         department_name: selectedDepartment || "Ikke oppgitt",
         assessment_week: week,
+        respondent_user_id: currentUser?.id,
+        respondent_pseudonym: `user_${Date.now()}`,
         status: "submitted",
         created_date: new Date().toISOString(),
+        submitted_at: new Date().toISOString(),
         physical_load: score,
         mental_wellbeing: score,
         work_environment: score,
         recovery: score,
         stress_level: score,
-        adaptive_responses: [],
+        adaptive_responses: answeredQuestions.map(aq => ({
+          question: allQuestions.find(q => q.question_id === aq.question_id)?.text || aq.question_id,
+          answer: aq.answer,
+          category: allQuestions.find(q => q.question_id === aq.question_id)?.category || "generell"
+        })),
         risk_indicators: assessment?.risk_signals || [],
       });
 
@@ -421,7 +430,7 @@ export default function Assessment() {
     if (isLast) {
       await getNextQuestionAI();
     } else {
-      setCurrentQuestionIndex((i) => Math.min(i + 1, relevantQuestions.length - 1));
+      setCurrentQuestionIndex((i) => Math.min(i + 1, displayedQuestions.length - 1));
     }
   };
 
