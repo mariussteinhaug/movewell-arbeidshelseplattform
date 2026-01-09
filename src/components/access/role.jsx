@@ -4,7 +4,6 @@ export const ROLE = {
   EMPLOYEE: "employee",
   MANAGER: "manager",
   HR: "hr",
-  ADMIN: "admin", // built-in fallback (treated as HR)
 };
 
 // Normalize from either a user object or a raw role string
@@ -45,7 +44,34 @@ export function accessScopeFromUser(user) {
   const role = normalizeRole(user);
   const organization_id = user?.organization_id || "default";
   if (role === ROLE.MANAGER) {
-    return { organization_id, department_id: user?.department_id || null };
+    const deptIds = Array.isArray(user?.managed_department_ids) 
+      ? user.managed_department_ids 
+      : [];
+    if (user?.department_id && !deptIds.includes(user.department_id)) {
+      deptIds.push(user.department_id);
+    }
+    return { organization_id, department_ids: deptIds, department_id: user?.department_id || null };
   }
   return { organization_id };
+}
+
+// Check if user can access a specific department
+export function canAccessDepartment(user, departmentId) {
+  const role = normalizeRole(user);
+  if (role === ROLE.HR) return true;
+  if (role === ROLE.MANAGER) {
+    const scope = accessScopeFromUser(user);
+    return scope.department_ids?.includes(departmentId) || scope.department_id === departmentId;
+  }
+  return user?.department_id === departmentId;
+}
+
+// Check if user can access employee data
+export function canAccessEmployee(user, employeeDepartmentId) {
+  const role = normalizeRole(user);
+  if (role === ROLE.HR) return true;
+  if (role === ROLE.MANAGER) {
+    return canAccessDepartment(user, employeeDepartmentId);
+  }
+  return false; // Employees cannot access other employees
 }
