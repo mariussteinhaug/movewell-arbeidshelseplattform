@@ -8,9 +8,11 @@ import {
   Users,
   Sparkles,
   ArrowUpRight,
+  Loader2,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { useRequireRoles, ROLE, accessScopeFromUser } from "@/components/access/guard";
 
 // Lazy load heavy charts for performance
 const DepartmentRiskChart = lazy(() =>
@@ -18,25 +20,6 @@ const DepartmentRiskChart = lazy(() =>
 );
 const TrendChart = lazy(() => import("../components/dashboard/TrendChart"));
 const AlertList = lazy(() => import("../components/dashboard/AlertList"));
-
-/* ---------------------------
-   Roles (MoveWell)
---------------------------- */
-const ROLE = {
-  EMPLOYEE: "employee",
-  MANAGER: "manager",
-  HR: "hr",
-  ADMIN: "admin",
-};
-
-function normalizeRole(rawRole) {
-  if (!rawRole) return ROLE.EMPLOYEE;
-  const r = String(rawRole).toLowerCase();
-  if (r === "hr") return ROLE.HR;
-  if (["manager", "leader", "leder"].includes(r)) return ROLE.MANAGER;
-  if (r === "admin") return ROLE.ADMIN;
-  return ROLE.EMPLOYEE;
-}
 
 function getManagedDepartmentKeys(user) {
   const ids = Array.isArray(user?.managed_department_ids)
@@ -211,15 +194,14 @@ function StatCard({ label, value, hint, icon: Icon, chip }) {
    Main Dashboard
 --------------------------- */
 export default function Dashboard() {
+  const { user: currentUser, role, isLoading: authLoading, scope: authScope } = useRequireRoles(
+    [ROLE.MANAGER, ROLE.HR], 
+    "Assessment"
+  );
+  
   const [range, setRange] = useState(RANGE.D30);
 
-  const { data: currentUser } = useQuery({
-    queryKey: ["current-user"],
-    queryFn: () => base44.auth.me(),
-  });
-
-  const role = normalizeRole(currentUser?.role);
-  const canSeeDashboard = role === ROLE.HR || role === ROLE.MANAGER || role === ROLE.ADMIN;
+  const canSeeDashboard = role === ROLE.HR || role === ROLE.MANAGER;
   const scope = useMemo(() => getManagedDepartmentKeys(currentUser), [currentUser?.id]);
 
   const { data: assessmentsRaw = [], isLoading: loadingAssessments } = useQuery({
@@ -260,7 +242,7 @@ export default function Dashboard() {
 
   const scopedAssessments = useMemo(() => {
     if (!currentUser) return [];
-    if (role === ROLE.HR || role === ROLE.ADMIN) return assessmentsRaw;
+    if (role === ROLE.HR) return assessmentsRaw;
     return assessmentsRaw.filter(
       (a) =>
         scope.ids.includes(a.department_id) ||
@@ -270,7 +252,7 @@ export default function Dashboard() {
 
   const scopedDepartments = useMemo(() => {
     if (!currentUser) return [];
-    if (role === ROLE.HR || role === ROLE.ADMIN) return departments;
+    if (role === ROLE.HR) return departments;
     return departments.filter(
       (d) => scope.ids.includes(d.id) || scope.names.includes(d.name)
     );
@@ -278,7 +260,7 @@ export default function Dashboard() {
 
   const scopedRecommendations = useMemo(() => {
     if (!currentUser) return [];
-    if (role === ROLE.HR || role === ROLE.ADMIN) return recommendations;
+    if (role === ROLE.HR) return recommendations;
     return recommendations.filter(
       (r) =>
         scope.ids.includes(r.department_id) || scope.names.includes(r.department)
@@ -287,7 +269,7 @@ export default function Dashboard() {
 
   const scopedSessions = useMemo(() => {
     if (!currentUser) return [];
-    if (role === ROLE.HR || role === ROLE.ADMIN) return sessionsAll;
+    if (role === ROLE.HR) return sessionsAll;
     return sessionsAll.filter(
       (s) =>
         scope.ids.includes(s.department_id) ||
@@ -304,7 +286,7 @@ export default function Dashboard() {
       if (m.type !== "broadcast") return false;
       const ts = m.sent_at ? new Date(m.sent_at).getTime() : 0;
       if (ts < startMs) return false;
-      if (role === ROLE.HR || role === ROLE.ADMIN) return true;
+      if (role === ROLE.HR) return true;
       return scope.ids.includes(m.recipient_department_id);
     }).length;
   }, [messagesAll, role, scope]);
@@ -393,17 +375,12 @@ export default function Dashboard() {
       ? "Følg med"
       : "Tiltak";
 
-  const isLoading = loadingAssessments || loadingDepartments;
+  const isLoading = loadingAssessments || loadingDepartments || authLoading;
 
-  if (currentUser && !canSeeDashboard) {
+  if (authLoading) {
     return (
-      <div className="min-h-[60vh] grid place-items-center text-center">
-        <div className="max-w-md">
-          <h2 className="text-2xl font-semibold text-slate-900">Ingen tilgang</h2>
-          <p className="text-slate-600 mt-2">
-            Denne siden er kun tilgjengelig for HR og ledere.
-          </p>
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
       </div>
     );
   }
