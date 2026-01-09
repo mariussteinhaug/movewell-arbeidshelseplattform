@@ -9,17 +9,15 @@ import { format } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
-import { useRequireRoles, ROLE } from '@/components/access/guard';
+import { useRequireRoles, ROLE } from '../components/access/guard';
 
 export default function Departments() {
   const { user, role, isLoading: authLoading, scope } = useRequireRoles([ROLE.HR], "Dashboard");
-  
   const [selectedDept, setSelectedDept] = useState(null);
 
   const { data: departments = [] } = useQuery({
     queryKey: ['departments'],
-    queryFn: () => base44.entities.Department.filter({ organization_id: user?.organization_id }),
-    enabled: !!user,
+    queryFn: () => base44.entities.Department.list()
   });
 
   const { data: assessments = [] } = useQuery({
@@ -146,14 +144,6 @@ export default function Departments() {
       </div>
     </div>
   );
-
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-8">

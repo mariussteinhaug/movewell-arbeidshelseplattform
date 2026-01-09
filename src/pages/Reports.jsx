@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -16,29 +16,18 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
-import { useRequireRoles, ROLE } from '@/components/access/guard';
+import { useRequireRoles, ROLE } from '../components/access/guard';
 
 export default function Reports() {
     const { user, role, isLoading: authLoading, scope } = useRequireRoles([ROLE.MANAGER, ROLE.HR], "Assessment");
-    
     const [selectedDepartment, setSelectedDepartment] = useState('');
     const [generating, setGenerating] = useState(false);
     const queryClient = useQueryClient();
 
-    const { data: allDepartments = [] } = useQuery({
+    const { data: departments = [] } = useQuery({
         queryKey: ['departments'],
-        queryFn: () => base44.entities.Department.filter({ organization_id: user?.organization_id }),
-        enabled: !!user,
+        queryFn: () => base44.entities.Department.list(),
     });
-    
-    // Filter departments based on role
-    const departments = useMemo(() => {
-        if (role === ROLE.HR) return allDepartments;
-        // Managers can only see their departments
-        return allDepartments.filter(d => 
-            scope?.department_ids?.includes(d.id) || scope?.department_id === d.id
-        );
-    }, [allDepartments, role, scope]);
 
     const { data: reports = [] } = useQuery({
         queryKey: ['reports', selectedDepartment],
@@ -199,14 +188,6 @@ Generer en strukturert analyse som identifiserer:
         
         doc.save(`MoveWell_Rapport_${report.department}_${report.week_to}.pdf`);
     };
-
-    if (authLoading) {
-        return (
-            <div className="flex items-center justify-center h-64">
-                <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
-            </div>
-        );
-    }
 
     return (
         <div className="max-w-7xl mx-auto space-y-6">

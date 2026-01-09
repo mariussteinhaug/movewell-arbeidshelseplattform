@@ -20,6 +20,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import QuestionRenderer from "../components/assessment/QuestionRenderer";
 import DocumentUpload from "../components/assessment/DocumentUpload";
 import { cn } from "@/lib/utils";
+import { useAuth } from "../components/access/guard";
 
 /* ---------------------------
    Helpers
@@ -40,6 +41,7 @@ function getISOWeekString(date = new Date()) {
 --------------------------- */
 
 export default function Assessment() {
+  const { user: authUser, role, isLoading: authLoading, scope } = useAuth();
   const queryClient = useQueryClient();
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);

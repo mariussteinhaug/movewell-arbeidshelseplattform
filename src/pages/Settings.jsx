@@ -11,11 +11,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Building2, Plus, Trash2, Users, Edit2, Loader2 } from 'lucide-react';
 import { cn } from "@/lib/utils";
-import { useRequireRoles, ROLE } from '@/components/access/guard';
+import { useRequireRoles, ROLE } from '../components/access/guard';
 
 export default function Settings() {
   const { user, role, isLoading: authLoading, scope } = useRequireRoles([ROLE.HR], "Dashboard");
-  
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingDept, setEditingDept] = useState(null);
@@ -121,14 +120,6 @@ export default function Settings() {
     kveldsskift: 'Kveldsskift',
     tilkalling_ekstrahjelp: 'Tilkalling/Ekstrahjelp'
   };
-
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-8">

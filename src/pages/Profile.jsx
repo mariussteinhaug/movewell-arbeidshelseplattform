@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useAuth, normalizeRole as normalizeRoleUtil } from "../components/access/guard";
 
 /* ---------------------------
    Role mapping (MoveWell)
@@ -32,15 +33,6 @@ const ROLE_LABELS = {
   manager: { label: "Leder", chip: "bg-blue-100 text-blue-700" },
   hr: { label: "HR", chip: "bg-purple-100 text-purple-700" },
 };
-
-function normalizeRole(rawRole) {
-  if (!rawRole) return "employee";
-  const r = String(rawRole).toLowerCase();
-  if (r === "hr") return "hr";
-  if (r === "manager" || r === "leader" || r === "leder") return "manager";
-  if (r === "admin") return "hr"; // treat legacy admin as HR
-  return "employee";
-}
 
 function initialsFromName(name) {
   if (!name) return "?";
@@ -54,6 +46,7 @@ function initialsFromName(name) {
 }
 
 export default function Profile() {
+  const { user: authUser, role: authRole, isLoading: authLoading, scope } = useAuth();
   const queryClient = useQueryClient();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -71,7 +64,7 @@ export default function Profile() {
     queryFn: () => base44.auth.me(),
   });
 
-  const role = useMemo(() => normalizeRole(currentUser?.role), [currentUser?.role]);
+  const role = useMemo(() => normalizeRoleUtil(currentUser), [currentUser]);
   const roleMeta = ROLE_LABELS[role] || ROLE_LABELS.employee;
 
   useEffect(() => {

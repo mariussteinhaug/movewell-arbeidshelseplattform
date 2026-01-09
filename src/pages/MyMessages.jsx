@@ -10,8 +10,10 @@ import { MessageSquare, Heart, Info, Settings as SettingsIcon, Send, Mail, Inbox
 import { format } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth, normalizeRole } from '../components/access/guard';
 
 export default function MyMessages() {
+  const { user: authUser, role: authRole, isLoading: authLoading, scope } = useAuth();
   const queryClient = useQueryClient();
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [replyText, setReplyText] = useState('');
