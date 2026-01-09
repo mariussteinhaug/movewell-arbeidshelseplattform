@@ -31,6 +31,16 @@ export default function Reports() {
         enabled: !authLoading,
     });
 
+    // Reports query - must be called unconditionally (before any returns)
+    const { data: reports = [] } = useQuery({
+        queryKey: ['reports', selectedDepartment],
+        queryFn: () => {
+            if (!selectedDepartment) return base44.entities.Report.list('-created_date');
+            return base44.entities.Report.filter({ department: selectedDepartment }, '-created_date');
+        },
+        enabled: !authLoading,
+    });
+
     // Manager sees only their departments, HR sees all
     const departments = React.useMemo(() => {
         if (role === ROLE.HR) return allDepartments;
@@ -40,6 +50,7 @@ export default function Reports() {
         return [];
     }, [allDepartments, role, scope]);
 
+    // Loading check AFTER all hooks
     if (authLoading) {
         return (
             <div className="flex items-center justify-center h-64">
@@ -47,14 +58,6 @@ export default function Reports() {
             </div>
         );
     }
-
-    const { data: reports = [] } = useQuery({
-        queryKey: ['reports', selectedDepartment],
-        queryFn: () => {
-            if (!selectedDepartment) return base44.entities.Report.list('-created_date');
-            return base44.entities.Report.filter({ department: selectedDepartment }, '-created_date');
-        },
-    });
 
     const generateReport = async () => {
         if (!selectedDepartment) return;
