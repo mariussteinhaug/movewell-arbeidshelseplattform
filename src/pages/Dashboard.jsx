@@ -200,40 +200,43 @@ export default function Dashboard() {
   const canSeeDashboard = role === ROLE.HR || role === ROLE.MANAGER;
   const scope = useMemo(() => getManagedDepartmentKeys(currentUser), [currentUser?.id]);
 
+  // All hooks must be called unconditionally - use enabled flag to control fetching
+  const queryEnabled = !authLoading && !!currentUser;
+
   const { data: assessmentsRaw = [], isLoading: loadingAssessments } = useQuery({
-    queryKey: ["assessments"],
+    queryKey: ["assessments", currentUser?.organization_id],
     queryFn: () => base44.entities.HealthAssessment.filter({ organization_id: currentUser?.organization_id }, "-created_date", 500),
-    enabled: !authLoading && !!currentUser && canSeeDashboard,
+    enabled: queryEnabled,
   });
 
   const { data: departments = [], isLoading: loadingDepartments } = useQuery({
-    queryKey: ["departments"],
+    queryKey: ["departments", currentUser?.organization_id],
     queryFn: () => base44.entities.Department.filter({ organization_id: currentUser?.organization_id }),
-    enabled: !authLoading && !!currentUser && canSeeDashboard,
+    enabled: queryEnabled,
   });
 
   const { data: sessionsAll = [] } = useQuery({
-    queryKey: ["assessment-sessions"],
+    queryKey: ["assessment-sessions", currentUser?.organization_id],
     queryFn: () => base44.entities.AssessmentSession.filter({ organization_id: currentUser?.organization_id }, "-created_date", 500),
-    enabled: !authLoading && !!currentUser && canSeeDashboard,
+    enabled: queryEnabled,
   });
 
   const { data: recommendations = [] } = useQuery({
-    queryKey: ["recommendations"],
+    queryKey: ["recommendations", currentUser?.organization_id],
     queryFn: () =>
       base44.entities.ActionRecommendation.filter(
         { status: "ny", organization_id: currentUser?.organization_id },
         "-created_date",
         10
       ),
-    enabled: !authLoading && !!currentUser && canSeeDashboard,
+    enabled: queryEnabled,
   });
 
   // Meldinger (for varsler i dag)
   const { data: messagesAll = [] } = useQuery({
-    queryKey: ["messages"],
+    queryKey: ["messages", currentUser?.organization_id],
     queryFn: () => base44.entities.Message.filter({ organization_id: currentUser?.organization_id }, "-sent_at", 200),
-    enabled: !authLoading && !!currentUser && canSeeDashboard,
+    enabled: queryEnabled,
   });
 
   const scopedAssessments = useMemo(() => {
