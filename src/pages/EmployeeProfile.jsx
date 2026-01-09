@@ -12,8 +12,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, Mail, ClipboardList, Wrench, FileText, Plus, Loader2, AlertCircle, Calendar, CheckCircle2, Clock, PlayCircle, Eye, EyeOff } from 'lucide-react';
 import { format } from 'date-fns';
 import { nb } from 'date-fns/locale';
+import { useRequireRoles, ROLE } from '@/components/access/guard';
 
 export default function EmployeeProfile() {
+  const { user: currentAuthUser, role, isLoading: authLoading, scope } = useRequireRoles([ROLE.HR], "Dashboard");
+  
   const queryClient = useQueryClient();
   const [selectedEmployeeEmail, setSelectedEmployeeEmail] = useState(null);
   const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
@@ -148,6 +151,14 @@ export default function EmployeeProfile() {
     tiltak: 'bg-emerald-100 text-emerald-700',
     annet: 'bg-slate-100 text-slate-700'
   };
+
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">

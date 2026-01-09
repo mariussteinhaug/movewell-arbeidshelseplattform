@@ -3,6 +3,7 @@ import Accommodation from './pages/Accommodation';
 import Assessment from './pages/Assessment';
 import Dashboard from './pages/Dashboard';
 import Departments from './pages/Departments';
+import Docs from './pages/Docs';
 import EmployeeProfile from './pages/EmployeeProfile';
 import Invite from './pages/Invite';
 import Landing from './pages/Landing';
@@ -11,7 +12,6 @@ import Profile from './pages/Profile';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import TrendAnalysis from './pages/TrendAnalysis';
-import Docs from './pages/Docs';
 import __Layout from './Layout.jsx';
 
 
@@ -21,6 +21,7 @@ export const PAGES = {
     "Assessment": Assessment,
     "Dashboard": Dashboard,
     "Departments": Departments,
+    "Docs": Docs,
     "EmployeeProfile": EmployeeProfile,
     "Invite": Invite,
     "Landing": Landing,
@@ -29,7 +30,6 @@ export const PAGES = {
     "Reports": Reports,
     "Settings": Settings,
     "TrendAnalysis": TrendAnalysis,
-    "Docs": Docs,
 }
 
 export const pagesConfig = {

@@ -4,18 +4,22 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building2, Users, TrendingUp, TrendingDown, Minus, Activity, Brain, Briefcase, Calendar } from 'lucide-react';
+import { Building2, Users, TrendingUp, TrendingDown, Minus, Activity, Brain, Briefcase, Calendar, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
+import { useRequireRoles, ROLE } from '@/components/access/guard';
 
 export default function Departments() {
+  const { user, role, isLoading: authLoading, scope } = useRequireRoles([ROLE.HR], "Dashboard");
+  
   const [selectedDept, setSelectedDept] = useState(null);
 
   const { data: departments = [] } = useQuery({
     queryKey: ['departments'],
-    queryFn: () => base44.entities.Department.list()
+    queryFn: () => base44.entities.Department.filter({ organization_id: user?.organization_id }),
+    enabled: !!user,
   });
 
   const { data: assessments = [] } = useQuery({
@@ -142,6 +146,14 @@ export default function Departments() {
       </div>
     </div>
   );
+
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">

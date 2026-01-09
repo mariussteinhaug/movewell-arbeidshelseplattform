@@ -7,8 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TrendingUp, AlertCircle, Loader2, Calendar, BarChart3, FileText } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { format, subMonths } from 'date-fns';
+import { useRequireRoles, ROLE } from '@/components/access/guard';
 
 export default function TrendAnalysis() {
+  const { user, role, isLoading: authLoading, scope } = useRequireRoles([ROLE.HR], "Dashboard");
+  
   const queryClient = useQueryClient();
   const [selectedPeriod, setSelectedPeriod] = useState('3');
   const [generatingReport, setGeneratingReport] = useState(false);
@@ -16,7 +19,8 @@ export default function TrendAnalysis() {
 
   const { data: departments = [] } = useQuery({
     queryKey: ['departments'],
-    queryFn: () => base44.entities.Department.list()
+    queryFn: () => base44.entities.Department.filter({ organization_id: user?.organization_id }),
+    enabled: !!user,
   });
 
   const { data: allSessions = [] } = useQuery({
@@ -146,6 +150,14 @@ Vær konkret, datadrevet og handlingsorientert i anbefalingene.`;
       default: return 'bg-slate-100 text-slate-700';
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
