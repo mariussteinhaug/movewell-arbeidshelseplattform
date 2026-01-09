@@ -69,7 +69,7 @@ export default function LandingHeader() {
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
             <button
-              onClick={() => base44.auth.redirectToLogin(createPageUrl("Dashboard"))}
+              onClick={() => base44.auth.redirectToLogin("/Dashboard")}
               className="h-10 px-6 bg-[#33c58f]/10 backdrop-blur-2xl border border-[#33c58f]/50 text-[#2a9e73] font-medium rounded-full shadow-[0_4px_16px_rgba(51,197,143,0.15),inset_0_1px_1px_rgba(255,255,255,0.6)] hover:bg-[#33c58f]/20 transition-colors"
             >
               Logg inn
@@ -122,7 +122,7 @@ export default function LandingHeader() {
               <button
               onClick={() => {
                 setIsMenuOpen(false);
-                base44.auth.redirectToLogin(createPageUrl("Dashboard"));
+                base44.auth.redirectToLogin("/Dashboard");
               }}
               className="w-full h-12 bg-[#33c58f]/10 backdrop-blur-2xl border border-[#33c58f]/50 text-[#2a9e73] font-medium rounded-full shadow-[0_4px_16px_rgba(51,197,143,0.15),inset_0_1px_1px_rgba(255,255,255,0.6)] hover:bg-[#33c58f]/20 transition-colors mt-2"
             >
