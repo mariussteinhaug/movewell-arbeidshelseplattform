@@ -16,13 +16,12 @@ import CaseListItem from "../components/accommodation/CaseListItem";
 import CaseDetail from "../components/accommodation/CaseDetail";
 
 export default function Accommodation() {
-  const { data: currentUser } = useQuery({
-    queryKey: ['current-user'],
-    queryFn: () => base44.auth.me()
-  });
+  const { user: currentUser, role, isLoading: authLoading, scope } = useRequireRoles([ROLE.MANAGER, ROLE.HR], 'Assessment');
+  
   const { data: accommodations = [], isLoading } = useQuery({
     queryKey: ['accommodations'],
     queryFn: () => base44.entities.Accommodation.list('-created_date', 500),
+    enabled: !authLoading,
   });
 
   const [search, setSearch] = React.useState("");
@@ -39,12 +38,14 @@ export default function Accommodation() {
 
   const filtered = React.useMemo(() => {
     const q = search.trim().toLowerCase();
-    const role = normalizeRole(currentUser);
-    const scope = accessScopeFromUser(currentUser);
     return (accommodations || []).filter((it) => {
       if (!includeArchived && it.archived) return false;
-      if (it.organization_id !== scope.organization_id) return false;
-      if (role === ROLE.MANAGER && scope.department_id && it.department_id !== scope.department_id) return false;
+      if (it.organization_id !== scope?.organization_id) return false;
+      // Manager sees only their departments
+      if (role === ROLE.MANAGER) {
+        const deptIds = scope?.department_ids || [];
+        if (!deptIds.includes(it.department_id) && scope?.department_id !== it.department_id) return false;
+      }
       const matchesStatus = statusFilter === "alle" || it.status === statusFilter;
       if (!q) return matchesStatus;
       const hay = [
@@ -59,7 +60,7 @@ export default function Accommodation() {
         .toLowerCase();
       return matchesStatus && hay.includes(q);
     });
-  }, [accommodations, search, statusFilter, includeArchived, currentUser]);
+  }, [accommodations, search, statusFilter, includeArchived, role, scope]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   React.useEffect(() => {
@@ -74,9 +75,7 @@ export default function Accommodation() {
     setSelectedCase(filtered[0] || null);
   }, [search, statusFilter, accommodations]);
 
-  useRequireRoles([ROLE.MANAGER, ROLE.HR], 'Assessment');
-
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />

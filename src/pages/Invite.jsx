@@ -1,4 +1,5 @@
 import React from "react";
+import { useRequireRoles, ROLE } from "../components/access/guard";
 import InviteUserModal from "../components/invitations/InviteUserModal";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "../utils";
@@ -6,11 +7,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2 } from "lucide-react";
 import { useRequireRoles, ROLE } from "../components/access/guard";
 
 export default function Invite() {
-  const { user: me, isLoading: authLoading } = useRequireRoles([ROLE.MANAGER, ROLE.HR], 'Assessment');
+  useRequireRoles([ROLE.MANAGER, ROLE.HR], 'Assessment');
+  const { data: me } = useQuery({ queryKey: ['current-user'], queryFn: () => base44.auth.me() });
   const { data: invites = [] } = useQuery({
     queryKey: ['invites', me?.organization_id],
     enabled: !!me?.organization_id,
@@ -37,14 +38,6 @@ export default function Invite() {
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['invites'] })
   });
-
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
