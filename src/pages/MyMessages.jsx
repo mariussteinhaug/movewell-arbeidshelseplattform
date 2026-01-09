@@ -10,19 +10,15 @@ import { MessageSquare, Heart, Info, Settings as SettingsIcon, Send, Mail, Inbox
 import { format } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth, normalizeRole } from '../components/access/guard';
+import { useAuth, ROLE } from '@/components/access/guard';
 
 export default function MyMessages() {
-  const { user: authUser, role: authRole, isLoading: authLoading, scope } = useAuth();
+  const { user: currentUser, role, isLoading: authLoading } = useAuth();
   const queryClient = useQueryClient();
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [replyText, setReplyText] = useState('');
   const [forwardNote, setForwardNote] = useState('');
 
-  const { data: currentUser } = useQuery({
-    queryKey: ['current-user'],
-    queryFn: () => base44.auth.me()
-  });
 
   // Sessions og spørsmål for å vise navn + svar
   const { data: sessionsForMsgs = [] } = useQuery({
@@ -61,10 +57,9 @@ export default function MyMessages() {
   });
 
   const departmentAlerts = React.useMemo(() => {
-    const role = String(currentUser?.role || '').toLowerCase();
     const deptId = currentUser?.department_id;
-    const isHR = role === 'hr' || role === 'admin';
-    const isManager = role === 'manager';
+    const isHR = role === ROLE.HR;
+    const isManager = role === ROLE.MANAGER;
     return (deptMessages || []).filter((m) => {
       if (m.type !== 'broadcast') return false;
       if (isHR) {
@@ -75,7 +70,7 @@ export default function MyMessages() {
       }
       return false;
     });
-  }, [deptMessages, currentUser?.department_id, currentUser?.role]);
+  }, [deptMessages, currentUser?.department_id, role]);
 
   const inboxMessages = React.useMemo(() => {
     const byId = new Map();
@@ -187,11 +182,11 @@ export default function MyMessages() {
     hoy: 'bg-red-100 text-red-700'
   };
 
-  const canForward = ['manager', 'hr', 'admin'].includes(String(currentUser?.role || '').toLowerCase());
+  const canForward = role === ROLE.MANAGER || role === ROLE.HR;
 
   const unreadCount = inboxMessages.filter(m => m.status === 'ulest').length;
 
-  if (isLoading) {
+  if (isLoading || authLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />

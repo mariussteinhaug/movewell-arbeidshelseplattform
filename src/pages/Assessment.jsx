@@ -20,7 +20,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import QuestionRenderer from "../components/assessment/QuestionRenderer";
 import DocumentUpload from "../components/assessment/DocumentUpload";
 import { cn } from "@/lib/utils";
-import { useAuth } from "../components/access/guard";
+import { useAuth } from "@/components/access/guard";
 
 /* ---------------------------
    Helpers
@@ -41,7 +41,7 @@ function getISOWeekString(date = new Date()) {
 --------------------------- */
 
 export default function Assessment() {
-  const { user: authUser, role, isLoading: authLoading, scope } = useAuth();
+  const { user: currentUser, isLoading: authLoading } = useAuth();
   const queryClient = useQueryClient();
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -53,11 +53,6 @@ export default function Assessment() {
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [dynamicQuestions, setDynamicQuestions] = useState([]);
-
-  const { data: currentUser } = useQuery({
-    queryKey: ["current-user"],
-    queryFn: () => base44.auth.me(),
-  });
 
   const { data: allQuestions = [], isLoading: loadingQuestions } = useQuery({
     queryKey: ["questions"],
@@ -448,7 +443,7 @@ export default function Assessment() {
   /* ---------------------------
      Loading & UI
   --------------------------- */
-  if (loadingQuestions || loadingDepartments) {
+  if (loadingQuestions || loadingDepartments || authLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />

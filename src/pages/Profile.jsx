@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { useAuth, normalizeRole as normalizeRoleUtil } from "../components/access/guard";
+import { useAuth, normalizeRole } from "@/components/access/guard";
 
 /* ---------------------------
    Role mapping (MoveWell)
@@ -46,7 +46,7 @@ function initialsFromName(name) {
 }
 
 export default function Profile() {
-  const { user: authUser, role: authRole, isLoading: authLoading, scope } = useAuth();
+  const { user: currentUser, role, isLoading } = useAuth();
   const queryClient = useQueryClient();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -58,14 +58,14 @@ export default function Profile() {
     position: "",
     profile_image: "",
   });
-
-  const { data: currentUser, isLoading } = useQuery({
+  const roleMeta = ROLE_LABELS[role] || ROLE_LABELS.employee;
+  
+  // Re-fetch currentUser for mutations
+  const { data: userForMutation } = useQuery({
     queryKey: ["current-user"],
     queryFn: () => base44.auth.me(),
+    enabled: !!currentUser,
   });
-
-  const role = useMemo(() => normalizeRoleUtil(currentUser), [currentUser]);
-  const roleMeta = ROLE_LABELS[role] || ROLE_LABELS.employee;
 
   useEffect(() => {
     if (!currentUser) return;
