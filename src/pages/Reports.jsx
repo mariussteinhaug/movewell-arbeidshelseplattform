@@ -24,10 +24,29 @@ export default function Reports() {
     const [generating, setGenerating] = useState(false);
     const queryClient = useQueryClient();
 
-    const { data: departments = [] } = useQuery({
+    // Filter departments based on role scope
+    const { data: allDepartments = [] } = useQuery({
         queryKey: ['departments'],
         queryFn: () => base44.entities.Department.list(),
+        enabled: !authLoading,
     });
+
+    // Manager sees only their departments, HR sees all
+    const departments = React.useMemo(() => {
+        if (role === ROLE.HR) return allDepartments;
+        if (role === ROLE.MANAGER && scope?.department_ids?.length) {
+            return allDepartments.filter(d => scope.department_ids.includes(d.id));
+        }
+        return [];
+    }, [allDepartments, role, scope]);
+
+    if (authLoading) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+            </div>
+        );
+    }
 
     const { data: reports = [] } = useQuery({
         queryKey: ['reports', selectedDepartment],
