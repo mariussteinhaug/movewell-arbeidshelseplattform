@@ -21,6 +21,18 @@ export default function Departments() {
     enabled: !authLoading,
   });
 
+  const { data: assessments = [] } = useQuery({
+    queryKey: ['assessments'],
+    queryFn: () => base44.entities.HealthAssessment.list('-created_date', 500),
+    enabled: !authLoading,
+  });
+
+  const { data: sessions = [] } = useQuery({
+    queryKey: ['assessment-sessions'],
+    queryFn: () => base44.entities.AssessmentSession.list('-created_date', 500),
+    enabled: !authLoading,
+  });
+
   if (authLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -28,16 +40,6 @@ export default function Departments() {
       </div>
     );
   }
-
-  const { data: assessments = [] } = useQuery({
-    queryKey: ['assessments'],
-    queryFn: () => base44.entities.HealthAssessment.list('-created_date', 500)
-  });
-
-  const { data: sessions = [] } = useQuery({
-    queryKey: ['assessment-sessions'],
-    queryFn: () => base44.entities.AssessmentSession.list('-created_date', 500)
-  });
 
   const departmentStats = useMemo(() => {
     if (!assessments.length) return {};

@@ -32,6 +32,34 @@ export default function Settings() {
     enabled: !authLoading,
   });
 
+  const createDept = useMutation({
+    mutationFn: (data) => base44.entities.Department.create({
+      ...data,
+      employee_count: parseInt(data.employee_count)
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['departments'] });
+      resetForm();
+    }
+  });
+
+  const updateDept = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Department.update(id, {
+      ...data,
+      employee_count: parseInt(data.employee_count)
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['departments'] });
+      resetForm();
+    }
+  });
+
+  const deleteDept = useMutation({
+    mutationFn: (id) => base44.entities.Department.delete(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['departments'] })
+  });
+
+  // Loading check AFTER all hooks
   if (authLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -40,7 +68,7 @@ export default function Settings() {
     );
   }
 
-  const createDept = useMutation({
+  const resetForm = () => {
     mutationFn: (data) => base44.entities.Department.create({
       ...data,
       employee_count: parseInt(data.employee_count)

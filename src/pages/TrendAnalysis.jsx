@@ -22,6 +22,12 @@ export default function TrendAnalysis() {
     enabled: !authLoading,
   });
 
+  const { data: allSessions = [] } = useQuery({
+    queryKey: ['assessment-sessions'],
+    queryFn: () => base44.entities.AssessmentSession.list('-created_date', 500),
+    enabled: !authLoading,
+  });
+
   if (authLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -29,11 +35,6 @@ export default function TrendAnalysis() {
       </div>
     );
   }
-
-  const { data: allSessions = [] } = useQuery({
-    queryKey: ['assessment-sessions'],
-    queryFn: () => base44.entities.AssessmentSession.list('-created_date', 500)
-  });
 
   const generateTrendReport = async () => {
     setGeneratingReport(true);
