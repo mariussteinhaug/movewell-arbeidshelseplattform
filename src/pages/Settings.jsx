@@ -68,11 +68,11 @@ export default function Settings() {
     );
   }
 
-  const resetForm = () => {
+  function resetForm() {
     setIsDialogOpen(false);
     setEditingDept(null);
     setFormData({ name: '', employee_count: '', sector: '', shift_type: '', manager_name: '' });
-  };
+  }
 
   const handleEdit = (dept) => {
     setEditingDept(dept);
