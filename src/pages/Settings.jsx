@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Building2, Plus, Trash2, Users, Edit2, Loader2 } from 'lucide-react';
 import { cn } from "@/lib/utils";
-import { useRequireRoles, ROLE } from "../components/access/guard";
+import { useRequireRoles, ROLE } from '../components/access/guard';
 
 export default function Settings() {
   const { user, role, isLoading: authLoading, scope } = useRequireRoles([ROLE.HR], "Dashboard");
