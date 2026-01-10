@@ -69,33 +69,6 @@ export default function Settings() {
   }
 
   const resetForm = () => {
-    mutationFn: (data) => base44.entities.Department.create({
-      ...data,
-      employee_count: parseInt(data.employee_count)
-    }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['departments'] });
-      resetForm();
-    }
-  });
-
-  const updateDept = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Department.update(id, {
-      ...data,
-      employee_count: parseInt(data.employee_count)
-    }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['departments'] });
-      resetForm();
-    }
-  });
-
-  const deleteDept = useMutation({
-    mutationFn: (id) => base44.entities.Department.delete(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['departments'] })
-  });
-
-  const resetForm = () => {
     setIsDialogOpen(false);
     setEditingDept(null);
     setFormData({ name: '', employee_count: '', sector: '', shift_type: '', manager_name: '' });
@@ -160,13 +133,11 @@ export default function Settings() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Innstillinger</h1>
         <p className="text-slate-500 mt-1">Administrer avdelinger og konfigurasjon</p>
       </div>
 
-      {/* Departments */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
