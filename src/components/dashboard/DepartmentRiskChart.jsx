@@ -11,17 +11,15 @@ import {
 } from "recharts";
 
 export default function DepartmentRiskChart({ data = [], minRespondents = 5 }) {
-  // Sorter: lav score øverst (mest viktig først)
   const sorted = useMemo(() => {
     const arr = Array.isArray(data) ? [...data] : [];
-    return arr.sort((a, b) => (a?.score ?? 0) - (b?.score ?? 0));
+    return arr.sort((a, b) => (b?.score ?? 0) - (a?.score ?? 0)); // Høyest først
   }, [data]);
 
   const getBarColor = (score) => {
-    // Bruk samme terskler som du allerede har
-    if (score >= 4) return "#10B981"; // emerald-500
-    if (score >= 3) return "#F59E0B"; // amber-500
-    return "#EF4444"; // red-500
+    if (score >= 4) return "#34D399"; // emerald-400
+    if (score >= 3) return "#FBBF24"; // amber-400
+    return "#F87171"; // red-400
   };
 
   const CustomTooltip = ({ active, payload, label }) => {
@@ -30,35 +28,15 @@ export default function DepartmentRiskChart({ data = [], minRespondents = 5 }) {
       const score = Number(row.score ?? payload[0].value ?? 0);
       const respondents = row.respondent_count;
 
-      const riskLevel =
-        score >= 4 ? "Lav risiko" : score >= 3 ? "Moderat risiko" : "Høy risiko";
-
-      const visibilityHint =
-        typeof respondents === "number" && respondents < minRespondents
-          ? `Skjult pga. < ${minRespondents} respondenter`
-          : null;
-
       return (
-        <div className="bg-white/95 backdrop-blur-sm border border-slate-200 rounded-2xl p-4 shadow-xl">
-          <p className="font-semibold text-slate-900">{label}</p>
-
-          <div className="mt-2 space-y-1">
-            <p className="text-sm text-slate-600">
-              Helseindeks: <span className="font-semibold text-slate-900">{score.toFixed(1)}</span>
-            </p>
-
-            {typeof respondents === "number" && (
-              <p className="text-xs text-slate-500">
-                Respondenter: <span className="font-medium">{respondents}</span>
-              </p>
-            )}
-
-            <p className="text-xs text-slate-500">{riskLevel}</p>
-
-            {visibilityHint && (
-              <p className="text-xs text-slate-500">{visibilityHint}</p>
-            )}
-          </div>
+        <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 shadow-lg">
+          <p className="font-medium text-slate-900">{label}</p>
+          <p className="text-sm text-slate-600 mt-1">
+            Score: <span className="font-semibold">{score.toFixed(1)}</span> / 5
+          </p>
+          {typeof respondents === "number" && (
+            <p className="text-xs text-slate-400 mt-0.5">{respondents} svar</p>
+          )}
         </div>
       );
     }
@@ -67,42 +45,35 @@ export default function DepartmentRiskChart({ data = [], minRespondents = 5 }) {
 
   if (!sorted.length) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200 p-6">
-        <div className="mb-2">
-          <h3 className="text-lg font-semibold text-slate-900">Helseindeks per avdeling</h3>
-          <p className="text-sm text-slate-500 mt-1">Aggregert score basert på ukentlige kartlegginger</p>
-        </div>
-        <div className="py-10 text-center">
-          <p className="text-slate-700 font-medium">Ingen data å vise ennå</p>
-          <p className="text-sm text-slate-500 mt-1">Når ansatte har svart, vil grafen dukke opp her.</p>
-        </div>
+      <div className="h-64 flex items-center justify-center text-slate-400">
+        Ingen avdelingsdata
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-6">
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-slate-900">Helseindeks per avdeling</h3>
-        <p className="text-sm text-slate-500 mt-1">
-          Aggregert score basert på ukentlige kartlegginger
-        </p>
-      </div>
-
-      <div className="h-72">
+    <div>
+      <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={sorted} layout="vertical" margin={{ left: 20, right: 20 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" horizontal={false} />
-            <XAxis type="number" domain={[0, 5]} tick={{ fill: "#64748B", fontSize: 12 }} />
+          <BarChart data={sorted} layout="vertical" margin={{ left: 0, right: 24 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" horizontal={false} />
+            <XAxis 
+              type="number" 
+              domain={[0, 5]} 
+              tick={{ fill: "#94A3B8", fontSize: 11 }}
+              axisLine={false}
+              tickLine={false}
+            />
             <YAxis
               dataKey="name"
               type="category"
-              tick={{ fill: "#334155", fontSize: 13 }}
-              width={120}
+              tick={{ fill: "#475569", fontSize: 13 }}
+              width={100}
+              axisLine={false}
+              tickLine={false}
             />
-            <Tooltip content={<CustomTooltip />} />
-
-            <Bar dataKey="score" radius={[0, 10, 10, 0]} barSize={32}>
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: "#F8FAFC" }} />
+            <Bar dataKey="score" radius={[0, 6, 6, 0]} barSize={24}>
               {sorted.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={getBarColor(entry.score)} />
               ))}
@@ -111,18 +82,18 @@ export default function DepartmentRiskChart({ data = [], minRespondents = 5 }) {
         </ResponsiveContainer>
       </div>
 
-      <div className="flex items-center justify-center gap-6 mt-6 pt-4 border-t border-slate-100">
+      <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t border-slate-100">
         <div className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded-full bg-emerald-500" />
-          <span className="text-xs text-slate-600">God (4–5)</span>
+          <div className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+          <span className="text-xs text-slate-500">God (4+)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded-full bg-amber-500" />
-          <span className="text-xs text-slate-600">Moderat (3–4)</span>
+          <div className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+          <span className="text-xs text-slate-500">Moderat (3-4)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded-full bg-red-500" />
-          <span className="text-xs text-slate-600">Høy risiko (&lt; 3)</span>
+          <div className="h-2.5 w-2.5 rounded-full bg-red-400" />
+          <span className="text-xs text-slate-500">Lav (&lt;3)</span>
         </div>
       </div>
     </div>
