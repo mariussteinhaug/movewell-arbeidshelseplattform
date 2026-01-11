@@ -2,12 +2,7 @@ import React, { useMemo, useState, lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import {
-  RefreshCw,
   BarChart3,
-  Activity,
-  Users,
-  Sparkles,
-  ArrowUpRight,
   Loader2,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -34,28 +29,20 @@ function getManagedDepartmentKeys(user) {
 }
 
 /* ---------------------------
-   Time ranges
+   Time ranges (simplified)
 --------------------------- */
 const RANGE = {
-  TODAY: "today",
   D7: "7d",
-  D14: "14d",
   D30: "30d",
   M6: "6m",
   Y1: "1y",
-  Y3: "3y",
-  ALL: "all",
 };
 
 const RANGE_LABEL = {
-  [RANGE.TODAY]: "I dag",
-  [RANGE.D7]: "Siste 7 dager",
-  [RANGE.D14]: "Siste 14 dager",
-  [RANGE.D30]: "Siste 30 dager",
-  [RANGE.M6]: "Siste 6 mnd",
-  [RANGE.Y1]: "Siste 1 år",
-  [RANGE.Y3]: "Siste 3 år",
-  [RANGE.ALL]: "All tid",
+  [RANGE.D7]: "7 dager",
+  [RANGE.D30]: "30 dager",
+  [RANGE.M6]: "6 mnd",
+  [RANGE.Y1]: "1 år",
 };
 
 const startOfDay = (d) => {
@@ -100,11 +87,11 @@ const bandLabel = (s) =>
   riskBand10(s) === "good" ? "God" : riskBand10(s) === "warn" ? "Moderat" : "Høy risiko";
 
 /* ---------------------------
-   Segmented Control
+   Segmented Control (Apple-style)
 --------------------------- */
 function Segmented({ value, onChange, options }) {
   return (
-    <div className="inline-flex items-center rounded-2xl bg-white/70 backdrop-blur px-1 py-1 border border-slate-200 shadow-sm">
+    <div className="inline-flex items-center rounded-xl bg-slate-100/80 p-1">
       {options.map((opt) => {
         const active = opt.value === value;
         return (
@@ -113,10 +100,10 @@ function Segmented({ value, onChange, options }) {
             type="button"
             onClick={() => onChange(opt.value)}
             className={cn(
-              "px-3 py-1.5 text-sm font-medium rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-slate-300",
+              "px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200",
               active
-                ? "bg-slate-900 text-white shadow-sm"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                ? "bg-white text-slate-900 shadow-sm"
+                : "text-slate-500 hover:text-slate-700"
             )}
             aria-pressed={active}
           >
@@ -129,60 +116,20 @@ function Segmented({ value, onChange, options }) {
 }
 
 /* ---------------------------
-   Panel & StatCard
+   Metric Card (Apple-style)
 --------------------------- */
-function Panel({ title, subtitle, icon: Icon, right, children, className }) {
+function MetricCard({ label, value, change, positive }) {
   return (
-    <div
-      className={cn(
-        "rounded-3xl border border-slate-200 bg-white/80 backdrop-blur shadow-[0_10px_30px_rgba(15,23,42,0.06)] overflow-hidden",
-        className
-      )}
-    >
-      <div className="px-6 pt-6 pb-4 flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            {Icon && (
-              <span
-                className="h-8 w-8 rounded-2xl bg-slate-900 text-white grid place-items-center shadow-sm"
-                aria-label={`${title} ikon`}
-              >
-                <Icon className="h-4 w-4" />
-              </span>
-            )}
-            <h3 className="text-base font-semibold text-slate-900 truncate">{title}</h3>
-          </div>
-          {subtitle && <p className="text-sm text-slate-500 mt-2">{subtitle}</p>}
-        </div>
-        {right && <div className="shrink-0">{right}</div>}
-      </div>
-      <div className="px-6 pb-6">{children}</div>
-    </div>
-  );
-}
-
-function StatCard({ label, value, hint, icon: Icon, chip }) {
-  return (
-    <div className="rounded-3xl border border-slate-200 bg-white/80 backdrop-blur shadow-[0_10px_30px_rgba(15,23,42,0.06)] p-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-slate-600">{label}</p>
-          <div className="mt-2 flex items-end gap-2">
-            <span className="text-3xl font-semibold text-slate-900">{value}</span>
-            {chip && (
-              <span className="text-xs px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
-                {chip}
-              </span>
-            )}
-          </div>
-          {hint && <p className="text-sm text-slate-500 mt-2">{hint}</p>}
-        </div>
-        {Icon && (
-          <span
-            className="h-10 w-10 rounded-2xl bg-slate-100 grid place-items-center"
-            aria-label={`${label} ikon`}
-          >
-            <Icon className="h-5 w-5 text-slate-700" />
+    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+      <p className="text-sm text-slate-500 font-medium">{label}</p>
+      <div className="mt-2 flex items-baseline gap-3">
+        <span className="text-4xl font-semibold tracking-tight text-slate-900">{value}</span>
+        {change && (
+          <span className={cn(
+            "text-sm font-medium",
+            positive ? "text-emerald-600" : "text-slate-400"
+          )}>
+            {change}
           </span>
         )}
       </div>
@@ -196,6 +143,7 @@ function StatCard({ label, value, hint, icon: Icon, chip }) {
 export default function Dashboard() {
   const { user: currentUser, role, isLoading: authLoading, scope: authScope } = useRequireRoles([ROLE.MANAGER, ROLE.HR], "Assessment");
   const [range, setRange] = useState(RANGE.D30);
+  const [selectedDept, setSelectedDept] = useState(null);
 
   const canSeeDashboard = role === ROLE.HR || role === ROLE.MANAGER;
   const scope = useMemo(() => getManagedDepartmentKeys(currentUser), [currentUser?.id]);
@@ -398,86 +346,86 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen">
-      <div className="fixed inset-0 -z-10 bg-gradient-to-b from-slate-50 via-white to-slate-50" />
-      <div className="fixed inset-0 -z-10 opacity-70 [background:radial-gradient(40%_30%_at_20%_10%,rgba(59,130,246,0.10),transparent),radial-gradient(35%_25%_at_80%_20%,rgba(16,185,129,0.10),transparent),radial-gradient(35%_30%_at_60%_80%,rgba(245,158,11,0.10),transparent)]" />
-
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Sticky Header */}
-        <div className="sticky top-0 z-20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-3 bg-white/60 backdrop-blur border-b border-slate-200">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-2">
-              <span className="h-9 w-9 rounded-2xl bg-slate-900 text-white grid place-items-center shadow-sm">
-                <Sparkles className="h-5 w-5" />
-              </span>
-              <h1 className="text-2xl sm:text-3xl font-semibold text-slate-900 truncate">
-                Dashboard
-              </h1>
-            </div>
-            <Segmented
-              value={range}
-              onChange={setRange}
-              options={Object.entries(RANGE_LABEL).map(([v, l]) => ({
-                value: v,
-                label: l,
-              }))}
-            />
+    <div className="min-h-screen bg-slate-50/50">
+      <div className="max-w-6xl mx-auto px-6 py-10 space-y-10">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
+              Dashboard
+            </h1>
+            <p className="text-slate-500 mt-1">Oversikt over helsekartlegging</p>
           </div>
+          <Segmented
+            value={range}
+            onChange={setRange}
+            options={Object.entries(RANGE_LABEL).map(([v, l]) => ({
+              value: v,
+              label: l,
+            }))}
+          />
         </div>
 
         <Suspense
           fallback={
-            <div className="grid gap-6">
-              <Skeleton className="h-64 w-full rounded-2xl" />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+              <Skeleton className="h-28 rounded-2xl" />
+              <Skeleton className="h-28 rounded-2xl" />
+              <Skeleton className="h-28 rounded-2xl" />
             </div>
           }
         >
           {isLoading ? (
-            <Skeleton className="h-64 w-full rounded-2xl" />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+              <Skeleton className="h-28 rounded-2xl" />
+              <Skeleton className="h-28 rounded-2xl" />
+              <Skeleton className="h-28 rounded-2xl" />
+            </div>
           ) : stats10 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              <div className="lg:col-span-4 space-y-6">
-                <StatCard
+            <div className="space-y-8">
+              {/* Key Metrics */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                <MetricCard
                   label="Svarprosent"
                   value={`${Math.round(responseRate)}%`}
-                  hint="Andel ansatte som har svart i perioden"
-                  icon={Users}
-                  chip="Live"
+                  change={responseRate >= 70 ? "God deltakelse" : null}
+                  positive={responseRate >= 70}
                 />
-                <StatCard
-                  label="Svar"
-                  value={`${stats10.responses}`}
-                  hint="Antall innsendte kartlegginger"
-                  icon={Activity}
-                  chip={RANGE_LABEL[range]}
+                <MetricCard
+                  label="Helseindeks"
+                  value={healthIndex10.toFixed(1)}
+                  change={`av 10 • ${band}`}
+                  positive={healthIndex10 >= 7}
                 />
-                <StatCard
-                  label="Status"
-                  value={band}
-                  hint={`Basert på helseindeks (${healthIndex10.toFixed(1)}/10)`}
-                  icon={ArrowUpRight}
-                  chip={bandChip}
-                />
-                <StatCard
-                  label="Varsler i dag"
-                  value={`${alertsToday}`}
-                  hint="AI/system-varsler sendt i dag"
-                  icon={BarChart3}
+                <MetricCard
+                  label="Kartlegginger"
+                  value={stats10.responses}
+                  change={RANGE_LABEL[range]}
                 />
               </div>
-              {/* Charts */}
-              <div className="lg:col-span-8">
+
+              {/* Chart Section */}
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-lg font-semibold text-slate-900">Avdelinger</h2>
+                    <p className="text-sm text-slate-500">Helseindeks per avdeling</p>
+                  </div>
+                </div>
                 <DepartmentRiskChart data={departmentChartData} />
               </div>
             </div>
           ) : (
-            <div className="text-center text-slate-500">
-              <RefreshCw className="h-10 w-10 mx-auto mb-3" />
-              Ingen data for valgt periode
+            <div className="bg-white rounded-2xl border border-slate-100 p-16 text-center">
+              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
+                <BarChart3 className="h-6 w-6 text-slate-400" />
+              </div>
+              <p className="text-slate-600 font-medium">Ingen data for valgt periode</p>
+              <p className="text-sm text-slate-400 mt-1">Prøv en annen tidsperiode</p>
             </div>
           )}
         </Suspense>
       </div>
     </div>
   );
-}
+  }
