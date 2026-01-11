@@ -17,9 +17,9 @@ export default function DepartmentRiskChart({ data = [], minRespondents = 5 }) {
   }, [data]);
 
   const getBarColor = (score) => {
-    if (score >= 4) return "#10B981"; // emerald-500 (health positive)
-    if (score >= 3) return "#3B82F6"; // blue-500 (neutral/baseline)
-    return "#F59E0B"; // amber-500 (needs attention)
+    if (score >= 4) return "#22C55E"; // green-500 (god helse, lite risiko)
+    if (score >= 3) return "#EAB308"; // yellow-500 (moderat, følg med)
+    return "#EF4444"; // red-500 (høy risiko, tiltak)
   };
 
   const CustomTooltip = ({ active, payload, label }) => {
@@ -84,16 +84,16 @@ export default function DepartmentRiskChart({ data = [], minRespondents = 5 }) {
 
       <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t border-slate-100">
         <div className="flex items-center gap-2">
-          <div className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+          <div className="h-2.5 w-2.5 rounded-full bg-green-500" />
           <span className="text-xs text-slate-500">God (4+)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="h-2.5 w-2.5 rounded-full bg-blue-500" />
+          <div className="h-2.5 w-2.5 rounded-full bg-yellow-500" />
           <span className="text-xs text-slate-500">Moderat (3-4)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="h-2.5 w-2.5 rounded-full bg-amber-500" />
-          <span className="text-xs text-slate-500">Følg opp (&lt;3)</span>
+          <div className="h-2.5 w-2.5 rounded-full bg-red-500" />
+          <span className="text-xs text-slate-500">Tiltak (&lt;3)</span>
         </div>
       </div>
     </div>
