@@ -116,14 +116,19 @@ function Segmented({ value, onChange, options }) {
 }
 
 /* ---------------------------
-   Metric Card (Apple-style)
+   Metric Card (Apple-style with blue/green)
 --------------------------- */
-function MetricCard({ label, value, change, positive }) {
+function MetricCard({ label, value, change, positive, type }) {
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
       <p className="text-sm text-slate-500 font-medium">{label}</p>
       <div className="mt-2 flex items-baseline gap-3">
-        <span className="text-4xl font-semibold tracking-tight text-slate-900">{value}</span>
+        <span className={cn(
+          "text-4xl font-semibold tracking-tight",
+          type === "health" && positive ? "text-emerald-600" : "text-slate-900"
+        )}>
+          {value}
+        </span>
         {change && (
           <span className={cn(
             "text-sm font-medium",
@@ -327,7 +332,7 @@ export default function Dashboard() {
   if (authLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
       </div>
     );
   }
@@ -396,6 +401,7 @@ export default function Dashboard() {
                   value={healthIndex10.toFixed(1)}
                   change={`av 10 • ${band}`}
                   positive={healthIndex10 >= 7}
+                  type="health"
                 />
                 <MetricCard
                   label="Kartlegginger"
