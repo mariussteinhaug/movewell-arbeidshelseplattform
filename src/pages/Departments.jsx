@@ -4,11 +4,11 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building2, Users, TrendingUp, TrendingDown, Minus, Activity, Brain, Briefcase, Calendar, Loader2 } from 'lucide-react';
+import { Building2, Users,  Activity, Brain, Briefcase, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { nb } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
-import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
+import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer} from 'recharts';
 import { useRequireRoles, ROLE } from '../components/access/guard';
 
 export default function Departments() {
