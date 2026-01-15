@@ -33,15 +33,8 @@ export default function Departments() {
     enabled: !authLoading,
   });
 
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
-      </div>
-    );
-  }
-
   const departmentStats = useMemo(() => {
+    if (authLoading) return {};
     if (!assessments.length) return {};
 
     const stats = {};
@@ -93,10 +86,10 @@ export default function Departments() {
     });
 
     return result;
-  }, [assessments]);
+  }, [assessments, authLoading]);
 
   const sessionsAgg = useMemo(() => {
-    if (!sessions.length) return {};
+    if (authLoading || !sessions.length) return {};
     const agg = {};
     const now = new Date();
     const fourWeeksAgo = new Date(now.getTime() - 28 * 24 * 60 * 60 * 1000);
@@ -115,9 +108,17 @@ export default function Departments() {
     });
 
     return agg;
-  }, [sessions]);
+  }, [sessions, authLoading]);
 
   const selectedStats = selectedDept ? departmentStats[selectedDept] : null;
+
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+      </div>
+    );
+  }
 
   const radarData = selectedStats ? [
     { subject: 'Fysisk', value: selectedStats.physical },
