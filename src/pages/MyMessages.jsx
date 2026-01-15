@@ -6,10 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MessageSquare, Heart, Info, Settings as SettingsIcon, Send, Mail, Inbox, CheckCircle2, Loader2 } from 'lucide-react';
+import { MessageSquare, Heart, Info, Settings as SettingsIcon,  Mail, Inbox, CheckCircle2, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { nb } from 'date-fns/locale';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth, normalizeRole } from '../components/access/guard';
 
 export default function MyMessages() {
