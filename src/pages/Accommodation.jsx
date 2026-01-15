@@ -56,6 +56,7 @@ export default function Accommodation() {
   });
 
   const filtered = React.useMemo(() => {
+    if (authLoading || isLoading) return [];
     const q = search.trim().toLowerCase();
 
     return (accommodations || []).filter((it) => {
@@ -84,10 +85,13 @@ export default function Accommodation() {
 
       return matchesStatus && hay.includes(q);
     });
-  }, [accommodations, search, statusFilter, includeArchived, role, scope]);
+  }, [accommodations, search, statusFilter, includeArchived, role, scope, authLoading, isLoading]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
 
   // Stable Selection Logic
   React.useEffect(() => {
+    if (authLoading || isLoading) return;
     // If empty list, clear selection
     if (filtered.length === 0) {
       setSelectedCase(null);
@@ -98,10 +102,7 @@ export default function Accommodation() {
     if (!selectedCase || !isSelectedVisible) {
       setSelectedCase(filtered[0]);
     }
-  }, [filtered, selectedCase]);
-
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  }, [filtered, selectedCase, authLoading, isLoading]);
 
   React.useEffect(() => {
     if (page > totalPages) setPage(1);
