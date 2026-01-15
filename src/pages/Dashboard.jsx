@@ -13,8 +13,7 @@ import { useRequireRoles, ROLE, accessScopeFromUser } from "../components/access
 const DepartmentRiskChart = lazy(() =>
   import("../components/dashboard/DepartmentRiskChart")
 );
-const TrendChart = lazy(() => import("../components/dashboard/TrendChart"));
-const AlertList = lazy(() => import("../components/dashboard/AlertList"));
+
 
 function getManagedDepartmentKeys(user) {
   const ids = Array.isArray(user?.managed_department_ids)
