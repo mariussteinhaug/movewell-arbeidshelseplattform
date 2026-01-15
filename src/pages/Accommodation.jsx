@@ -286,7 +286,7 @@ export default function Accommodation() {
                     {/* Actions from detail view could be lifted here if needed */}
                   </div>
                 </div>
-                <div className="flex-1 overflow-y-auto">
+                <div className="flex-1 overflow-y-auto p-6">
                   <CaseDetail
                     item={selectedCase}
                     saving={updateCase.isPending}
