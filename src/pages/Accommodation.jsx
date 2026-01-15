@@ -1,15 +1,11 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { createPageUrl } from "../utils";
-import { ROLE, normalizeRole, hasRole, accessScopeFromUser } from "../components/access/role";
+import { ROLE,  } from "../components/access/role";
 import { useRequireRoles } from "../components/access/guard";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, Search, ChevronLeft, ChevronRight, Calendar as CalendarIcon, User as UserIcon, Building2, AlertTriangle } from 'lucide-react';
-import { format } from 'date-fns';
-import { nb } from 'date-fns/locale';
+import { Loader2, Search, ChevronLeft, ChevronRight} from 'lucide-react';
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import CaseListItem from "../components/accommodation/CaseListItem";
