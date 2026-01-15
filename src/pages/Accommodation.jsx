@@ -144,7 +144,7 @@ export default function Accommodation() {
   }
 
   return (
-    <div className="h-[calc(100vh-6rem)] flex flex-col gap-6">
+    <div className="flex flex-col gap-6">
       {/* Header & Filter Bar */}
       <div className="flex flex-col gap-4 flex-none">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -213,7 +213,7 @@ export default function Accommodation() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">
           {/* List Panel */}
-          <Card className="lg:col-span-4 flex flex-col h-full border-slate-200 shadow-sm overflow-hidden bg-white">
+          <Card className="lg:col-span-4 flex flex-col h-[600px] lg:h-[800px] border-slate-200 shadow-sm overflow-hidden bg-white sticky top-6">
             <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between flex-none">
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                 Saker ({filtered.length})
@@ -270,10 +270,10 @@ export default function Accommodation() {
           </Card>
 
           {/* Detail Panel */}
-          <Card className="lg:col-span-8 h-full border-slate-200 shadow-xl shadow-slate-200/40 overflow-hidden flex flex-col bg-white">
+          <Card className="lg:col-span-8 border-slate-200 shadow-xl shadow-slate-200/40 bg-white">
             {selectedCase ? (
               <>
-                <div className="flex-none border-b border-slate-100 p-6 pb-4 bg-slate-50/30">
+                <div className="border-b border-slate-100 p-6 pb-4 bg-slate-50/30">
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <h2 className="text-xl font-semibold text-slate-900 leading-tight">
@@ -283,10 +283,9 @@ export default function Accommodation() {
                         ID: <span className="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">{selectedCase.id.slice(0, 8)}</span>
                       </p>
                     </div>
-                    {/* Actions from detail view could be lifted here if needed */}
                   </div>
                 </div>
-                <div className="flex-1 overflow-y-auto p-6">
+                <div className="p-6">
                   <CaseDetail
                     item={selectedCase}
                     saving={updateCase.isPending}
