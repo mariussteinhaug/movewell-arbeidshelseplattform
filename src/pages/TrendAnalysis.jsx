@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TrendingUp, AlertCircle, Loader2, Calendar, BarChart3, FileText } from 'lucide-react';
+import { TrendingUp, Loader2, Calendar, BarChart3, FileText } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { format, subMonths } from 'date-fns';
 import { useRequireRoles, ROLE } from '../components/access/guard';
