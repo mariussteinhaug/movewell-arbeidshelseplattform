@@ -36,25 +36,7 @@ export default function LogoSection() {
           </div>
         </div>
 
-        {/* Industries */}
-        <div className="pt-8 border-t border-slate-100">
-          <div className="text-center mb-5">
-            <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
-              Bygget for norske virksomheter
-            </p>
-          </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm md:text-base">
-            {industries.map((item, index) => (
-              <span
-                key={index}
-                className="px-5 py-2 rounded-full border border-[#33c58f]/25 bg-[#33c58f]/5 text-[#2a9e73]/70 text-sm"
-              >
-                {item}
-              </span>
-            ))}
-          </div>
-        </div>
       </div>
     </section>
   );
