@@ -134,6 +134,14 @@ export default function EmployeeProfile() {
 
   const latestAssessment = employeeAssessments[0];
 
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+      </div>
+    );
+  }
+
   const getRiskColor = (level) => {
     if (level === 'low') return 'bg-emerald-50 border-emerald-200 text-emerald-700';
     if (level === 'moderate') return 'bg-amber-50 border-amber-200 text-amber-700';
