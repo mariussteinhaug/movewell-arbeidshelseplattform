@@ -16,7 +16,7 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
           <div className="max-w-xl">
             <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
-              MoveWell
+              Wellora
             </p>
             <h2 className="mt-3 text-2xl md:text-3xl font-semibold tracking-tight text-slate-900">
               Klar for å komme i gang?
@@ -156,7 +156,7 @@ export default function Footer() {
         {/* Bottom */}
         <div className="mt-12 pt-8 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-slate-600">
-            © {year} MoveWell. Alle rettigheter reservert.
+            © {year} Wellora. Alle rettigheter reservert.
           </p>
 
           <div className="flex items-center gap-4 text-sm text-slate-600">

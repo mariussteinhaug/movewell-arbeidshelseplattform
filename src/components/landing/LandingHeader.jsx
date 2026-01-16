@@ -43,8 +43,8 @@ export default function LandingHeader() {
             aria-label="Gå til toppen"
           >
             <img
-              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694db50ccf9dcb239e37fc6a/906a80b56_movewell-high-resolution-logo-transparent.png"
-              alt="MoveWell Logo"
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694db50ccf9dcb239e37fc6a/c8c0e6908_FullLogo_Transparent_NoBuffer.png"
+              alt="Wellora Logo"
               className="h-12 w-auto object-contain"
             />
           </a>

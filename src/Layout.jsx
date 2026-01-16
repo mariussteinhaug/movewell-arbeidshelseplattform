@@ -92,8 +92,8 @@ export default function Layout({ children, currentPageName }) {
           {/* Logo */}
           <div className="flex items-center px-10 mb-12">
             <img
-              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694db50ccf9dcb239e37fc6a/906a80b56_movewell-high-resolution-logo-transparent.png"
-              alt="MoveWell Logo"
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694db50ccf9dcb239e37fc6a/c8c0e6908_FullLogo_Transparent_NoBuffer.png"
+              alt="Wellora Logo"
               className="h-14 w-auto object-contain"
             />
           </div>
@@ -154,8 +154,8 @@ export default function Layout({ children, currentPageName }) {
       <div className="lg:hidden sticky top-0 z-40 bg-white border-b border-slate-200">
         <div className="flex items-center justify-between px-6 py-4">
           <img
-            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694db50ccf9dcb239e37fc6a/906a80b56_movewell-high-resolution-logo-transparent.png"
-            alt="MoveWell Logo"
+            src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694db50ccf9dcb239e37fc6a/c8c0e6908_FullLogo_Transparent_NoBuffer.png"
+            alt="Wellora Logo"
             className="h-10 w-auto object-contain"
           />
 
