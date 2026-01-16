@@ -45,7 +45,7 @@ export default function LandingHeader() {
             <img
               src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694db50ccf9dcb239e37fc6a/57b9986d9_TextOnly_NoBuffer1.png"
               alt="Wellora Logo"
-              className="h-10 w-auto object-contain"
+              className="h-7 w-auto object-contain"
             />
           </a>
 
