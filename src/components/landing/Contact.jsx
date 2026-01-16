@@ -38,7 +38,7 @@ export default function Contact() {
               Book en uforpliktende demo
             </h2>
             <p className="mt-4 text-slate-600 text-base md:text-lg leading-relaxed max-w-xl">
-              Se hvordan MoveWell kan gi tidlige signaler og en enklere oppfølgingsflyt for HR og ledere.
+              Se hvordan Wellora kan gi tidlige signaler og en enklere oppfølgingsflyt for HR og ledere.
             </p>
 
             {/* Contact cards */}
@@ -51,10 +51,10 @@ export default function Contact() {
                   <div>
                     <p className="text-sm font-semibold text-slate-900">E-post</p>
                     <a
-                      href="mailto:hei@movewell.no"
+                      href="mailto:hei@wellora.no"
                       className="text-sm text-slate-600 hover:text-slate-900 transition-colors"
                     >
-                      hei@movewell.no
+                      hei@wellora.no
                     </a>
                   </div>
                 </div>

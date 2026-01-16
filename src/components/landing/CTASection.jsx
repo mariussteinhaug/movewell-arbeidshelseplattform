@@ -19,7 +19,7 @@ export default function CTASection() {
           </h2>
 
           <p className="relative mt-5 text-base md:text-xl text-white/90 max-w-2xl mx-auto leading-relaxed">
-            La oss vise deg hvordan MoveWell kan gi tidlige signaler, tydelig oppfølging og bedre beslutningsgrunnlag.
+            La oss vise deg hvordan Wellora kan gi tidlige signaler, tydelig oppfølging og bedre beslutningsgrunnlag.
           </p>
 
           <div className="relative mt-10 flex flex-col sm:flex-row gap-3 justify-center px-4 sm:px-0">
