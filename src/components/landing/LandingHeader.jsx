@@ -43,9 +43,9 @@ export default function LandingHeader() {
             aria-label="Gå til toppen"
           >
             <img
-              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694db50ccf9dcb239e37fc6a/c8c0e6908_FullLogo_Transparent_NoBuffer.png"
+              src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694db50ccf9dcb239e37fc6a/6e16d8fb8_TextOnly_NoBuffer.png"
               alt="Wellora Logo"
-              className="h-12 w-auto object-contain"
+              className="h-10 w-auto object-contain"
             />
           </a>
 
