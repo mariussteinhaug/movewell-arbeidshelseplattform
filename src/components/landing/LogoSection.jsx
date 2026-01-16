@@ -1,7 +1,7 @@
 import React from "react";
 
 export default function LogoSection() {
-  const items = [
+  const industries = [
     "Industri & bygg",
     "Helse & omsorg",
     "Offentlig sektor",
@@ -9,24 +9,51 @@ export default function LogoSection() {
     "Retail",
   ];
 
+  const logos = [
+    {
+      name: "Eramet",
+      url: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/694db50ccf9dcb239e37fc6a/7405f97c3_image.png",
+    },
+  ];
+
   return (
-    <section className="py-6 md:py-8 bg-white">
+    <section className="py-10 md:py-14 bg-white">
       <div className="container mx-auto px-6 md:px-20">
-        <div className="text-center mb-5">
-          <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
-            Bygget for norske virksomheter
+        {/* Customer logos */}
+        <div className="text-center mb-8">
+          <p className="text-sm font-medium uppercase tracking-wide text-slate-500 mb-8">
+            Brukes av ledende norske virksomheter
           </p>
+          <div className="flex flex-wrap items-center justify-center gap-12">
+            {logos.map((logo, index) => (
+              <img
+                key={index}
+                src={logo.url}
+                alt={logo.name}
+                className="h-12 md:h-16 object-contain grayscale hover:grayscale-0 transition-all duration-300 opacity-70 hover:opacity-100"
+              />
+            ))}
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm md:text-base">
-          {items.map((item, index) => (
-            <span
-              key={index}
-              className="px-5 py-2 rounded-full border border-[#33c58f]/25 bg-[#33c58f]/5 text-[#2a9e73]/70 text-sm"
-            >
-              {item}
-            </span>
-          ))}
+        {/* Industries */}
+        <div className="pt-8 border-t border-slate-100">
+          <div className="text-center mb-5">
+            <p className="text-sm font-medium uppercase tracking-wide text-slate-500">
+              Bygget for norske virksomheter
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm md:text-base">
+            {industries.map((item, index) => (
+              <span
+                key={index}
+                className="px-5 py-2 rounded-full border border-[#33c58f]/25 bg-[#33c58f]/5 text-[#2a9e73]/70 text-sm"
+              >
+                {item}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
     </section>
