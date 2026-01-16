@@ -40,46 +40,40 @@ export default function EmployeeProfile() {
     enabled: !authLoading,
   });
 
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
-      </div>
-    );
-  }
-
   const { data: users = [] } = useQuery({
     queryKey: ['users'],
-    queryFn: () => base44.entities.User.list()
+    queryFn: () => base44.entities.User.list(),
+    enabled: !authLoading,
   });
 
   const { data: departments = [] } = useQuery({
     queryKey: ['departments'],
-    queryFn: () => base44.entities.Department.list()
+    queryFn: () => base44.entities.Department.list(),
+    enabled: !authLoading,
   });
 
   const { data: assessments = [] } = useQuery({
     queryKey: ['assessment-sessions'],
     queryFn: () => base44.entities.AssessmentSession.list('-created_date', 500),
-    enabled: !!selectedEmployeeEmail
+    enabled: !authLoading && !!selectedEmployeeEmail
   });
 
   const { data: accommodations = [] } = useQuery({
     queryKey: ['accommodations'],
     queryFn: () => base44.entities.Accommodation.list('-last_updated', 100),
-    enabled: !!selectedEmployeeEmail
+    enabled: !authLoading && !!selectedEmployeeEmail
   });
 
   const { data: messages = [] } = useQuery({
     queryKey: ['messages'],
     queryFn: () => base44.entities.Message.list('-created_date', 200),
-    enabled: !!selectedEmployeeEmail
+    enabled: !authLoading && !!selectedEmployeeEmail
   });
 
   const { data: notes = [] } = useQuery({
     queryKey: ['employee-notes'],
     queryFn: () => base44.entities.EmployeeNote.list('-created_date', 100),
-    enabled: !!selectedEmployeeEmail
+    enabled: !authLoading && !!selectedEmployeeEmail
   });
 
   const createNote = useMutation({
