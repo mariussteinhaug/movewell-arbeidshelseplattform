@@ -51,10 +51,10 @@ export default function Contact() {
                   <div>
                     <p className="text-sm font-semibold text-slate-900">E-post</p>
                     <a
-                      href="mailto:hei@wellora.no"
+                      href="mailto:support@wellora.no"
                       className="text-sm text-slate-600 hover:text-slate-900 transition-colors"
                     >
-                      hei@wellora.no
+                      support@wellora.no
                     </a>
                   </div>
                 </div>
