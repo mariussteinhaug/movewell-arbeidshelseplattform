@@ -68,10 +68,10 @@ export default function Contact() {
                   <div>
                     <p className="text-sm font-semibold text-slate-900">Telefon</p>
                     <a
-                      href="tel:+4722334455"
+                      href="tel:+4748202836"
                       className="text-sm text-slate-600 hover:text-slate-900 transition-colors"
                     >
-                      +47 22 33 44 55
+                      +47 48 20 28 36
                     </a>
                   </div>
                 </div>
