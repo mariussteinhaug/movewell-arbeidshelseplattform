@@ -1,0 +1,64 @@
+{
+  "name": "Consent",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string",
+      "description": "Bedrift/tenant-ID"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "ID til bruker som samtykker (intern). Ikke e-post."
+    },
+    "user_pseudonym": {
+      "type": "string",
+      "description": "Valgfritt: pseudonym/hash hvis du vil separere identitet fra assessment"
+    },
+    "department_id": {
+      "type": "string",
+      "description": "Valgfritt: avdeling ved samtykke (for statistikk, ikke tilgang)"
+    },
+    "accepted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "N\u00e5r samtykke ble gitt"
+    },
+    "consent_type": {
+      "type": "string",
+      "enum": [
+        "health_assessment",
+        "email_notifications",
+        "data_processing"
+      ],
+      "description": "Hva samtykket gjelder"
+    },
+    "consent_text": {
+      "type": "string",
+      "description": "Samtykketekst som ble vist (snapshot)"
+    },
+    "consent_version": {
+      "type": "string",
+      "description": "Versjon av samtykketekst"
+    },
+    "survey_version": {
+      "type": "string",
+      "description": "Versjon av survey ved samtykke"
+    },
+    "ip_hash": {
+      "type": "string",
+      "description": "Valgfritt: hash av IP for audit (ikke r\u00e5 IP)"
+    },
+    "user_agent": {
+      "type": "string",
+      "description": "Valgfritt: nettleser/device (audit)"
+    }
+  },
+  "required": [
+    "organization_id",
+    "user_id",
+    "accepted_at",
+    "consent_type",
+    "consent_text",
+    "consent_version"
+  ]
+}

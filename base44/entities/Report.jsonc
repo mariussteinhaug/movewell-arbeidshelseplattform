@@ -1,0 +1,167 @@
+{
+  "name": "Report",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string",
+      "description": "Bedrift/tenant-ID (for \u00e5 sperre data mellom bedrifter)"
+    },
+    "department_id": {
+      "type": "string",
+      "description": "ID til avdeling rapporten gjelder"
+    },
+    "department_name": {
+      "type": "string",
+      "description": "Valgfritt: visningsnavn p\u00e5 avdeling (kun for UI)"
+    },
+    "week_from": {
+      "type": "string",
+      "description": "Start uke (YYYY-WW)"
+    },
+    "week_to": {
+      "type": "string",
+      "description": "Slutt uke (YYYY-WW)"
+    },
+    "respondent_count": {
+      "type": "number",
+      "description": "Antall respondenter (aggregert)"
+    },
+    "min_respondents_required": {
+      "type": "number",
+      "description": "Minstekrav for \u00e5 vise rapport (anonymitet/GDPR). F.eks. 5."
+    },
+    "is_visible": {
+      "type": "boolean",
+      "description": "Om rapporten er synlig (false hvis for f\u00e5 respondenter)"
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "hr_only",
+        "manager_and_hr"
+      ],
+      "default": "manager_and_hr",
+      "description": "Hvem kan se rapporten"
+    },
+    "generated_by": {
+      "type": "string",
+      "enum": [
+        "ai",
+        "hr",
+        "system"
+      ],
+      "description": "Hvem/ hva genererte rapporten"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "N\u00e5r rapporten ble generert"
+    },
+    "metrics": {
+      "type": "object",
+      "description": "Aggregerte n\u00f8kkeltall (perfekt for dashboard)",
+      "properties": {
+        "avg_physical_load": {
+          "type": "number"
+        },
+        "avg_mental_wellbeing": {
+          "type": "number"
+        },
+        "avg_work_environment": {
+          "type": "number"
+        },
+        "avg_recovery": {
+          "type": "number"
+        },
+        "avg_stress_level": {
+          "type": "number"
+        },
+        "risk_level": {
+          "type": "string",
+          "enum": [
+            "lav",
+            "middels",
+            "hoy"
+          ],
+          "description": "Samlet risikoniv\u00e5 (AI/regel-basert)"
+        }
+      }
+    },
+    "executive_summary": {
+      "type": "string",
+      "description": "Executive summary fra AI"
+    },
+    "top_problems": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "problem": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "number"
+          },
+          "affected_percentage": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "problem",
+          "severity"
+        ]
+      },
+      "description": "Topp problemer"
+    },
+    "risk_drivers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Hoveddrivere for risiko"
+    },
+    "actions_immediate": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tiltak 0-2 uker"
+    },
+    "actions_short_term": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tiltak 1-3 m\u00e5neder"
+    },
+    "actions_long_term": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tiltak 3-12 m\u00e5neder"
+    },
+    "linked_recommendation_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Valgfritt: kobling til ActionRecommendation (s\u00e5 rapport -> tiltak henger sammen)"
+    },
+    "version": {
+      "type": "number",
+      "description": "Versjonering hvis rapport regenereres"
+    }
+  },
+  "required": [
+    "organization_id",
+    "department_id",
+    "week_from",
+    "week_to",
+    "respondent_count",
+    "min_respondents_required",
+    "is_visible",
+    "generated_by",
+    "generated_at"
+  ]
+}

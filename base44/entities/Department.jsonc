@@ -1,0 +1,64 @@
+{
+  "name": "Department",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string",
+      "description": "Bedrift/tenant-ID (brukes for \u00e5 sperre data mellom bedrifter)"
+    },
+    "name": {
+      "type": "string",
+      "description": "Avdelingsnavn"
+    },
+    "employee_count": {
+      "type": "number",
+      "description": "Antall ansatte"
+    },
+    "sector": {
+      "type": "string",
+      "enum": [
+        "varm_prosess",
+        "kald_prosess",
+        "pakkeri",
+        "lager_logistikk",
+        "kai_lasting",
+        "mekanisk_vedlikehold",
+        "laboratorium",
+        "miljo_hms",
+        "administrasjon",
+        "tilkalling",
+        "annet"
+      ],
+      "description": "Avdelingstype"
+    },
+    "shift_type": {
+      "type": "string",
+      "enum": [
+        "dagtid",
+        "5-skift",
+        "nattskift",
+        "kveldsskift",
+        "tilkalling_ekstrahjelp"
+      ],
+      "description": "Arbeidstidsordning"
+    },
+    "manager_user_id": {
+      "type": "string",
+      "description": "Bruker-ID til avdelingsleder (styrer leder-tilgang)"
+    },
+    "manager_display_name": {
+      "type": "string",
+      "description": "Valgfritt: visningsnavn p\u00e5 leder (kun for UI)"
+    },
+    "is_active": {
+      "type": "boolean",
+      "description": "Om avdelingen er aktiv"
+    }
+  },
+  "required": [
+    "organization_id",
+    "name",
+    "employee_count",
+    "is_active"
+  ]
+}

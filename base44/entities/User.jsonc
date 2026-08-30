@@ -1,0 +1,46 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "app_role": {
+      "type": "string",
+      "enum": [
+        "employee",
+        "manager",
+        "hr"
+      ],
+      "default": "employee",
+      "description": "Application-specific role: employee, manager, or hr"
+    },
+    "organization_id": {
+      "type": "string",
+      "description": "Organization/tenant ID for multi-tenancy"
+    },
+    "department_id": {
+      "type": "string",
+      "description": "Primary department ID"
+    },
+    "managed_department_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Department IDs this user manages (for managers)"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Phone number"
+    },
+    "position": {
+      "type": "string",
+      "description": "Job title/position"
+    }
+  },
+  "required": [
+    "organization_id",
+    "department_id",
+    "managed_department_ids",
+    "phone",
+    "position"
+  ]
+}

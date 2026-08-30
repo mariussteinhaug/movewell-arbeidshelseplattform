@@ -1,0 +1,187 @@
+{
+  "name": "Message",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string",
+      "description": "Bedrift/tenant-ID"
+    },
+    "thread_id": {
+      "type": "string",
+      "description": "ID for samtaletr\u00e5d (samler replies som egen tr\u00e5d)"
+    },
+    "in_reply_to_message_id": {
+      "type": "string",
+      "description": "Valgfritt: peker til meldingen dette er et svar p\u00e5"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "direct",
+        "broadcast",
+        "system"
+      ],
+      "description": "Direktemelding, utsendelse (til flere), eller systemmelding"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "oppfolging",
+        "informasjon",
+        "tilrettelegging",
+        "bedriftshelsetjeneste",
+        "generelt"
+      ],
+      "description": "Meldingskategori"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "lav",
+        "normal",
+        "hoy"
+      ],
+      "default": "normal"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ulest",
+        "lest",
+        "besvart",
+        "archived"
+      ],
+      "default": "ulest",
+      "description": "Lesestatus / oppf\u00f8lgingsstatus"
+    },
+    "subject": {
+      "type": "string",
+      "description": "Tittel/emne (kan v\u00e6re tom for chat-stil hvis du vil)"
+    },
+    "content": {
+      "type": "string",
+      "description": "Meldingsinnhold"
+    },
+    "sender_user_id": {
+      "type": "string",
+      "description": "Bruker-ID til avsender"
+    },
+    "sender_display_name": {
+      "type": "string",
+      "description": "Visningsnavn (for UI)"
+    },
+    "recipient_user_id": {
+      "type": "string",
+      "description": "Bruker-ID til mottaker (for direct). Tom hvis broadcast."
+    },
+    "recipient_department_id": {
+      "type": "string",
+      "description": "Avdeling-ID (for broadcast til en avdeling, eller for filtrering)"
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "employee_only",
+        "manager_and_hr",
+        "hr_only"
+      ],
+      "default": "manager_and_hr",
+      "description": "Hvem kan se innholdet"
+    },
+    "related_assessment_session_id": {
+      "type": "string",
+      "description": "Valgfritt: kobling til AssessmentSession"
+    },
+    "related_report_id": {
+      "type": "string",
+      "description": "Valgfritt: kobling til Report"
+    },
+    "related_action_recommendation_id": {
+      "type": "string",
+      "description": "Valgfritt: kobling til ActionRecommendation"
+    },
+    "read_by": {
+      "type": "array",
+      "description": "Hvem som har lest (for flere mottakere/HR/leder)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string"
+          },
+          "read_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "user_id",
+          "read_at"
+        ]
+      }
+    },
+    "replies": {
+      "type": "array",
+      "description": "Svar i tr\u00e5den (for enkel chat-stil)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "sender_user_id": {
+            "type": "string"
+          },
+          "sender_display_name": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "sent_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "sender_user_id",
+          "content",
+          "sent_at"
+        ]
+      }
+    },
+    "attachments": {
+      "type": "array",
+      "description": "Valgfritt: vedlegg",
+      "items": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      }
+    },
+    "sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Tidspunkt sendt"
+    }
+  },
+  "required": [
+    "organization_id",
+    "thread_id",
+    "type",
+    "category",
+    "priority",
+    "content",
+    "sender_user_id",
+    "sent_at"
+  ]
+}

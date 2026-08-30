@@ -1,0 +1,108 @@
+{
+  "name": "ActionRecommendation",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string",
+      "description": "Bedrift/tenant-ID (for \u00e5 sperre data mellom bedrifter)"
+    },
+    "department_id": {
+      "type": "string",
+      "description": "ID til avdeling (styrer leder-tilgang og filtrering)"
+    },
+    "department_name": {
+      "type": "string",
+      "description": "Valgfritt: visningsnavn p\u00e5 avdeling (kun for UI)"
+    },
+    "assessment_week": {
+      "type": "string",
+      "description": "Uke tiltaket bygger p\u00e5 (YYYY-WW)"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "ai",
+        "hr",
+        "manager",
+        "system"
+      ],
+      "description": "Hvor anbefalingen kommer fra"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "fysisk",
+        "mental",
+        "arbeidsforhold",
+        "generell"
+      ],
+      "description": "Kategori for anbefaling"
+    },
+    "title": {
+      "type": "string",
+      "description": "Tittel p\u00e5 anbefaling"
+    },
+    "description": {
+      "type": "string",
+      "description": "Beskrivelse av tiltak"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "hoy",
+        "middels",
+        "lav"
+      ],
+      "description": "Prioritet"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ny",
+        "pagaende",
+        "fullfort"
+      ],
+      "default": "ny"
+    },
+    "owner_user_id": {
+      "type": "string",
+      "description": "Hvem som eier tiltaket (leder/HR). Brukes for ansvar og UI."
+    },
+    "due_date": {
+      "type": "string",
+      "description": "Valgfritt: frist (ISO dato)"
+    },
+    "created_at": {
+      "type": "string",
+      "description": "N\u00e5r anbefalingen ble opprettet (ISO timestamp)"
+    },
+    "updated_at": {
+      "type": "string",
+      "description": "Sist oppdatert (ISO timestamp)"
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "hr_only",
+        "manager_and_hr"
+      ],
+      "default": "manager_and_hr",
+      "description": "Hvem kan se tiltaket"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Interne notater (typisk HR/leder)."
+    }
+  },
+  "required": [
+    "organization_id",
+    "department_id",
+    "category",
+    "title",
+    "description",
+    "priority",
+    "status",
+    "source",
+    "created_at"
+  ]
+}

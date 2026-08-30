@@ -1,0 +1,78 @@
+{
+  "name": "EmployeeNote",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string",
+      "description": "Bedrift/tenant-ID"
+    },
+    "employee_user_id": {
+      "type": "string",
+      "description": "Bruker-ID til ansatt notatet gjelder"
+    },
+    "employee_display_name": {
+      "type": "string",
+      "description": "Valgfritt: visningsnavn (kun for UI)"
+    },
+    "department_id": {
+      "type": "string",
+      "description": "Valgfritt: avdeling (for filtrering / leder-tilgang)"
+    },
+    "note_type": {
+      "type": "string",
+      "enum": [
+        "oppfolging",
+        "observasjon",
+        "tiltak",
+        "annet"
+      ],
+      "default": "oppfolging",
+      "description": "Type notat"
+    },
+    "content": {
+      "type": "string",
+      "description": "Notatinnhold"
+    },
+    "author_user_id": {
+      "type": "string",
+      "description": "Bruker-ID til forfatter (HR/leder)"
+    },
+    "author_display_name": {
+      "type": "string",
+      "description": "Valgfritt: visningsnavn (kun for UI)"
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "author_only",
+        "manager_and_hr",
+        "hr_only",
+        "employee_visible"
+      ],
+      "default": "author_only",
+      "description": "Hvem kan se notatet"
+    },
+    "related_accommodation_id": {
+      "type": "string",
+      "description": "Valgfritt: kobling til Accommodation"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Opprettet"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Sist oppdatert"
+    }
+  },
+  "required": [
+    "organization_id",
+    "employee_user_id",
+    "content",
+    "author_user_id",
+    "visibility",
+    "created_at"
+  ]
+}

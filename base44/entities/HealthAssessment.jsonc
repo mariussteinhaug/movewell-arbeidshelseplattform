@@ -1,0 +1,120 @@
+{
+  "name": "HealthAssessment",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string",
+      "description": "Bedrift/organisasjon (for HR/tenant-sperre)"
+    },
+    "department_id": {
+      "type": "string",
+      "description": "ID til avdeling (brukes for leder-tilgang og filtrering)"
+    },
+    "department_name": {
+      "type": "string",
+      "description": "Visningsnavn p\u00e5 avdeling (brukes i dashbord)"
+    },
+    "assessment_week": {
+      "type": "string",
+      "description": "Uke for kartlegging (format: YYYY-WW)"
+    },
+    "respondent_user_id": {
+      "type": "string",
+      "description": "Bruker-ID (for intern sporing, valgfritt)"
+    },
+    "respondent_pseudonym": {
+      "type": "string",
+      "description": "Pseudonym/hash for anonym lagring"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "submitted",
+        "ny",
+        "fullf\u00f8rt"
+      ],
+      "description": "Status p\u00e5 kartleggingen"
+    },
+    "created_date": {
+      "type": "string",
+      "description": "ISO-timestamp for n\u00e5r kartleggingen ble opprettet"
+    },
+    "submitted_at": {
+      "type": "string",
+      "description": "ISO-timestamp for n\u00e5r den ble sendt inn"
+    },
+    "physical_load": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Fysisk belastning (1\u20135)"
+    },
+    "mental_wellbeing": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Psykisk helse (1\u20135)"
+    },
+    "work_environment": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Arbeidsforhold (1\u20135)"
+    },
+    "recovery": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Restitusjon/s\u00f8vn (1\u20135)"
+    },
+    "stress_level": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 5,
+      "description": "Stressniv\u00e5 (1\u20135)"
+    },
+    "comments": {
+      "type": "string",
+      "description": "Valgfri kommentar (anonym)"
+    },
+    "adaptive_responses": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "question": {
+            "type": "string"
+          },
+          "answer": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "question",
+          "answer"
+        ]
+      },
+      "description": "AI-genererte oppf\u00f8lgingssp\u00f8rsm\u00e5l og svar"
+    },
+    "risk_indicators": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "AI-identifiserte risikofaktorer"
+    }
+  },
+  "required": [
+    "organization_id",
+    "department_id",
+    "physical_load",
+    "mental_wellbeing",
+    "work_environment",
+    "status",
+    "created_date"
+  ]
+}

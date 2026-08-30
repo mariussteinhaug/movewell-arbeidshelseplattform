@@ -1,0 +1,239 @@
+{
+  "name": "AssessmentSession",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string",
+      "description": "Bedrift/tenant-ID"
+    },
+    "department_id": {
+      "type": "string",
+      "description": "ID til avdeling (kobling til Department)"
+    },
+    "department_name": {
+      "type": "string",
+      "description": "Valgfritt: visningsnavn (kun for UI)"
+    },
+    "session_week": {
+      "type": "string",
+      "description": "Uke for kartlegging (YYYY-WW)"
+    },
+    "anonymous_id": {
+      "type": "string",
+      "description": "Anonym session ID (ikke direkte personidentifiserbar)"
+    },
+    "respondent_user_id": {
+      "type": "string",
+      "description": "Valgfritt: hvis ansatt skal kunne se sin egen historikk (ikke n\u00f8dvendig for anonym aggregat)"
+    },
+    "respondent_display_name": {
+      "type": "string",
+      "description": "Valgfritt: visningsnavn (kun for UI)"
+    },
+    "respondent_pseudonym": {
+      "type": "string",
+      "description": "Valgfritt: pseudonym/hash for kobling uten e-post/navn"
+    },
+    "path": {
+      "type": "string",
+      "enum": [
+        "not_set",
+        "muskel",
+        "fysisk",
+        "psykisk",
+        "annet"
+      ],
+      "description": "Valgt hovedvei"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "in_progress",
+        "completed"
+      ],
+      "description": "Flytstatus"
+    },
+    "progress": {
+      "type": "number",
+      "description": "0-100 (for Apple-feel progressbar)"
+    },
+    "answered_questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "question_id": {
+            "type": "string"
+          },
+          "answer": {
+            "type": "string"
+          },
+          "answer_type": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "question_id",
+          "answer"
+        ]
+      },
+      "description": "Besvarte sp\u00f8rsm\u00e5l (anonymisert/pseudonymisert)"
+    },
+    "generated_questions": {
+      "type": "array",
+      "description": "AI-genererte oppf\u00f8lgingssp\u00f8rsm\u00e5l for denne sesjonen",
+      "items": {
+        "type": "object",
+        "properties": {
+          "question_id": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "answer_type": {
+            "type": "string",
+            "enum": [
+              "scale",
+              "choice",
+              "multichoice",
+              "text",
+              "number"
+            ]
+          },
+          "answer_options": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "scale": {
+            "type": "object",
+            "properties": {
+              "min": {
+                "type": "number"
+              },
+              "max": {
+                "type": "number"
+              },
+              "step": {
+                "type": "number"
+              },
+              "min_label": {
+                "type": "string"
+              },
+              "max_label": {
+                "type": "string"
+              }
+            }
+          },
+          "category": {
+            "type": "string"
+          },
+          "order": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "question_id",
+          "text",
+          "answer_type"
+        ]
+      }
+    },
+    "risk_signals": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Identifiserte risikosignaler"
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": [
+        "unknown",
+        "low",
+        "moderate",
+        "high"
+      ],
+      "default": "unknown",
+      "description": "Beregnet risikoniv\u00e5"
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "AI-konfidensgrad (0-1)"
+    },
+    "ai_summary": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "Kort oppsummering av funn (for leder/HR, ikke-identifiserende)."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Opprettet"
+    },
+    "submitted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Sendt inn"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Fullf\u00f8rt (hvis completed)"
+    },
+    "attachments": {
+      "type": "array",
+      "description": "Lenker til vedlegg (sensitivt!)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "medical_note",
+              "ergonomic_form",
+              "other"
+            ]
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "employee_only",
+              "hr_only"
+            ]
+          },
+          "uploaded_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "url",
+          "visibility"
+        ]
+      }
+    }
+  },
+  "required": [
+    "organization_id",
+    "department_id",
+    "anonymous_id",
+    "path",
+    "status",
+    "created_at",
+    "session_week",
+    "submitted_at"
+  ]
+}

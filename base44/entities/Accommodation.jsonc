@@ -1,0 +1,125 @@
+{
+  "name": "Accommodation",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string",
+      "description": "Bedrift/tenant-ID"
+    },
+    "employee_user_id": {
+      "type": "string",
+      "description": "Bruker-ID til ansatt (ikke e-post)"
+    },
+    "employee_display_name": {
+      "type": "string",
+      "description": "Valgfritt: visningsnavn for UI"
+    },
+    "department_id": {
+      "type": "string",
+      "description": "ID til avdeling"
+    },
+    "department_name": {
+      "type": "string",
+      "description": "Valgfritt: visningsnavn for UI"
+    },
+    "accommodation_type": {
+      "type": "string",
+      "description": "Type tilrettelegging/tiltak (kort)"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detaljert beskrivelse av tiltaket"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "planlagt",
+        "pagaende",
+        "fullfort"
+      ],
+      "default": "planlagt",
+      "description": "Status p\u00e5 tiltaket"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "lav",
+        "normal",
+        "hoy"
+      ],
+      "default": "normal",
+      "description": "Prioritet (for oppf\u00f8lging i UI)"
+    },
+    "responsible_user_id": {
+      "type": "string",
+      "description": "Hvem er ansvarlig for oppf\u00f8lging (leder/HR)"
+    },
+    "responsible_display_name": {
+      "type": "string",
+      "description": "Valgfritt: visningsnavn for UI"
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "employee_and_hr",
+        "manager_and_hr",
+        "hr_only"
+      ],
+      "default": "manager_and_hr",
+      "description": "Hvem kan se saken"
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": [
+        "low",
+        "moderate",
+        "high"
+      ],
+      "description": "Risikoniv\u00e5 (fra rapport/AI/regel)"
+    },
+    "related_assessment_session_id": {
+      "type": "string",
+      "description": "Valgfritt: kobling til AssessmentSession"
+    },
+    "related_report_id": {
+      "type": "string",
+      "description": "Valgfritt: kobling til Report"
+    },
+    "related_action_recommendation_id": {
+      "type": "string",
+      "description": "Valgfritt: kobling til ActionRecommendation"
+    },
+    "due_date": {
+      "type": "string",
+      "description": "Valgfritt: frist (ISO dato)"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Interne notater (sensitivt \u2013 vurder HR-only i praksis)"
+    },
+    "archived": {
+      "type": "boolean",
+      "default": false,
+      "description": "Arkivert sak (skjules fra standardvisning)"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Opprettet"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Sist oppdatert"
+    }
+  },
+  "required": [
+    "organization_id",
+    "employee_user_id",
+    "department_id",
+    "accommodation_type",
+    "status",
+    "responsible_user_id",
+    "created_at"
+  ]
+}

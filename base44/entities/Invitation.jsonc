@@ -1,0 +1,68 @@
+{
+  "name": "Invitation",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string",
+      "description": "Tenant/org ID"
+    },
+    "email": {
+      "type": "string",
+      "description": "Invitee email (lowercase)"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "hr",
+        "manager",
+        "employee"
+      ],
+      "description": "App role to grant"
+    },
+    "department_id": {
+      "type": "string",
+      "description": "Optional department for manager/employee"
+    },
+    "token": {
+      "type": "string",
+      "description": "Unique invite token"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Expiration time"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "expired",
+        "revoked"
+      ],
+      "default": "pending"
+    },
+    "invited_by_user_id": {
+      "type": "string",
+      "description": "Issuer user id"
+    },
+    "accepted_by_user_id": {
+      "type": "string",
+      "description": "Who accepted"
+    },
+    "accepted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Acceptance timestamp"
+    }
+  },
+  "required": [
+    "organization_id",
+    "email",
+    "role",
+    "token",
+    "expires_at",
+    "status",
+    "invited_by_user_id"
+  ]
+}

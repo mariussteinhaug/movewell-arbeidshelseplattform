@@ -1,0 +1,167 @@
+{
+  "name": "QuestionBank",
+  "type": "object",
+  "properties": {
+    "question_id": {
+      "type": "string",
+      "description": "Unik ID (Q1-Q48)"
+    },
+    "version": {
+      "type": "string",
+      "description": "Versjon av sp\u00f8rsm\u00e5let (f.eks. 1.0, 1.1)"
+    },
+    "is_active": {
+      "type": "boolean",
+      "description": "Om sp\u00f8rsm\u00e5let er aktivt i n\u00e5v\u00e6rende survey"
+    },
+    "text": {
+      "type": "string",
+      "description": "Sp\u00f8rsm\u00e5lstekst"
+    },
+    "helper_text": {
+      "type": "string",
+      "description": "Kort forklaring under sp\u00f8rsm\u00e5let (Apple-stil: rolig, 1 linje)"
+    },
+    "path": {
+      "type": "string",
+      "enum": [
+        "generell",
+        "muskel",
+        "fysisk",
+        "psykisk",
+        "annet"
+      ],
+      "description": "Hvilken hovedvei sp\u00f8rsm\u00e5let tilh\u00f8rer"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "kontekst",
+        "\u00e5rsak",
+        "smerte",
+        "varighet",
+        "funksjon",
+        "st\u00f8tte",
+        "mestring",
+        "risiko",
+        "tiltak"
+      ],
+      "description": "Kategori for sp\u00f8rsm\u00e5let"
+    },
+    "answer_type": {
+      "type": "string",
+      "enum": [
+        "scale",
+        "choice",
+        "multichoice",
+        "text",
+        "number"
+      ],
+      "description": "Type svar"
+    },
+    "answer_options": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Svaralternativer hvis relevant"
+    },
+    "scale": {
+      "type": "object",
+      "description": "Kun brukt n\u00e5r answer_type=scale",
+      "properties": {
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        },
+        "step": {
+          "type": "number"
+        },
+        "min_label": {
+          "type": "string"
+        },
+        "max_label": {
+          "type": "string"
+        }
+      }
+    },
+    "placeholder": {
+      "type": "string",
+      "description": "Placeholder for tekst/number-input"
+    },
+    "severity_weight": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "description": "Vektlegging av alvorlighet"
+    },
+    "required_for_minimum": {
+      "type": "boolean",
+      "description": "Om sp\u00f8rsm\u00e5let er p\u00e5krevd for minimum vurdering"
+    },
+    "order": {
+      "type": "number",
+      "description": "Sorteringsrekkef\u00f8lge"
+    },
+    "display": {
+      "type": "object",
+      "description": "UI-innstillinger for Apple-feel",
+      "properties": {
+        "compact": {
+          "type": "boolean"
+        },
+        "show_divider": {
+          "type": "boolean"
+        },
+        "icon": {
+          "type": "string"
+        }
+      }
+    },
+    "show_if": {
+      "type": "object",
+      "description": "Branching-regel: vis bare hvis betingelser er oppfylt",
+      "properties": {
+        "depends_on_question_id": {
+          "type": "string"
+        },
+        "operator": {
+          "type": "string",
+          "enum": [
+            "equals",
+            "not_equals",
+            "greater_than",
+            "less_than",
+            "includes"
+          ]
+        },
+        "value": {
+          "type": "string",
+          "description": "Verdien som m\u00e5 matches (for scale kan du lagre som string '4' osv.)"
+        }
+      }
+    },
+    "risk_tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tagger som AI/rapport kan bruke (f.eks. 'stress', 's\u00f8vn', 'belastning')"
+    }
+  },
+  "required": [
+    "question_id",
+    "version",
+    "is_active",
+    "text",
+    "path",
+    "category",
+    "answer_type",
+    "order"
+  ]
+}
